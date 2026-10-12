@@ -230,6 +230,15 @@ if(TARGET SDL3_ttf::SDL3_ttf)
   target_link_libraries(MuClient PUBLIC SDL3_ttf::SDL3_ttf)
 endif()
 
+# RmlUi (HTML/CSS-based UI) drives the resolution-independent HUD. Optional:
+# without it the client builds as before and source/UI/Rml compiles to stubs.
+find_package(RmlUi CONFIG QUIET)
+if(TARGET RmlUi::RmlUi)
+  target_link_libraries(MuClient PUBLIC RmlUi::RmlUi)
+  target_compile_definitions(MuClient PUBLIC MU_RMLUI)
+  message(STATUS "RmlUi found: resolution-independent HUD enabled")
+endif()
+
 # The in-game shop downloader uses libcurl on every platform.
 find_package(CURL REQUIRED)
 target_link_libraries(MuClient PUBLIC CURL::libcurl)

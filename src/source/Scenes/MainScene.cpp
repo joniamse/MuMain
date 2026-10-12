@@ -19,6 +19,7 @@
 #include "World/MapInfra/MapManager.h"
 #include "UI/Legacy/UIMng.h"
 #include "UI/NewUI/NewUISystem.h"
+#include "UI/Modern/ModernHud.h"
 #include "GameLogic/Social/PartyManager.h"
 #include "GameLogic/Events/Cinematic/CDirection.h"
 #include "GameLogic/Pets/w_PetProcess.h"
@@ -622,6 +623,7 @@ static void RenderMainSceneUI()
     g_pNewUISystem->Render();
 
     BeginBitmap();
+    UI::Modern::RenderHud();
     RenderInfomation();
 
 #ifdef ENABLE_EDIT

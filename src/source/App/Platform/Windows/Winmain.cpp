@@ -79,6 +79,7 @@
 #include "GameLogic/Pets/w_PetProcess.h"
 
 #include "UI/NewUI/NewUISystem.h"
+#include "UI/Modern/ModernHud.h"
 #include "UI/Scaling/UITransform.h"
 #include "Camera/CameraConfig.h"
 #include "Camera/CameraProjection.h"
@@ -184,6 +185,7 @@ static void ShutdownRendererWindow()
         g_hDC = nullptr;
     }
 
+    UI::Modern::Shutdown();
     mu::ShutdownSDLGpuRenderer();
     g_hRC = nullptr;
 

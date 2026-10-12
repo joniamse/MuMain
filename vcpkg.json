@@ -13,6 +13,7 @@
       "platform": "windows & x64"
     },
     "openssl",
+    "rmlui",
     {
       "name": "glslang",
       "features": ["tools"]
