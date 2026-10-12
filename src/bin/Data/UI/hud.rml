@@ -1,0 +1,35 @@
+<rml>
+<head>
+    <title>HUD</title>
+    <link type="text/rcss" href="hud.rcss"/>
+</head>
+<body data-model="hud">
+    <div id="vitals">
+        <div class="header">
+            <span class="name">{{name}}</span>
+            <span class="level">Lv. {{level}}<span data-if="master_level > 0"> · ML {{master_level}}</span></span>
+        </div>
+
+        <div class="bar life">
+            <div class="fill" data-style-width="life_width"></div>
+            <span class="label">HP</span>
+            <span class="value">{{life}} / {{life_max}}</span>
+        </div>
+        <div class="bar mana">
+            <div class="fill" data-style-width="mana_width"></div>
+            <span class="label">MP</span>
+            <span class="value">{{mana}} / {{mana_max}}</span>
+        </div>
+        <div class="bar shield small">
+            <div class="fill" data-style-width="shield_width"></div>
+            <span class="label">SD</span>
+            <span class="value">{{shield}} / {{shield_max}}</span>
+        </div>
+        <div class="bar ability small">
+            <div class="fill" data-style-width="ability_width"></div>
+            <span class="label">AG</span>
+            <span class="value">{{ability}} / {{ability_max}}</span>
+        </div>
+    </div>
+</body>
+</rml>
