@@ -2199,6 +2199,10 @@ int WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int nC
     g_ErrorReport.AddSeparator();
 
     setlocale(LC_ALL, "");
+    // Keep the user's locale for text, but parse and print numbers the C way ('.' decimal
+    // separator). RmlUi reads stylesheet numbers with atof and writes them with printf, so a
+    // ',' locale (Spanish, German, ...) turns "0.25s" into 0 and "42.5%" into invalid CSS.
+    setlocale(LC_NUMERIC, "C");
 
     CInput::Instance().Create(g_hWnd, WindowWidth, WindowHeight);
 

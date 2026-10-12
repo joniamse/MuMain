@@ -22,16 +22,19 @@ public:
     void Refresh();
 
 private:
-    // RML names: <name>, <name>_max and <name>_width (a CSS percentage such as "42.5%").
+    // RML names: <name>, <name>_max, <name>_pct (whole percent, for conditions such as
+    // "life_pct < 25") and <name>_width (a CSS percentage such as "42.5%").
     // The width is formatted here: RmlUi's float-to-string follows the process locale,
     // which writes "42,5" on Spanish/German Windows and yields invalid CSS.
     struct Gauge
     {
         ::Rml::String currentName;
         ::Rml::String maximumName;
+        ::Rml::String percentName;
         ::Rml::String widthName;
         int current = 0;
         int maximum = 0;
+        int percent = 0;
         ::Rml::String width = "0%";
     };
 

@@ -1,0 +1,112 @@
+/*
+ * Base theme for every modern UI document. Link it first, then the document's own stylesheet.
+ * Sizes are in dp: 1dp = 1px at a 720px-high window, scaled with the window.
+ *
+ * Palette
+ *   surface      #0b1018 (panels, ~85% opacity)    text          #eef2f7
+ *   surface-2    #121a26 (raised elements)         text-muted    #8fa3bd
+ *   line         #2b3a4f (borders)                 accent        #6f9bd1 (steel blue)
+ *   track        #05080d (empty gauges)
+ *   shield #ffd24a / life #ff4d4d / mana #3d9bff / ability #4fd8a6
+ */
+
+/* RmlUi has no user-agent stylesheet: every element is inline unless styled otherwise. */
+div, p, h1, h2, h3 {
+    display: block;
+}
+
+body {
+    display: block;
+    width: 100%;
+    height: 100%;
+    font-family: "Liberation Sans";
+    font-size: 12dp;
+    color: #eef2f7;
+    pointer-events: none;
+}
+
+/* ---- Surfaces ---------------------------------------------------------------------------- */
+
+.panel {
+    background-color: #0b1018d9;
+    border: 1dp #2b3a4f;
+    border-top: 1dp #6f9bd1aa;
+    border-radius: 4dp;
+}
+
+/* ---- Text -------------------------------------------------------------------------------- */
+
+.text-title {
+    font-weight: bold;
+    font-size: 14dp;
+    color: #eef2f7;
+    font-effect: outline(1dp #000000cc);
+}
+
+.text-muted {
+    font-size: 10dp;
+    color: #8fa3bd;
+}
+
+/* ---- Gauges: <div class="gauge [thin] <kind>"><div class="gauge-fill"/><div class="gauge-gloss"/>
+        <span class="gauge-value"/></div> ------------------------------------------------------- */
+
+.gauge {
+    display: block;
+    position: relative;
+    height: 13dp;
+    background-color: #05080de6;
+    border: 1dp #000000b3;
+    border-radius: 2dp;
+}
+
+.gauge.thin {
+    height: 6dp;
+}
+
+.gauge-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    border-radius: 1dp;
+    transition: width 0.25s cubic-out;
+}
+
+/* Glass highlight over the upper half of the fill. */
+.gauge-gloss {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 45%;
+    background-color: #ffffff1f;
+    border-radius: 1dp;
+}
+
+.gauge-value {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    text-align: center;
+    font-size: 9dp;
+    line-height: 13dp;
+    color: #ffffff;
+    font-effect: outline(1dp #000000e6);
+}
+
+.shield  .gauge-fill { decorator: vertical-gradient(#ffe27a #c98a12); }
+.life    .gauge-fill { decorator: vertical-gradient(#ff6b6b #9e1019); }
+.mana    .gauge-fill { decorator: vertical-gradient(#62b3ff #1442a3); }
+.ability .gauge-fill { decorator: vertical-gradient(#7ff0c4 #128061); }
+
+/* Low values pulse. Add the "critical" class (e.g. data-class-critical="life_pct < 25"). */
+@keyframes gauge-pulse {
+    from { opacity: 1; }
+    to   { opacity: 0.45; }
+}
+
+.critical .gauge-fill {
+    animation: 0.6s sine-in-out infinite alternate gauge-pulse;
+}

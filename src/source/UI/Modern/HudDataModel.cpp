@@ -86,9 +86,11 @@ void HudDataModel::BindGauge(::Rml::DataModelConstructor& constructor, const ::R
 {
     gauge.currentName = name;
     gauge.maximumName = name + "_max";
+    gauge.percentName = name + "_pct";
     gauge.widthName = name + "_width";
     constructor.Bind(gauge.currentName, &gauge.current);
     constructor.Bind(gauge.maximumName, &gauge.maximum);
+    constructor.Bind(gauge.percentName, &gauge.percent);
     constructor.Bind(gauge.widthName, &gauge.width);
 }
 
@@ -130,6 +132,7 @@ void HudDataModel::UpdateGauge(Gauge& gauge, int current, int maximum)
                            : 0.0f;
     UpdateValue(gauge.currentName.c_str(), gauge.current, clampedCurrent);
     UpdateValue(gauge.maximumName.c_str(), gauge.maximum, clampedMaximum);
+    UpdateValue(gauge.percentName.c_str(), gauge.percent, static_cast<int>(percent));
     FormatCssPercent(percent, m_widthBuffer);
     UpdateValue(gauge.widthName.c_str(), gauge.width, m_widthBuffer);
 }

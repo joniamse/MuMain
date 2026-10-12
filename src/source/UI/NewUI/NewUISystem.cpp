@@ -14,6 +14,13 @@ namespace
     constexpr int kLayoutBaseX = 640;
     constexpr int kLayoutPanelWidth = 190;
 
+#ifdef MU_RMLUI
+    // Below the modern status window (Data/UI/hud.rcss #status), which sits under the map name.
+    constexpr int kSystemLogTop = 104;
+#else
+    constexpr int kSystemLogTop = 80;
+#endif
+
     constexpr int PanelColumnX(int columns)
     {
         return kLayoutBaseX - (kLayoutPanelWidth * columns);
@@ -139,7 +146,7 @@ bool CNewUISystem::Create()
         return false;
 
     m_pNewSystemLogWindow = new CNewUISystemLogWindow;
-    if (false == m_pNewSystemLogWindow->Create(m_pNewUIMng, 0, 80))
+    if (false == m_pNewSystemLogWindow->Create(m_pNewUIMng, 0, kSystemLogTop))
         return false;
 
     m_pNewOptionWindow = new CNewUIOptionWindow;
