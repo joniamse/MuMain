@@ -25,6 +25,15 @@ body {
     pointer-events: none;
 }
 
+/* ---- Interaction --------------------------------------------------------------------------
+   The body ignores the mouse, so clicks fall through to the game world. Elements that should
+   take clicks (buttons, windows) opt in with the "interactive" class; the game then does not
+   see presses that land on them. */
+
+.interactive {
+    pointer-events: auto;
+}
+
 /* ---- Surfaces ---------------------------------------------------------------------------- */
 
 .panel {

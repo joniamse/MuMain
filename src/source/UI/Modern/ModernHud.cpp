@@ -7,10 +7,14 @@
 #include "Core/Utilities/Log/MuLogger.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "UI/Modern/HudDataModel.h"
+#include "UI/Modern/RmlInput.h"
 #include "UI/Modern/RmlRenderInterface.h"
 #include "UI/Modern/RmlSystemInterface.h"
 
 #include "UI/Modern/RmlIncludes.h"
+
+#include <SDL3/SDL_events.h>
+#include <SDL3/SDL_keyboard.h>
 
 #include <array>
 #include <memory>
@@ -31,12 +35,16 @@ constexpr std::array kFontFaces = {
     "fonts/LiberationSans-Bold.ttf",
 };
 
+constexpr int kMouseButtonCount = 3;
+
 struct HudState
 {
     RmlSystemInterface systemInterface;
     std::unique_ptr<RmlRenderInterface> renderInterface;
     HudDataModel dataModel;
     ::Rml::Context* context = nullptr;
+    // Buttons whose press went to the UI; their release must not reach the game either.
+    std::array<bool, kMouseButtonCount> capturedButtons{};
     bool initialised = false;
     bool failed = false;
 };
@@ -98,6 +106,88 @@ bool Initialise(HudState& state)
     return CreateHud(state);
 }
 
+int CurrentModifiers()
+{
+    return Input::ConvertModifiers(SDL_GetModState());
+}
+
+bool IsTextFieldFocused(::Rml::Context& context)
+{
+    const ::Rml::Element* focus = context.GetFocusElement();
+    if (!focus)
+    {
+        return false;
+    }
+    const ::Rml::String& tag = focus->GetTagName();
+    return tag == "input" || tag == "textarea";
+}
+
+bool ProcessMouseButton(HudState& state, const SDL_Event& event)
+{
+    const int button = Input::ConvertMouseButton(event.button.button);
+    if (button < 0)
+    {
+        return false;
+    }
+
+    ::Rml::Context& context = *state.context;
+    const int modifiers = CurrentModifiers();
+    context.ProcessMouseMove(static_cast<int>(event.button.x), static_cast<int>(event.button.y), modifiers);
+
+    bool& captured = state.capturedButtons[static_cast<std::size_t>(button)];
+    if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
+    {
+        captured = !context.ProcessMouseButtonDown(button, modifiers);
+        return captured;
+    }
+
+    context.ProcessMouseButtonUp(button, modifiers);
+    const bool wasCaptured = captured;
+    captured = false;
+    return wasCaptured;
+}
+
+bool ProcessMouseWheel(::Rml::Context& context, const SDL_Event& event)
+{
+    if (!context.IsMouseInteracting())
+    {
+        return false;
+    }
+    // RmlUi scrolls down for positive values; SDL reports wheel-up as positive.
+    const ::Rml::Vector2f delta{-event.wheel.x, -event.wheel.y};
+    context.ProcessMouseWheel(delta, CurrentModifiers());
+    return true;
+}
+
+bool ProcessKey(::Rml::Context& context, const SDL_Event& event)
+{
+    if (!IsTextFieldFocused(context))
+    {
+        return false;
+    }
+    const ::Rml::Input::KeyIdentifier key = Input::ConvertKey(event.key.key);
+    const int modifiers = Input::ConvertModifiers(event.key.mod);
+    if (event.type == SDL_EVENT_KEY_DOWN)
+    {
+        context.ProcessKeyDown(key, modifiers);
+    }
+    else
+    {
+        context.ProcessKeyUp(key, modifiers);
+    }
+    return true;
+}
+
+bool ProcessText(::Rml::Context& context, const SDL_Event& event)
+{
+    if (!IsTextFieldFocused(context))
+    {
+        return false;
+    }
+    context.ProcessTextInput(::Rml::String(event.text.text));
+    return true;
+}
+
 void UpdateLayout(::Rml::Context& context)
 {
     const ::Rml::Vector2i size = WindowSize();
@@ -141,6 +231,39 @@ void RenderHud()
     state.renderInterface->EndFrame();
 }
 
+bool ProcessEvent(const SDL_Event& event)
+{
+    HudState& state = State();
+    if (!IsEnabled() || !state.context)
+    {
+        return false;
+    }
+
+    ::Rml::Context& context = *state.context;
+    switch (event.type)
+    {
+    case SDL_EVENT_MOUSE_MOTION:
+        context.ProcessMouseMove(static_cast<int>(event.motion.x), static_cast<int>(event.motion.y),
+                                 CurrentModifiers());
+        return false;
+    case SDL_EVENT_MOUSE_BUTTON_DOWN:
+    case SDL_EVENT_MOUSE_BUTTON_UP:
+        return ProcessMouseButton(state, event);
+    case SDL_EVENT_MOUSE_WHEEL:
+        return ProcessMouseWheel(context, event);
+    case SDL_EVENT_WINDOW_MOUSE_LEAVE:
+        context.ProcessMouseLeave();
+        return false;
+    case SDL_EVENT_KEY_DOWN:
+    case SDL_EVENT_KEY_UP:
+        return ProcessKey(context, event);
+    case SDL_EVENT_TEXT_INPUT:
+        return ProcessText(context, event);
+    default:
+        return false;
+    }
+}
+
 void Shutdown()
 {
     HudState& state = State();
@@ -160,6 +283,10 @@ void Shutdown()
 namespace UI::Modern
 {
 bool IsEnabled()
+{
+    return false;
+}
+bool ProcessEvent(const SDL_Event& /*event*/)
 {
     return false;
 }

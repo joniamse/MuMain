@@ -72,6 +72,12 @@ bool HudDataModel::Bind(::Rml::Context& context)
     }
 
     constructor.Bind("name", &m_name);
+    constructor.Bind("compact", &m_compact);
+    constructor.BindEventCallback("toggle_compact",
+                                  [this](::Rml::DataModelHandle handle, ::Rml::Event&, const ::Rml::VariantList&) {
+                                      m_compact = !m_compact;
+                                      handle.DirtyVariable("compact");
+                                  });
     constructor.Bind("level", &m_level);
     constructor.Bind("master_level", &m_masterLevel);
     BindGauge(constructor, "life", m_life);

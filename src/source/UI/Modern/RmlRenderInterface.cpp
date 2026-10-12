@@ -6,7 +6,9 @@
 
 #include "Core/Utilities/Log/MuLogger.h"
 
+#include <SDL3/SDL_error.h>
 #include <SDL3/SDL_gpu.h>
+#include <SDL3/SDL_surface.h>
 
 #include <algorithm>
 #include <cstring>
@@ -175,13 +177,38 @@ void RmlRenderInterface::ReleaseGeometry(::Rml::CompiledGeometryHandle geometry)
     delete reinterpret_cast<CompiledGeometry*>(geometry);
 }
 
+// PNG files (straight alpha) referenced from documents, e.g. <img src="icons/sword.png"/>
+// or "decorator: image(frame.png)". RmlUi passes the path resolved against the document.
 ::Rml::TextureHandle RmlRenderInterface::LoadTexture(::Rml::Vector2i& textureDimensions, const ::Rml::String& source)
 {
-    // Image files are not needed by the first HUD (styling is CSS only).
-    // A PNG loader is added together with the first skinned element.
-    (void)textureDimensions;
-    mu::log::Get("rmlui")->warn("image textures are not supported yet: {}", source);
-    return 0;
+    SDL_Surface* loaded = SDL_LoadPNG(source.c_str());
+    if (!loaded)
+    {
+        mu::log::Get("rmlui")->warn("could not load image '{}': {}", source, SDL_GetError());
+        return 0;
+    }
+
+    // RGBA32 is R,G,B,A in memory on every platform, matching the GPU texture format.
+    SDL_Surface* rgba = SDL_ConvertSurface(loaded, SDL_PIXELFORMAT_RGBA32);
+    SDL_DestroySurface(loaded);
+    if (!rgba)
+    {
+        mu::log::Get("rmlui")->warn("could not convert image '{}': {}", source, SDL_GetError());
+        return 0;
+    }
+
+    std::vector<std::uint8_t> pixels(static_cast<std::size_t>(rgba->w) * rgba->h * kBytesPerPixel);
+    const std::size_t rowBytes = static_cast<std::size_t>(rgba->w) * kBytesPerPixel;
+    for (int row = 0; row < rgba->h; ++row)
+    {
+        const auto* sourceRow = static_cast<const std::uint8_t*>(rgba->pixels) + static_cast<std::size_t>(row) * rgba->pitch;
+        std::memcpy(pixels.data() + static_cast<std::size_t>(row) * rowBytes, sourceRow, rowBytes);
+    }
+
+    textureDimensions = {rgba->w, rgba->h};
+    GpuTexture* texture = CreateGpuTexture(pixels.data(), rgba->w, rgba->h);
+    SDL_DestroySurface(rgba);
+    return reinterpret_cast<::Rml::TextureHandle>(texture);
 }
 
 ::Rml::TextureHandle RmlRenderInterface::GenerateTexture(::Rml::Span<const ::Rml::byte> source,

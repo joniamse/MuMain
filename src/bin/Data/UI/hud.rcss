@@ -8,6 +8,21 @@
     padding: 7dp 8dp 8dp 8dp;
 }
 
+#status:hover {
+    border-color: #3d5270;
+    border-top-color: #9cc2ee;
+}
+
+/* Compact mode (click the window): numbers hidden, slimmer gauges. */
+#status.compact .gauge {
+    height: 7dp;
+}
+
+#status.compact .gauge-value,
+#status.compact .identity .text-muted {
+    display: none;
+}
+
 /* ---- Header: level badge + name ---------------------------------------------------------- */
 
 .status-header {
@@ -20,9 +35,7 @@
     width: 26dp;
     height: 26dp;
     margin-right: 8dp;
-    border: 1dp #6f9bd1;
-    border-radius: 13dp;
-    decorator: vertical-gradient(#24364f #0e1520);
+    decorator: image(img/level-badge.png);
     text-align: center;
     line-height: 26dp;
     font-size: 11dp;

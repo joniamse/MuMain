@@ -1379,6 +1379,13 @@ MSG MainLoop()
             if (ImGui::GetCurrentContext() != nullptr)
                 ImGui_ImplSDL3_ProcessEvent(&event);
 #endif
+            // Clicks on interactive modern UI elements must not reach the game (no walking
+            // when pressing a button). Motion is forwarded but never consumed.
+            if (UI::Modern::ProcessEvent(event))
+            {
+                ++messageProcessed;
+                continue;
+            }
             switch (event.type)
             {
             case SDL_EVENT_QUIT:

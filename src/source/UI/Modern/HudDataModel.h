@@ -49,6 +49,8 @@ private:
     std::wstring m_heroId;
     ::Rml::String m_widthBuffer;
     ::Rml::String m_name;
+    // Toggled by clicking the status window ("toggle_compact"): hides numbers, slims gauges.
+    bool m_compact = false;
     int m_level = 0;
     int m_masterLevel = 0;
     Gauge m_life;

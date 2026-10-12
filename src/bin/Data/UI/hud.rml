@@ -5,7 +5,7 @@
     <link type="text/rcss" href="hud.rcss"/>
 </head>
 <body data-model="hud">
-    <div id="status" class="panel">
+    <div id="status" class="panel interactive" data-class-compact="compact" data-event-click="toggle_compact">
         <div class="status-header">
             <div class="level-badge">{{level}}</div>
             <div class="identity">
