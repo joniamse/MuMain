@@ -25,6 +25,7 @@
 #include "GameLogic/Skills/SkillManager.h"
 #include "UI/NewUI/HUD/Skills/SkillTooltip.h"
 #include "UI/Scaling/UITransform.h"
+#include "UI/Modern/ModernHud.h"
 #include "Core/Time/CTimCheck.h"
 #include "GameLogic/Social/MonkSystem.h"
 #include "GameLogic/Items/ItemCategories.h"
@@ -49,6 +50,21 @@ namespace
     constexpr float kRightBandStart = 488.0f;
     constexpr float kRightBandWidth = 152.0f;
     constexpr float kMenu3RightSourceX = 104.0f;
+
+    // Below this share of the maximum life the heartbeat sound plays.
+    constexpr float kLowLifeRatio = 0.2f;
+
+    // Independent of which HUD draws the life gauge, so it also plays with the modern HUD.
+    void PlayLowLifeWarning()
+    {
+        const bool isMaster = gCharacterManager.IsMasterLevel(Hero->Class);
+        const int lifeMax = isMaster ? Master_Level_Data.wMaxLife : static_cast<int>(CharacterAttribute->LifeMax);
+        const int life = std::clamp(static_cast<int>(CharacterAttribute->Life), 0, std::max(lifeMax, 0));
+        if (lifeMax > 0 && life > 0 && static_cast<float>(life) / static_cast<float>(lifeMax) < kLowLifeRatio)
+        {
+            PlayBuffer(SOUND_HEART);
+        }
+    }
 }
 
 SEASON3B::CNewUIMainFrameWindow::CNewUIMainFrameWindow()
@@ -258,6 +274,13 @@ void SEASON3B::CNewUIMainFrameWindow::RenderLeftRegion()
 void SEASON3B::CNewUIMainFrameWindow::RenderCenterRegion()
 {
     g_pSkillList->RenderCurrentSkillAndHotSkillList();
+    PlayLowLifeWarning();
+
+    // The modern HUD (UI/Modern) shows these gauges instead.
+    if (UI::Modern::IsEnabled())
+    {
+        return;
+    }
     RenderLifeMana();
     RenderGuageSD();
     RenderGuageAG();
@@ -325,14 +348,6 @@ void SEASON3B::CNewUIMainFrameWindow::RenderLifeMana()
         wLife = std::min<int>(std::max<int>(0, CharacterAttribute->Life), wLifeMax);
         wManaMax = CharacterAttribute->ManaMax;
         wMana = std::min<int>(std::max<int>(0, CharacterAttribute->Mana), wManaMax);
-    }
-
-    if (wLifeMax > 0)
-    {
-        if (wLife > 0 && (wLife / (float)wLifeMax) < 0.2f)
-        {
-            PlayBuffer(SOUND_HEART);
-        }
     }
 
     float fLife = 0.f;

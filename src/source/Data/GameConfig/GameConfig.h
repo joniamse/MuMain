@@ -68,6 +68,9 @@ public:
     std::wstring GetFontSelection() const { return m_fontSelection; }
     void SetFontSelection(const std::wstring& font);
 
+    // Modern (RmlUi) HUD instead of the legacy gauges. Needs a build with RmlUi.
+    bool GetModernHud() const { return m_modernHud; }
+
     // Chat commands - the favourites and the named templates of the command
     // window. They belong to the installation, not to a character.
     // A template is stored as "name|command|value|value|...".
@@ -127,6 +130,7 @@ private:
 
     std::wstring m_uiLocale;
     std::wstring m_fontSelection;
+    bool m_modernHud = true;
 
     int m_zoom;
     bool m_sortParticleDraws;

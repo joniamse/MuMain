@@ -2,6 +2,7 @@
 #include "UI/NewUI/NewUISystem.h"
 #include "UI/NewUI/Dialogs/NewUIMessageBox.h"
 #include "UI/Scaling/UITransform.h"
+#include "UI/Modern/ModernHud.h"
 
 #include "GameLogic/Items/PersonalShopTitleImp.h"
 #include "World/MapInfra/MapManager.h"
@@ -14,12 +15,9 @@ namespace
     constexpr int kLayoutBaseX = 640;
     constexpr int kLayoutPanelWidth = 190;
 
-#ifdef MU_RMLUI
-    // Below the modern status window (Data/UI/hud.rcss #status), which sits under the map name.
-    constexpr int kSystemLogTop = 104;
-#else
     constexpr int kSystemLogTop = 80;
-#endif
+    // Below the modern status window (Data/UI/hud.rcss #status), which sits under the map name.
+    constexpr int kSystemLogTopBelowModernHud = 104;
 
     constexpr int PanelColumnX(int columns)
     {
@@ -146,7 +144,8 @@ bool CNewUISystem::Create()
         return false;
 
     m_pNewSystemLogWindow = new CNewUISystemLogWindow;
-    if (false == m_pNewSystemLogWindow->Create(m_pNewUIMng, 0, kSystemLogTop))
+    const int systemLogTop = UI::Modern::IsEnabled() ? kSystemLogTopBelowModernHud : kSystemLogTop;
+    if (false == m_pNewSystemLogWindow->Create(m_pNewUIMng, 0, systemLogTop))
         return false;
 
     m_pNewOptionWindow = new CNewUIOptionWindow;

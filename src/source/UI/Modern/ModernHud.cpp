@@ -5,6 +5,7 @@
 #ifdef MU_RMLUI
 
 #include "Core/Utilities/Log/MuLogger.h"
+#include "Data/GameConfig/GameConfig.h"
 #include "UI/Modern/HudDataModel.h"
 #include "UI/Modern/RmlRenderInterface.h"
 #include "UI/Modern/RmlSystemInterface.h"
@@ -108,13 +109,18 @@ void UpdateLayout(::Rml::Context& context)
 }
 } // namespace
 
+bool IsEnabled()
+{
+    return !State().failed && GameConfig::GetInstance().GetModernHud();
+}
+
 void RenderHud()
 {
-    HudState& state = State();
-    if (state.failed)
+    if (!IsEnabled())
     {
         return;
     }
+    HudState& state = State();
     if (!state.initialised)
     {
         state.initialised = true;
@@ -153,6 +159,10 @@ void Shutdown()
 
 namespace UI::Modern
 {
+bool IsEnabled()
+{
+    return false;
+}
 void RenderHud() {}
 void Shutdown() {}
 } // namespace UI::Modern
