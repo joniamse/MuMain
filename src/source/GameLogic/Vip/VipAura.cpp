@@ -43,13 +43,12 @@ struct Textures
     GLuint orb = BITMAP_UNKNOWN;
     GLuint starSoft = BITMAP_UNKNOWN;
     GLuint starSharp = BITMAP_UNKNOWN;
-    GLuint starBurst = BITMAP_UNKNOWN;
     GLuint runes = BITMAP_UNKNOWN;
     GLuint vortex = BITMAP_UNKNOWN;
     GLuint vortexWide = BITMAP_UNKNOWN;
     GLuint pillar = BITMAP_UNKNOWN;
-    GLuint bolt = BITMAP_UNKNOWN;
-    GLuint flash = BITMAP_UNKNOWN;
+    std::array<GLuint, 2> flames{BITMAP_UNKNOWN, BITMAP_UNKNOWN};
+    GLuint shockwave = BITMAP_UNKNOWN;
     std::array<GLuint, 4> arcs{BITMAP_UNKNOWN, BITMAP_UNKNOWN, BITMAP_UNKNOWN, BITMAP_UNKNOWN};
 };
 
@@ -67,13 +66,12 @@ const Textures& GetTextures()
         loaded.orb = Load(L"aura_orb");
         loaded.starSoft = Load(L"aura_star_soft");
         loaded.starSharp = Load(L"aura_star_sharp");
-        loaded.starBurst = Load(L"aura_star_burst");
         loaded.runes = Load(L"aura_runes");
         loaded.vortex = Load(L"aura_vortex");
         loaded.vortexWide = Load(L"aura_vortex_wide");
         loaded.pillar = Load(L"aura_pillar");
-        loaded.bolt = Load(L"aura_bolt");
-        loaded.flash = Load(L"aura_flash");
+        loaded.flames = {Load(L"aura_flame_1"), Load(L"aura_flame_2")};
+        loaded.shockwave = Load(L"aura_shockwave");
         loaded.arcs = {Load(L"aura_arc_1"), Load(L"aura_arc_2"), Load(L"aura_arc_3"), Load(L"aura_arc_4")};
         return loaded;
     }();
@@ -232,31 +230,64 @@ void Decal(OBJECT* object, GLuint texture, float size, const Color& color, float
                              rotation, 1.f, height);
 }
 
-// Every few seconds a lightning bolt strikes the character from above, with a flash on the
-// ground. Each character has its own rhythm (from its object key).
-void Lightning(OBJECT* object, float time, const Color& color, const Textures& textures, float seed)
+// Flames licking up around the feet on a ring, each flickering on its own: it grows, sways and
+// fades in a short loop, and the ring turns slowly.
+void Flames(OBJECT* object, float time, int count, const Color& tint, const Textures& textures, float seed)
 {
-    constexpr float kPeriod = 5200.f;
-    constexpr float kStrike = 260.f;
+    vec3_t position, light;
+    for (int i = 0; i < count; ++i)
+    {
+        const GLuint texture = textures.flames[static_cast<std::size_t>(i) % textures.flames.size()];
+        if (!Has(texture))
+        {
+            continue;
+        }
+        const float cycle = std::fmod(time * 0.0011f + Hash(5, i, seed), 1.f);
+        const float angle = static_cast<float>(i) * kTwoPi / static_cast<float>(count) + time * 0.0004f;
+        const float radius = 48.f + 6.f * std::sinf(time * 0.003f + static_cast<float>(i));
+        position[0] = object->Position[0] + std::cosf(angle) * radius;
+        position[1] = object->Position[1] + std::sinf(angle) * radius;
+        position[2] = object->Position[2] + 20.f + cycle * 35.f;
+        // Fire colours, drawn towards the aura's tint: bright at the start, fading as it rises.
+        const float heat = std::sinf(cycle * kPi);
+        Vector(heat * (0.6f + 0.4f * tint.red), heat * (0.35f + 0.3f * tint.green), heat * (0.15f + 0.45f * tint.blue), light);
+        CreateSprite(static_cast<int>(texture), position, 0.45f + 0.25f * (1.f - cycle), light, object,
+                     std::sinf(time * 0.004f + static_cast<float>(i)) * 12.f);
+    }
+}
+
+// Pale ash drifting up slowly, higher than the embers, swaying more.
+void Ash(OBJECT* object, float time, int count, const Textures& textures, float seed)
+{
+    const GLuint texture = Or(textures.orb, BITMAP_LIGHT);
+    vec3_t position, light;
+    for (int i = 0; i < count; ++i)
+    {
+        const float cycle = std::fmod(time * (0.00012f + Hash(6, i, seed) * 0.0001f) + Hash(7, i, seed), 1.f);
+        const float angle = Hash(8, i, seed) * kTwoPi + cycle * 1.5f;
+        const float radius = 25.f + Hash(9, i, seed) * 70.f;
+        position[0] = object->Position[0] + std::cosf(angle) * radius + std::sinf(time * 0.0015f + i) * 20.f * cycle;
+        position[1] = object->Position[1] + std::sinf(angle) * radius;
+        position[2] = object->Position[2] + 30.f + cycle * 280.f;
+        const float grey = 0.35f * std::sinf(cycle * kPi);
+        Vector(grey, grey * 0.95f, grey * 0.9f, light);
+        CreateSprite(static_cast<int>(texture), position, 0.06f + Hash(10, i, seed) * 0.04f, light, object);
+    }
+}
+
+// Every few seconds a ring of fire spreads from the feet over the ground and fades out.
+void Shockwave(OBJECT* object, float time, const Color& tint, const Textures& textures, float seed)
+{
+    constexpr float kPeriod = 4200.f;
+    constexpr float kLength = 900.f;
     const float phase = std::fmod(time + seed * 997.f, kPeriod);
-    if (phase > kStrike * 2.f)
+    if (phase > kLength)
     {
         return;
     }
-    const float fade = 1.f - phase / (kStrike * 2.f);
-    if (phase < kStrike && Has(textures.bolt))
-    {
-        // Two flickering frames: the bolt jumps a little.
-        const float jitter = std::fmod(phase, 80.f) < 40.f ? 0.f : 8.f;
-        vec3_t position, light;
-        VectorCopy(object->Position, position);
-        position[0] += jitter;
-        position[2] += 170.f;
-        Vector(0.85f + color.red * 0.15f, 0.85f + color.green * 0.15f, 1.f, light);
-        CreateSprite(static_cast<int>(textures.bolt), position, 4.2f, light, object);
-    }
-    Decal(object, textures.flash, 2.4f, kWhiteGold, fade * 0.9f, seed);
-    Glow(object, 60.f, 4.0f, color, fade * 0.8f);
+    const float t = phase / kLength;
+    const Color fire{0.6f + 0.4f * tint.red, 0.4f + 0.3f * tint.green, 0.2f + 0.5f * tint.blue};
+    Decal(object, textures.shockwave, 0.6f + t * 2.6f, fire, (1.f - t) * 0.9f, seed);
 }
 
 void RenderPlata(OBJECT* object, float time, const Textures& textures)
@@ -292,8 +323,8 @@ void RenderPlatino(OBJECT* object, float time, const Textures& textures, float s
 }
 
 // The most glorious: a prismatic vortex and two sigils turning on the ground, a column of light,
-// a halo over the head, crackling electricity, rising embers and star bursts and, every few
-// seconds, a lightning bolt from the sky.
+// a halo over the head, crackling electricity, a ring of flames, rising embers and ash and,
+// every few seconds, a ring of fire spreading over the ground.
 void RenderDiamante(OBJECT* object, float time, const Textures& textures, float seed)
 {
     const float pulse = Pulse(time, 0.0025f, 0.2f);
@@ -315,9 +346,10 @@ void RenderDiamante(OBJECT* object, float time, const Textures& textures, float 
     Decal(object, textures.halo, 0.55f, kWhiteGold, Pulse(time, 0.004f, 0.15f), time * 0.01f, 205.f);
 
     Electricity(object, time, 3, main, textures, seed);
+    Flames(object, time, 10, main, textures, seed);
     Embers(object, time, 24, textures, seed);
-    Motes(object, time, 8, kWhiteGold, Or(textures.starBurst, BITMAP_SHINY), 0.4f, 240.f);
-    Lightning(object, time, main, textures, seed);
+    Ash(object, time, 18, textures, seed);
+    Shockwave(object, time, main, textures, seed);
 }
 } // namespace
 
