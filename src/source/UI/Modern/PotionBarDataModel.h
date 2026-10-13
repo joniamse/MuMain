@@ -15,7 +15,9 @@ namespace UI::Modern
 //   slots[] PotionView { hotkey, key, filled, icon, rect, count, has_count }
 //           icon/rect feed <img data-attr-src data-attr-rect>
 // Events:
-//   use(hotkey)   uses the item, like pressing the key
+//   use(hotkey)   uses the item, like pressing the key; while an item taken from the inventory
+//                 is carried, assigns it to the hotkey instead and puts it back
+//   drop(hotkey)  a release over the slot: assigns a carried item (drag from the inventory)
 class PotionBarDataModel
 {
 public:

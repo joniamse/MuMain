@@ -52,7 +52,8 @@
     <!-- Potion bar: item hotkeys Q, W, E, R (data model "potions"); a click uses the item -->
     <div id="potionbar" class="panel" data-model="potions">
         <div class="potion-slot interactive" data-for="slot : slots"
-             data-class-empty="!slot.filled" data-event-click="use(slot.hotkey)">
+             data-class-empty="!slot.filled" data-event-click="use(slot.hotkey)"
+             data-event-mouseup="drop(slot.hotkey)">
             <img data-if="slot.filled" data-attr-src="slot.icon" data-attr-rect="slot.rect"/>
             <span class="potion-count" data-if="slot.has_count">{{slot.count}}</span>
             <span class="slot-key">{{slot.key}}</span>
