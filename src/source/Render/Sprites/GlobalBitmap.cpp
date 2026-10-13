@@ -668,6 +668,20 @@ std::wstring ResolveModernSkin(const std::wstring& filename)
     std::ifstream probe(NarrowPath(packed), std::ios::binary);
     return probe ? candidate : filename;
 }
+
+// A modern skin texture can be drawn at 2, 4 or 8 times the size of the classic one (byte 0 of
+// the file, which the classic files leave 0). The game's code measures textures in classic
+// pixels, so the bitmap reports its size divided by that factor: same slicing, finer detail.
+int SkinTexelScale(const std::wstring& filename, std::uint8_t marker)
+{
+    std::wstring lower = filename;
+    std::transform(lower.begin(), lower.end(), lower.begin(), [](wchar_t c) { return std::towlower(c); });
+    if (lower.find(L"interface\\modern\\") == std::wstring::npos)
+    {
+        return 1;
+    }
+    return marker == 2 || marker == 4 || marker == 8 ? marker : 1;
+}
 } // namespace
 
 bool CGlobalBitmap::LoadImage(GLuint uiBitmapIndex, const std::wstring& requestedFilename, GLuint uiFilter,
@@ -1041,6 +1055,10 @@ bool CGlobalBitmap::OpenJpegTurbo(GLuint uiBitmapIndex, const std::wstring& file
         return false;
     }
 
+    const int texelScale = SkinTexelScale(filename, jpegBuf[0]);
+    pNewBitmap->Width /= static_cast<float>(texelScale);
+    pNewBitmap->Height /= static_cast<float>(texelScale);
+
     SDL_GPUTexture* rawTexture = pNewBitmap->sdlTexture;
     SDL_GPUSampler* rawSampler = pNewBitmap->sdlSampler;
     m_mapBitmap.insert(type_bitmap_map::value_type(uiBitmapIndex, std::move(pNewBitmap)));
@@ -1111,6 +1129,10 @@ bool CGlobalBitmap::OpenTga(GLuint uiBitmapIndex, const std::wstring& filename, 
         g_ErrorReport.Write(L"SDL texture upload failed %ls (%d)\r\n", filename.c_str(), uiBitmapIndex);
         return false;
     }
+
+    const int texelScale = SkinTexelScale(filename, pakBuffer[0]);
+    pNewBitmap->Width /= static_cast<float>(texelScale);
+    pNewBitmap->Height /= static_cast<float>(texelScale);
 
     SDL_GPUTexture* rawTexture = pNewBitmap->sdlTexture;
     SDL_GPUSampler* rawSampler = pNewBitmap->sdlSampler;
