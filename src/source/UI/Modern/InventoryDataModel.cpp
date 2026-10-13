@@ -48,6 +48,18 @@ const char* ItemKind(const ITEM& item)
     return item.Level >= 7 ? "high" : "normal";
 }
 
+// The classic warning tints of equipped items, as style classes.
+const char* WarningKind(unsigned int color)
+{
+    switch (color)
+    {
+    case 0: return "";
+    case 0x40FFFF00u: return "worn";       // half durability
+    case 0x40FF8000u: return "worn-more";  // 30%
+    default: return "broken";              // 20%, none left or unusable
+    }
+}
+
 // Same tiers as the legacy zen colours (getGoldColor).
 const char* ZenTier(DWORD zen)
 {
@@ -115,6 +127,7 @@ bool InventoryDataModel::Bind(::Rml::Context& context)
         box.RegisterMember("kind", &Box::kind);
         box.RegisterMember("label", &Box::label);
         box.RegisterMember("tip", &Box::tip);
+        box.RegisterMember("warning", &Box::warning);
         box.RegisterMember("filled", &Box::filled);
         box.RegisterMember("active", &Box::active);
         box.RegisterMember("locked", &Box::locked);
@@ -209,11 +222,12 @@ void InventoryDataModel::Refresh()
             const ITEM& item = CharacterMachine->Equipment[i];
             box.filled = item.Type >= 0;
             box.kind = box.filled ? ItemKind(item) : "empty";
+            box.warning = WarningKind(layout.equipmentWarning[i]);
             box.label = kSlotLabels[static_cast<std::size_t>(i)];
             view.slots.push_back(std::move(box));
         }
 
-        AddButton(view.buttons, mapper, layout.exit, "exit", "Cerrar", "Cerrar (I / V)");
+        AddButton(view.buttons, mapper, layout.exit, "exit", "×", "Cerrar (I / V)");
         AddButton(view.buttons, mapper, layout.repair, "repair", "Reparar", "Reparar items (L)", layout.repairing);
         AddButton(view.buttons, mapper, layout.myShop, "shop", "Tienda",
                   layout.myShopCloses ? "Cerrar tienda personal (S)" : "Abrir tienda personal (S)", layout.myShopCloses,

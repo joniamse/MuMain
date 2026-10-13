@@ -7,21 +7,23 @@
 <!-- Drawn under the legacy inventory window, which draws the items over it and takes the
      clicks: this document only takes mouse motion (hover styles and tooltips). -->
 <body data-model="inventory">
-    <div id="inventory" class="panel" data-if="visible"
+    <div id="inventory" data-if="visible"
          data-style-left="panel_left + 'px'" data-style-top="panel_top + 'px'"
          data-style-width="panel_width + 'px'" data-style-height="panel_height + 'px'">
         <div class="inv-header">
-            <div class="text-title">Inventario</div>
+            <div class="inv-title">INVENTARIO</div>
             <div class="inv-options">
-                <span class="inv-option" data-class-on="set_active">Set</span>
-                <span class="inv-option" data-class-on="socket_active">Socket</span>
+                <span class="inv-option" data-class-on="set_active">SET</span>
+                <span class="inv-option" data-class-on="socket_active">SOCKET</span>
             </div>
         </div>
 
-        <div class="inv-equipment"></div>
-        <div data-for="slot : slots" data-attr-class="'slot ' + slot.kind" data-class-filled="slot.filled"
+        <div class="inv-section equipment"></div>
+        <div data-for="slot : slots" data-attr-class="'slot ' + slot.kind + ' ' + slot.warning"
+             data-class-filled="slot.filled"
              data-style-left="slot.left + 'px'" data-style-top="slot.top + 'px'"
              data-style-width="slot.width + 'px'" data-style-height="slot.height + 'px'">
+            <div class="slot-shine"></div>
             <span class="slot-label" data-if="!slot.filled">{{slot.label}}</span>
         </div>
 
@@ -34,9 +36,10 @@
                  data-style-width="item.width + 'px'" data-style-height="item.height + 'px'"></div>
         </div>
 
-        <div class="inv-zen" data-attr-class="'inv-zen ' + zen_tier">
-            <span class="zen-label">ZEN</span>
+        <div data-attr-class="'inv-zen ' + zen_tier">
+            <span class="zen-coin"></span>
             <span class="zen-value">{{zen}}</span>
+            <span class="zen-label">ZEN</span>
         </div>
 
         <div data-for="button : buttons" data-attr-class="'inv-button interactive ' + button.kind"

@@ -94,6 +94,8 @@ namespace SEASON3B
 
         bool m_bRepairEnableLevel;
         bool m_bMyShopOpen;
+        // The slots and buttons are placed for the modern look (see ApplyLayout).
+        bool m_bModernLayout;
 
         // The repair and personal-shop buttons hide while a window that trades
         // or stores items is open.
@@ -200,6 +202,8 @@ namespace SEASON3B
                 bool shown = false;
             };
             Box equipment[MAX_EQUIPMENT_INDEX];
+            // The classic warning tint of each equipped item (worn out, unusable), 0 for none.
+            unsigned int equipmentWarning[MAX_EQUIPMENT_INDEX]{};
             Box exit, repair, myShop, expand;
             bool myShopLocked = false;
             // The shop button closes the personal shop (else it opens it).
@@ -216,6 +220,10 @@ namespace SEASON3B
         void DeleteEquippingEffect();
         void DeleteEquippingEffectBug(ITEM* pItem);
         void SetButtonInfo();
+        void SyncLayout();
+        void ApplyLayout();
+        void SetModernEquipmentSlots();
+        unsigned int GetEquipmentWarningColor(int slot) const;
 
     private:
         void LoadImages() const;

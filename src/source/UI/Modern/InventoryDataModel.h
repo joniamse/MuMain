@@ -18,7 +18,7 @@ namespace UI::Modern
 //   visible, panel_left, panel_top, panel_width, panel_height
 //   zen, zen_tier ('low' | 'mid' | 'high' | 'max'), set_active, socket_active
 //   grid (Box), cells[] (one int per square, for data-for)
-//   items[], slots[], buttons[]  Box { left, top, width, height, kind, label, tip, filled, active, locked }
+//   items[], slots[], buttons[]  Box { left, top, width, height, kind, label, tip, warning, filled, active, locked }
 //     items:   kind 'normal' | 'high' (+7 and up) | 'excellent' | 'ancient'
 //     slots:   label of the empty slot, filled, kind of the equipped item
 //     buttons: kind 'exit' | 'repair' | 'shop' | 'expand', active (repair mode on / shop open)
@@ -34,6 +34,8 @@ public:
         ::Rml::String kind;
         ::Rml::String label;
         ::Rml::String tip;
+        // Slots: "" | "worn" | "worn-more" | "broken".
+        ::Rml::String warning;
         bool filled = false;
         bool active = false;
         bool locked = false;

@@ -60,6 +60,7 @@ CNewUIMyInventory::CNewUIMyInventory()
 
     m_bRepairEnableLevel = false;
     m_bMyShopOpen = false;
+    m_bModernLayout = false;
 }
 
 CNewUIMyInventory::~CNewUIMyInventory()
@@ -422,13 +423,39 @@ void CNewUIMyInventory::SetPos(int x, int y)
     m_Pos.x = x;
     m_Pos.y = y;
 
-    SetEquipmentSlotInfo();
-
     m_pNewInventoryCtrl->SetPos(x + 15, y + 200);
-    m_BtnExit.SetPos(m_Pos.x + 13, m_Pos.y + 391);
-    m_BtnRepair.SetPos(m_Pos.x + 50, m_Pos.y + 391);
-    m_BtnMyShop.SetPos(m_Pos.x + 87, m_Pos.y + 391);
-    m_BtnExpand.SetPos(m_Pos.x + 87 + 37, m_Pos.y + 391);
+    ApplyLayout();
+}
+
+void CNewUIMyInventory::SyncLayout()
+{
+    if (UI::Modern::AreWindowsModern() != m_bModernLayout)
+    {
+        ApplyLayout();
+    }
+}
+
+// Places the equipment slots and the buttons: the classic layout matches the classic images
+// (whose click areas overlap); the modern one has its own grid without overlaps, with the close
+// button in the title bar.
+void CNewUIMyInventory::ApplyLayout()
+{
+    m_bModernLayout = UI::Modern::AreWindowsModern();
+    SetEquipmentSlotInfo();
+    if (m_bModernLayout)
+    {
+        m_BtnExit.ChangeButtonInfo(m_Pos.x + 166, m_Pos.y + 7, 17, 17);
+        m_BtnRepair.ChangeButtonInfo(m_Pos.x + 12, m_Pos.y + 398, 54, 22);
+        m_BtnMyShop.ChangeButtonInfo(m_Pos.x + 68, m_Pos.y + 398, 54, 22);
+        m_BtnExpand.ChangeButtonInfo(m_Pos.x + 124, m_Pos.y + 398, 54, 22);
+    }
+    else
+    {
+        m_BtnExit.ChangeButtonInfo(m_Pos.x + 13, m_Pos.y + 391, 36, 29);
+        m_BtnRepair.ChangeButtonInfo(m_Pos.x + 50, m_Pos.y + 391, 36, 29);
+        m_BtnMyShop.ChangeButtonInfo(m_Pos.x + 87, m_Pos.y + 391, 36, 29);
+        m_BtnExpand.ChangeButtonInfo(m_Pos.x + 87 + 37, m_Pos.y + 391, 36, 29);
+    }
 }
 
 const POINT& CNewUIMyInventory::GetPos() const
@@ -463,6 +490,7 @@ void CNewUIMyInventory::SetRepairMode(bool bRepair)
 
 bool CNewUIMyInventory::UpdateMouseEvent()
 {
+    SyncLayout();
     if (m_pNewInventoryCtrl && !m_pNewInventoryCtrl->UpdateMouseEvent())
         return false;
 
@@ -700,7 +728,8 @@ bool CNewUIMyInventory::Update()
 bool CNewUIMyInventory::Render()
 {
     // The modern look (UI::Modern) draws the frame, slots, texts and buttons under this window.
-    const bool modern = UI::Modern::AreWindowsModern();
+    SyncLayout();
+    const bool modern = m_bModernLayout;
     EnableAlphaTest();
     if (!modern)
     {
@@ -1106,8 +1135,37 @@ void CNewUIMyInventory::DeleteEquippingEffect()
     SetCharacterClass(Hero);
 }
 
+void CNewUIMyInventory::SetModernEquipmentSlots()
+{
+    // Three columns of 42 (x 10, 74, 138) and small slots of 20 in the gaps between them.
+    const auto place = [this](int slot, int x, int y, int width, int height) {
+        m_EquipmentSlots[slot].x = m_Pos.x + x;
+        m_EquipmentSlots[slot].y = m_Pos.y + y;
+        m_EquipmentSlots[slot].width = width;
+        m_EquipmentSlots[slot].height = height;
+    };
+    place(EQUIPMENT_HELPER, 10, 46, 42, 40);
+    place(EQUIPMENT_HELM, 74, 46, 42, 40);
+    place(EQUIPMENT_WING, 138, 46, 42, 40);
+    place(EQUIPMENT_WEAPON_RIGHT, 10, 90, 42, 60);
+    place(EQUIPMENT_ARMOR, 74, 90, 42, 60);
+    place(EQUIPMENT_WEAPON_LEFT, 138, 90, 42, 60);
+    place(EQUIPMENT_AMULET, 53, 90, 20, 20);
+    place(EQUIPMENT_GLOVES, 10, 154, 42, 40);
+    place(EQUIPMENT_PANTS, 74, 154, 42, 40);
+    place(EQUIPMENT_BOOTS, 138, 154, 42, 40);
+    place(EQUIPMENT_RING_RIGHT, 53, 154, 20, 20);
+    place(EQUIPMENT_RING_LEFT, 117, 154, 20, 20);
+}
+
 void CNewUIMyInventory::SetEquipmentSlotInfo()
 {
+    if (m_bModernLayout)
+    {
+        SetModernEquipmentSlots();
+        return;
+    }
+
     m_EquipmentSlots[EQUIPMENT_HELPER].x = m_Pos.x + 15;
     m_EquipmentSlots[EQUIPMENT_HELPER].y = m_Pos.y + 44;
     m_EquipmentSlots[EQUIPMENT_HELPER].width = 46;
@@ -1266,6 +1324,42 @@ void CNewUIMyInventory::RenderFrame() const
     RenderImage(IMAGE_INVENTORY_BACK_BOTTOM, x, y + INVENTORY_HEIGHT - 45, 190.f, 45.f);
 }
 
+// The tint of a worn-out or unusable equipped item; 0 when it needs none.
+unsigned int CNewUIMyInventory::GetEquipmentWarningColor(int slot) const
+{
+    ITEM* pEquipmentItemSlot = &CharacterMachine->Equipment[slot];
+    if (pEquipmentItemSlot->Type == -1)
+        return 0;
+
+    ITEM_ATTRIBUTE* pItemAttr = &ItemAttribute[pEquipmentItemSlot->Type];
+    const int iLevel = pEquipmentItemSlot->Level;
+    const int iMaxDurability = CalcMaxDurability(pEquipmentItemSlot, pItemAttr, iLevel);
+
+    if (slot == EQUIPMENT_RING_LEFT || slot == EQUIPMENT_RING_RIGHT)
+    {
+        if (pEquipmentItemSlot->Type == ITEM_WIZARDS_RING && iLevel == 1
+            || iLevel == 2)
+        {
+            return 0;
+        }
+    }
+
+    if ((pEquipmentItemSlot->bPeriodItem == true) && (pEquipmentItemSlot->bExpiredPeriod == false))
+        return 0;
+
+    if (pEquipmentItemSlot->Durability <= 0)
+        return 0x40FF0000u;
+    if (pEquipmentItemSlot->Durability <= (iMaxDurability * 0.2f))
+        return 0x40FF2600u;
+    if (pEquipmentItemSlot->Durability <= (iMaxDurability * 0.3f))
+        return 0x40FF8000u;
+    if (pEquipmentItemSlot->Durability <= (iMaxDurability * 0.5f))
+        return 0x40FFFF00u;
+    if (IsEquipable(slot, pEquipmentItemSlot) == false)
+        return 0x40FF0000u;
+    return 0;
+}
+
 void CNewUIMyInventory::RenderEquippedItem()
 {
     for (int i = 0; i < MAX_EQUIPMENT_INDEX; i++)
@@ -1280,50 +1374,18 @@ void CNewUIMyInventory::RenderEquippedItem()
         if ((i == EQUIPMENT_GLOVES) && (gCharacterManager.GetBaseClass(Hero->Class) == CLASS_RAGEFIGHTER))
             continue;
 
-        EnableAlphaTest();
+        // The modern look draws the slot and shows the warning in its frame.
+        if (m_bModernLayout)
+            continue;
 
-        if (!UI::Modern::AreWindowsModern())
-        {
-            RenderImage(m_EquipmentSlots[i].dwBgImage, m_EquipmentSlots[i].x, m_EquipmentSlots[i].y,
-                m_EquipmentSlots[i].width, m_EquipmentSlots[i].height);
-        }
+        EnableAlphaTest();
+        RenderImage(m_EquipmentSlots[i].dwBgImage, m_EquipmentSlots[i].x, m_EquipmentSlots[i].y,
+            m_EquipmentSlots[i].width, m_EquipmentSlots[i].height);
         DisableAlphaBlend();
 
-        ITEM* pEquipmentItemSlot = &CharacterMachine->Equipment[i];
-        if (pEquipmentItemSlot->Type != -1)
+        const unsigned int overlayColor = GetEquipmentWarningColor(i);
+        if (overlayColor != 0)
         {
-            ITEM_ATTRIBUTE* pItemAttr = &ItemAttribute[pEquipmentItemSlot->Type];
-            const int iLevel = pEquipmentItemSlot->Level;
-            const int iMaxDurability = CalcMaxDurability(pEquipmentItemSlot, pItemAttr, iLevel);
-
-            if (i == EQUIPMENT_RING_LEFT || i == EQUIPMENT_RING_RIGHT)
-            {
-                if (pEquipmentItemSlot->Type == ITEM_WIZARDS_RING && iLevel == 1
-                    || iLevel == 2)
-                {
-                    continue;
-                }
-            }
-
-            if ((pEquipmentItemSlot->bPeriodItem == true) && (pEquipmentItemSlot->bExpiredPeriod == false))
-                continue;
-
-            unsigned int overlayColor;
-            if (pEquipmentItemSlot->Durability <= 0)
-                overlayColor = 0x40FF0000u;
-            else if (pEquipmentItemSlot->Durability <= (iMaxDurability * 0.2f))
-                overlayColor = 0x40FF2600u;
-            else if (pEquipmentItemSlot->Durability <= (iMaxDurability * 0.3f))
-                overlayColor = 0x40FF8000u;
-            else if (pEquipmentItemSlot->Durability <= (iMaxDurability * 0.5f))
-                overlayColor = 0x40FFFF00u;
-            else if (IsEquipable(i, pEquipmentItemSlot) == false)
-                overlayColor = 0x40FF0000u;
-            else
-            {
-                continue;
-            }
-
             EnableAlphaTest();
             RenderColorQuadARGB(m_EquipmentSlots[i].x + 1, m_EquipmentSlots[i].y,
                 m_EquipmentSlots[i].width - 4, m_EquipmentSlots[i].height - 4, overlayColor);
@@ -1936,6 +1998,7 @@ void CNewUIMyInventory::GetModernLayout(ModernLayout& layout)
         // Same slots as RenderEquippedItem: no helm for the Dark Lord, no gloves for the Rage Fighter.
         layout.equipment[i].shown = !(i == EQUIPMENT_HELM && baseClass == CLASS_DARK)
                                     && !(i == EQUIPMENT_GLOVES && baseClass == CLASS_RAGEFIGHTER);
+        layout.equipmentWarning[i] = GetEquipmentWarningColor(i);
     }
 
     const auto describe = [&](CNewUIButton& button, bool shown, ModernLayout::Box& box) {
