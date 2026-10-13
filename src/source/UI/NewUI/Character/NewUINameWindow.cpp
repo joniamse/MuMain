@@ -13,6 +13,8 @@
 #include "UI/Legacy/UIControls.h"
 #include "GameLogic/Events/CSChaosCastle.h"
 #include "GameLogic/Items/PersonalShopTitleImp.h"
+#include "Audio/DSPlaySound.h"
+#include "Network/Server/WSclient.h"
 #include "GameLogic/Events/MatchEvent.h"
 #include "World/MapInfra/MapManager.h"
 #include "Camera/CameraProjection.h"
@@ -126,6 +128,16 @@ void SEASON3B::CNewUINameWindow::SetPos(int x, int y)
 
 bool SEASON3B::CNewUINameWindow::UpdateMouseEvent()
 {
+    // A click on the title of another player's personal store opens it, like in the original game.
+    if (SEASON3B::IsPress(VK_LBUTTON) && Hero != nullptr)
+    {
+        if (CHARACTER* seller = FindShopTitleAtMouse())
+        {
+            SocketClient->ToGameServer()->SendPlayerShopItemListRequest(seller->Key, MU_C16(seller->ID));
+            PlayBuffer(SOUND_CLICK01);
+            return false;
+        }
+    }
     return true;
 }
 

@@ -9,6 +9,7 @@
 #include "Engine/Object/ZzzCharacter.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "Engine/Object/ZzzObject.h"
+#include "GameLogic/Items/PersonalShopTitleImp.h"
 #include "Render/Terrain/ZzzLodTerrain.h"
 #include "UI/Legacy/UIControls.h"
 #include "UI/NewUI/NewUICommon.h"
@@ -153,8 +154,9 @@ bool Update(CHARACTER* hero, OBJECT* heroObject)
 {
     float screenX = 0.0f;
     float screenY = 0.0f;
-    const bool wantsMove =
-        IsEnabled() && !IsModifierHeld() && !IsTyping() && ReadDirection(screenX, screenY);
+    // A character with its personal store open doesn't walk.
+    const bool wantsMove = IsEnabled() && !IsModifierHeld() && !IsTyping() && !IsShopInViewport(hero)
+                           && ReadDirection(screenX, screenY);
     if (!wantsMove)
     {
         StopIfMoving(hero);

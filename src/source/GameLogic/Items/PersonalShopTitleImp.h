@@ -105,6 +105,10 @@ public:
     void Update();
     void Draw();
 
+    // The player whose shop title is under the window position (in window pixels), other
+    // than the hero; null when there is none. Clicking a title opens that player's store.
+    CHARACTER* FindShopTitleAt(float windowX, float windowY) const;
+
     static CPersonalShopTitleImp* GetObjPtr(); //. singleton obj pointer
 
 protected:
@@ -179,6 +183,10 @@ inline bool IsShopTitleHighlight(CHARACTER* pPlayer)
     return CPersonalShopTitleImp::GetObjPtr()->IsShopTitleHighlight(pPlayer);
 }
 
+inline CHARACTER* FindShopTitleAtMouse()
+{
+    return CPersonalShopTitleImp::GetObjPtr()->FindShopTitleAt(g_fWindowMouseX, g_fWindowMouseY);
+}
 inline bool IsShopInViewport(CHARACTER* pPlayer)
 {
     return CPersonalShopTitleImp::GetObjPtr()->IsInViewport(pPlayer);

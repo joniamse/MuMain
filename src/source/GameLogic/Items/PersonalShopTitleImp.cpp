@@ -274,6 +274,8 @@ void CPersonalShopTitleImp::Draw()
         RevisionPosition();
 
         auto isHighlightTime = static_cast<INT64>(WorldTime / 265) % 2 == 0;
+        // The title under the mouse lights up: clicking it opens the store.
+        const CHARACTER* hovered = FindShopTitleAt(g_fWindowMouseX, g_fWindowMouseY);
 
         auto mi = m_listShopTitleDrawObj.begin();
         for (; mi != m_listShopTitleDrawObj.end(); ++mi)
@@ -290,6 +292,10 @@ void CPersonalShopTitleImp::Draw()
                     pDrawObj->EnableHighlight();
                 }
             }
+            else if (mi->first == hovered)
+            {
+                pDrawObj->EnableHighlight();
+            }
             else
             {
                 pDrawObj->DisableHighlight();
@@ -301,6 +307,30 @@ void CPersonalShopTitleImp::Draw()
             }
         }
     }
+}
+
+CHARACTER* CPersonalShopTitleImp::FindShopTitleAt(float windowX, float windowY) const
+{
+    if (!IsShowShopTitles())
+    {
+        return nullptr;
+    }
+
+    for (const auto& [player, drawObj] : m_listShopTitleDrawObj)
+    {
+        if (player == Hero || !drawObj->IsVisible())
+        {
+            continue;
+        }
+
+        RECT rect;
+        drawObj->GetBoxRect(rect);
+        if (windowX >= rect.left && windowX < rect.right && windowY >= rect.top && windowY < rect.bottom)
+        {
+            return player;
+        }
+    }
+    return nullptr;
 }
 
 CPersonalShopTitleImp* CPersonalShopTitleImp::GetObjPtr()

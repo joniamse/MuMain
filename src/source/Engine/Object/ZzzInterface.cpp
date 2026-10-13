@@ -2863,6 +2863,21 @@ void MoveHero()
     if (c->Object.Live == 0)
         return;
 
+    // With the personal store open the character stays where it is, like in the original game.
+    if (IsShopInViewport(c))
+    {
+        if (MouseLButtonPush && !MouseOnWindow)
+        {
+            static DWORD s_lastStoreWarning = 0;
+            if (GetTickCount() - s_lastStoreWarning > 3000)
+            {
+                s_lastStoreWarning = GetTickCount();
+                g_pSystemLogBox->AddText(L"Con la tienda personal abierta no puedes moverte. Ciérrala o usa /offstore.", SEASON3B::TYPE_SYSTEM_MESSAGE);
+            }
+        }
+        return;
+    }
+
     if (HandleHeroPositionSlide(c))
     {
         return;
