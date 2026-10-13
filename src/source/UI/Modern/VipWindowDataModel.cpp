@@ -11,6 +11,7 @@
 #include "Network/Server/WSclient.h"
 #include "UI/Modern/RmlFormat.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cwchar>
 #include <string>
@@ -144,6 +145,10 @@ bool VipWindowDataModel::Bind(::Rml::Context& context)
     constructor.Bind("notice", &m_notice);
     constructor.Bind("has_notice", &m_hasNotice);
     constructor.Bind("loading", &m_loading);
+    constructor.Bind("has_offstore", &m_hasOffStore);
+    constructor.Bind("offstore_title", &m_offStoreTitle);
+    constructor.Bind("offstore_left", &m_offStoreLeft);
+    constructor.Bind("offstore_sales", &m_offStoreSales);
     constructor.Bind("levels", &m_levels);
     constructor.Bind("packages", &m_packages);
 
@@ -202,6 +207,10 @@ bool VipWindowDataModel::HandleNotice(std::wstring_view text)
     {
         ReadPackage(fields);
     }
+    else if (kind == L"T")
+    {
+        ReadOffStore(fields);
+    }
     else if (kind == L"M")
     {
         m_notice = Text(fields, 1);
@@ -233,6 +242,24 @@ void VipWindowDataModel::Tick()
         return;
     }
     m_shownMinute = minute;
+
+    if (m_hasOffStore)
+    {
+        if (m_offStoreExpiresUnix < 0)
+        {
+            m_offStoreLeft = "Sin limite";
+        }
+        else
+        {
+            const std::int64_t left = std::max<std::int64_t>(0, m_offStoreExpiresUnix - now);
+            m_offStoreLeft = left == 0 ? "Cerrandose"
+                                       : std::to_string(left / 3600) + "h " + std::to_string(left % 3600 / 60) + "m";
+        }
+        if (m_handle)
+        {
+            m_handle.DirtyVariable("offstore_left");
+        }
+    }
 
     if (m_level == 0 || m_expiresUnix <= now)
     {
@@ -274,6 +301,7 @@ void VipWindowDataModel::Begin()
     m_packages.clear();
     m_notice.clear();
     m_hasNotice = false;
+    m_hasOffStore = false;
 }
 
 // S|balance|level|scope|expiresUnix|character|vault|recharge
@@ -340,6 +368,19 @@ void VipWindowDataModel::ReadPackage(const std::vector<std::wstring_view>& field
     package.total = static_cast<int>(Number(fields, 6));
     package.hasBonus = package.bonus > 0;
     m_packages.push_back(std::move(package));
+}
+
+// T|character|store|expiresUnix|soldItems|soldZen - the window shows the first one.
+void VipWindowDataModel::ReadOffStore(const std::vector<std::wstring_view>& fields)
+{
+    if (m_hasOffStore)
+    {
+        return;
+    }
+    m_hasOffStore = true;
+    m_offStoreTitle = "\"" + Text(fields, 2) + "\" de " + Text(fields, 1);
+    m_offStoreExpiresUnix = Number(fields, 3);
+    m_offStoreSales = std::to_string(Number(fields, 4)) + " vendidos, " + Grouped(Number(fields, 5)) + " zen";
 }
 
 void VipWindowDataModel::Finish()

@@ -36,6 +36,13 @@
                 </div>
             </div>
 
+            <div class="offstore" data-if="has_offstore">
+                <span class="offstore-label">Tienda offline</span>
+                <span>{{offstore_title}}</span>
+                <span class="offstore-left">quedan {{offstore_left}}</span>
+                <span class="text-muted">{{offstore_sales}}</span>
+            </div>
+
             <div class="notice" data-if="has_notice">{{notice}}</div>
 
             <div class="section-title">Membresías <span class="text-muted">30 días · Plata, Oro y Platino aplican al personaje actual; Diamante a toda la cuenta</span></div>
@@ -69,7 +76,7 @@
 
             <div class="vip-footer">
                 <span class="text-muted loading" data-if="loading">Consultando al servidor…</span>
-                <span class="text-muted" data-if="!loading">Comandos: /vip · /fichas · /baul · /offstore · /entradas</span>
+                <span class="text-muted" data-if="!loading">Comandos: /vip · /fichas · /baul · /tienda · /entradas</span>
                 <div class="button" data-event-click="refresh">Actualizar</div>
                 <div class="button" data-event-click="close">Cerrar</div>
             </div>

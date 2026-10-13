@@ -132,6 +132,31 @@
     border-radius: 3dp;
 }
 
+.offstore {
+    display: flex;
+    align-items: center;
+    margin-top: 8dp;
+    padding: 5dp 8dp;
+    font-size: 11dp;
+    border-radius: 3dp;
+    border: 1dp #4fd8a6;
+    background-color: #12261ecc;
+}
+
+.offstore span {
+    margin-right: 10dp;
+}
+
+.offstore-label {
+    font-weight: bold;
+    color: #4fd8a6;
+}
+
+.offstore-left {
+    font-weight: bold;
+    color: #ffd24a;
+}
+
 .section-title {
     margin-top: 10dp;
     margin-bottom: 4dp;

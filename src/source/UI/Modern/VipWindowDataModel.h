@@ -21,6 +21,7 @@ namespace UI::Modern
 // RML names:
 //   balance, level, level_name, tier ("tier-0".."tier-4"), scope_text, time_left, expires_text,
 //   character, active_vault, recharge_enabled, notice, has_notice, loading
+//   has_offstore, offstore_title, offstore_left, offstore_sales   (the first open offline store)
 //   levels[] LevelView { level, name, cost, scope_text, exp, drop, chaos, vaults, offstore, helper,
 //                        entries, tier, current, affordable, pending, action }
 //   packages[] PackageView { id, name, price, base, bonus, total, has_bonus }
@@ -84,6 +85,7 @@ private:
     void ReadStatus(const std::vector<std::wstring_view>& fields);
     void ReadLevel(const std::vector<std::wstring_view>& fields);
     void ReadPackage(const std::vector<std::wstring_view>& fields);
+    void ReadOffStore(const std::vector<std::wstring_view>& fields);
     void Finish();
     void Buy(int level);
     void Recharge(int packageId);
@@ -107,6 +109,11 @@ private:
     bool m_loading = false;
     std::vector<LevelView> m_levels;
     std::vector<PackageView> m_packages;
+    bool m_hasOffStore = false;
+    ::Rml::String m_offStoreTitle;
+    ::Rml::String m_offStoreLeft;
+    ::Rml::String m_offStoreSales;
+    std::int64_t m_offStoreExpiresUnix = 0;
 
     std::int64_t m_expiresUnix = 0;
     std::int64_t m_shownMinute = -1;
