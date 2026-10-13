@@ -9,12 +9,11 @@
 #include "Engine/Object/ZzzInfomation.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "Network/Server/WSclient.h"
+#include "UI/Modern/RmlFormat.h"
 
 #include "UI/Modern/RmlIncludes.h"
 
 #include <algorithm>
-#include <array>
-#include <charconv>
 
 namespace UI::Modern
 {
@@ -22,17 +21,6 @@ namespace
 {
 constexpr float kFullPercent = 100.0f;
 constexpr int kPercentDecimals = 1;
-constexpr std::size_t kPercentBufferSize = 16;
-
-// Locale-independent "<value>%" (always a '.' decimal separator). Reuses the target's capacity.
-void FormatCssPercent(float percent, ::Rml::String& target)
-{
-    std::array<char, kPercentBufferSize> buffer{};
-    const auto result = std::to_chars(buffer.data(), buffer.data() + buffer.size() - 1, percent,
-                                      std::chars_format::fixed, kPercentDecimals);
-    *result.ptr = '%';
-    target.assign(buffer.data(), result.ptr + 1);
-}
 
 struct Vitals
 {
@@ -139,7 +127,7 @@ void HudDataModel::UpdateGauge(Gauge& gauge, int current, int maximum)
     UpdateValue(gauge.currentName.c_str(), gauge.current, clampedCurrent);
     UpdateValue(gauge.maximumName.c_str(), gauge.maximum, clampedMaximum);
     UpdateValue(gauge.percentName.c_str(), gauge.percent, static_cast<int>(percent));
-    FormatCssPercent(percent, m_widthBuffer);
+    Format::CssPercent(percent, kPercentDecimals, m_widthBuffer);
     UpdateValue(gauge.widthName.c_str(), gauge.width, m_widthBuffer);
 }
 

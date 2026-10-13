@@ -13,6 +13,10 @@ struct SDL_GPUSampler;
 
 namespace UI::Modern
 {
+// Image sources of the form "legacy:<bitmap index>" show a texture the game already loaded
+// (e.g. skill icon sheets), cropped in RML with the img "rect" attribute.
+inline constexpr char kLegacyTextureScheme[] = "legacy:";
+
 // Draws RmlUi geometry through the SDL GPU renderer as 2D screen-space triangles.
 // RmlUi works with premultiplied alpha and a top-left origin; the renderer's 2D
 // triangle path blends straight alpha in a bottom-left (Y-up) space, so colours
@@ -50,6 +54,9 @@ private:
     {
         SDL_GPUTexture* texture = nullptr;
         SDL_GPUSampler* sampler = nullptr;
+        // False for textures borrowed from the game (see kLegacyTextureScheme): their GPU
+        // texture belongs to the game's bitmap cache and the sampler is shared.
+        bool owned = true;
     };
 
     struct CompiledGeometry
@@ -59,11 +66,15 @@ private:
     };
 
     GpuTexture* CreateGpuTexture(const std::uint8_t* straightRgba, int width, int height);
+    GpuTexture* BorrowLegacyTexture(const ::Rml::String& source, ::Rml::Vector2i& textureDimensions);
+    GpuTexture* LoadPngTexture(const ::Rml::String& source, ::Rml::Vector2i& textureDimensions);
     void DestroyGpuTexture(GpuTexture* texture);
     void FlushReleasedTextures();
     void ApplyScissor();
 
     GpuTexture* m_whiteTexture = nullptr;
+    // Linear filtering for borrowed game textures, which the game samples with GL_NEAREST.
+    SDL_GPUSampler* m_borrowedSampler = nullptr;
     // Textures released during a frame may still be referenced by that frame's
     // queued draw commands; they are destroyed at the start of the next frame.
     std::vector<GpuTexture*> m_pendingRelease;

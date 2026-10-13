@@ -125,6 +125,10 @@ namespace SEASON3B
         void SetHotKey(int iHotKey, int iSkillType);
         int GetHotKey(int iHotKey);
         int GetSkillIndex(int iSkillType);
+
+        // Makes the skill at `skillIndex` (a CharacterAttribute->Skill index, or a pet command)
+        // the hero's current skill, remembering the previous one, with the click sound.
+        void SelectCurrentSkill(int skillIndex);
         void RenderCurrentSkillAndHotSkillList();
 
         bool IsSkillListUp();

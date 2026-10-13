@@ -5,13 +5,16 @@
 #include "UI/Modern/RmlRenderInterface.h"
 
 #include "Core/Utilities/Log/MuLogger.h"
+#include "Render/Sprites/GlobalBitmap.h"
 
 #include <SDL3/SDL_error.h>
 #include <SDL3/SDL_gpu.h>
 #include <SDL3/SDL_surface.h>
 
 #include <algorithm>
+#include <charconv>
 #include <cstring>
+#include <string_view>
 
 namespace UI::Modern
 {
@@ -110,17 +113,43 @@ bool UploadPixels(SDL_GPUDevice* device, SDL_GPUTexture* texture, const std::uin
     SDL_ReleaseGPUTransferBuffer(device, transfer);
     return true;
 }
+
+SDL_GPUSampler* CreateLinearSampler(SDL_GPUDevice* device)
+{
+    if (!device)
+    {
+        return nullptr;
+    }
+    SDL_GPUSamplerCreateInfo samplerInfo{};
+    samplerInfo.min_filter = SDL_GPU_FILTER_LINEAR;
+    samplerInfo.mag_filter = SDL_GPU_FILTER_LINEAR;
+    samplerInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR;
+    samplerInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    samplerInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    samplerInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    return SDL_CreateGPUSampler(device, &samplerInfo);
+}
+
+bool StartsWith(const ::Rml::String& text, std::string_view prefix)
+{
+    return text.size() >= prefix.size() && std::string_view(text).substr(0, prefix.size()) == prefix;
+}
 } // namespace
 
 RmlRenderInterface::RmlRenderInterface()
 {
     m_whiteTexture = CreateGpuTexture(kOpaqueWhite, 1, 1);
+    m_borrowedSampler = CreateLinearSampler(Device());
 }
 
 RmlRenderInterface::~RmlRenderInterface()
 {
     FlushReleasedTextures();
     DestroyGpuTexture(m_whiteTexture);
+    if (m_borrowedSampler && Device())
+    {
+        SDL_ReleaseGPUSampler(Device(), m_borrowedSampler);
+    }
 }
 
 void RmlRenderInterface::BeginFrame(int windowWidth, int windowHeight)
@@ -177,15 +206,46 @@ void RmlRenderInterface::ReleaseGeometry(::Rml::CompiledGeometryHandle geometry)
     delete reinterpret_cast<CompiledGeometry*>(geometry);
 }
 
+::Rml::TextureHandle RmlRenderInterface::LoadTexture(::Rml::Vector2i& textureDimensions, const ::Rml::String& source)
+{
+    GpuTexture* texture = StartsWith(source, kLegacyTextureScheme) ? BorrowLegacyTexture(source, textureDimensions)
+                                                                   : LoadPngTexture(source, textureDimensions);
+    return reinterpret_cast<::Rml::TextureHandle>(texture);
+}
+
+// "legacy:<index>": a texture from the game's bitmap cache, drawn with linear filtering.
+// The game keeps ownership; the texture must stay loaded while documents show it.
+RmlRenderInterface::GpuTexture* RmlRenderInterface::BorrowLegacyTexture(const ::Rml::String& source,
+                                                                        ::Rml::Vector2i& textureDimensions)
+{
+    const std::string_view number = std::string_view(source).substr(std::size(kLegacyTextureScheme) - 1);
+    GLuint bitmapIndex = 0;
+    const auto result = std::from_chars(number.data(), number.data() + number.size(), bitmapIndex);
+    const BITMAP_t* bitmap = result.ec == std::errc() ? Bitmaps.FindTexture(bitmapIndex) : nullptr;
+    if (!bitmap || !bitmap->sdlTexture)
+    {
+        mu::log::Get("rmlui")->warn("game texture '{}' is not loaded", source);
+        return nullptr;
+    }
+
+    auto* texture = new GpuTexture();
+    texture->texture = bitmap->sdlTexture;
+    texture->sampler = m_borrowedSampler ? m_borrowedSampler : bitmap->sdlSampler;
+    texture->owned = false;
+    textureDimensions = {static_cast<int>(bitmap->Width), static_cast<int>(bitmap->Height)};
+    return texture;
+}
+
 // PNG files (straight alpha) referenced from documents, e.g. <img src="icons/sword.png"/>
 // or "decorator: image(frame.png)". RmlUi passes the path resolved against the document.
-::Rml::TextureHandle RmlRenderInterface::LoadTexture(::Rml::Vector2i& textureDimensions, const ::Rml::String& source)
+RmlRenderInterface::GpuTexture* RmlRenderInterface::LoadPngTexture(const ::Rml::String& source,
+                                                                   ::Rml::Vector2i& textureDimensions)
 {
     SDL_Surface* loaded = SDL_LoadPNG(source.c_str());
     if (!loaded)
     {
         mu::log::Get("rmlui")->warn("could not load image '{}': {}", source, SDL_GetError());
-        return 0;
+        return nullptr;
     }
 
     // RGBA32 is R,G,B,A in memory on every platform, matching the GPU texture format.
@@ -194,7 +254,7 @@ void RmlRenderInterface::ReleaseGeometry(::Rml::CompiledGeometryHandle geometry)
     if (!rgba)
     {
         mu::log::Get("rmlui")->warn("could not convert image '{}': {}", source, SDL_GetError());
-        return 0;
+        return nullptr;
     }
 
     std::vector<std::uint8_t> pixels(static_cast<std::size_t>(rgba->w) * rgba->h * kBytesPerPixel);
@@ -208,7 +268,7 @@ void RmlRenderInterface::ReleaseGeometry(::Rml::CompiledGeometryHandle geometry)
     textureDimensions = {rgba->w, rgba->h};
     GpuTexture* texture = CreateGpuTexture(pixels.data(), rgba->w, rgba->h);
     SDL_DestroySurface(rgba);
-    return reinterpret_cast<::Rml::TextureHandle>(texture);
+    return texture;
 }
 
 ::Rml::TextureHandle RmlRenderInterface::GenerateTexture(::Rml::Span<const ::Rml::byte> source,
@@ -276,14 +336,7 @@ RmlRenderInterface::GpuTexture* RmlRenderInterface::CreateGpuTexture(const std::
         return nullptr;
     }
 
-    SDL_GPUSamplerCreateInfo samplerInfo{};
-    samplerInfo.min_filter = SDL_GPU_FILTER_LINEAR;
-    samplerInfo.mag_filter = SDL_GPU_FILTER_LINEAR;
-    samplerInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_LINEAR;
-    samplerInfo.address_mode_u = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-    samplerInfo.address_mode_v = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-    samplerInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-    gpuTexture->sampler = SDL_CreateGPUSampler(device, &samplerInfo);
+    gpuTexture->sampler = CreateLinearSampler(device);
     if (!gpuTexture->sampler)
     {
         DestroyGpuTexture(gpuTexture.release());
@@ -299,7 +352,7 @@ void RmlRenderInterface::DestroyGpuTexture(GpuTexture* texture)
         return;
     }
     SDL_GPUDevice* device = Device();
-    if (device)
+    if (device && texture->owned)
     {
         if (texture->sampler)
         {

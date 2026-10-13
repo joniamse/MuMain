@@ -5,6 +5,7 @@
 #include "UI/Modern/RmlSystemInterface.h"
 
 #include "Core/Utilities/Log/MuLogger.h"
+#include "UI/Modern/RmlRenderInterface.h"
 
 #include <SDL3/SDL_timer.h>
 
@@ -37,6 +38,17 @@ bool RmlSystemInterface::LogMessage(::Rml::Log::Type type, const ::Rml::String& 
         break;
     }
     return true;
+}
+
+void RmlSystemInterface::JoinPath(::Rml::String& translatedPath, const ::Rml::String& documentPath,
+                                  const ::Rml::String& path)
+{
+    if (path.rfind(kLegacyTextureScheme, 0) == 0)
+    {
+        translatedPath = path;
+        return;
+    }
+    ::Rml::SystemInterface::JoinPath(translatedPath, documentPath, path);
 }
 } // namespace UI::Modern
 

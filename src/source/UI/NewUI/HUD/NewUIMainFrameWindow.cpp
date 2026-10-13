@@ -1,4 +1,4 @@
-﻿//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 // NewUIMainFrameWindow.cpp: implementation of the CNewUIMainFrameWindow class.
 //////////////////////////////////////////////////////////////////////
 
@@ -22,7 +22,11 @@
 #include "GameLogic/Events/CSChaosCastle.h"
 #include "World/MapInfra/MapManager.h"
 #include "Character/CharacterManager.h"
+#include "Character/ExperienceProgress.h"
+#include "UI/NewUI/HUD/MainMenuActions.h"
+#include "GameLogic/Skills/SkillAvailability.h"
 #include "GameLogic/Skills/SkillManager.h"
+#include "UI/NewUI/HUD/Skills/SkillIcon.h"
 #include "UI/NewUI/HUD/Skills/SkillTooltip.h"
 #include "UI/Scaling/UITransform.h"
 #include "UI/Modern/ModernHud.h"
@@ -210,22 +214,27 @@ bool SEASON3B::CNewUIMainFrameWindow::Render()
     const auto centerTransform = UI::Scaling::BottomHudCenterTransform(WindowWidth, WindowHeight);
     const auto rightTransform = UI::Scaling::BottomHudRightTransform(WindowWidth, WindowHeight);
     const auto experienceTransform = UI::Scaling::BottomHudExperienceTransform(WindowWidth, WindowHeight);
+    // The modern HUD (UI/Modern) draws the skill bar, menu buttons and experience bar itself.
+    const bool legacyMenuAndExperience = !UI::Modern::IsEnabled();
 
     {
         UI::Scaling::ScopedActiveTransform layout(leftTransform);
         RenderLeftFrame();
     }
+    if (legacyMenuAndExperience)
     {
-        UI::Scaling::ScopedActiveTransform layout(centerTransform);
-        RenderCenterFrame();
-    }
-    {
-        UI::Scaling::ScopedActiveTransform layout(rightTransform);
-        RenderRightFrame();
-    }
-    {
-        UI::Scaling::ScopedActiveTransform layout(experienceTransform);
-        RenderExperienceBackground();
+        {
+            UI::Scaling::ScopedActiveTransform layout(centerTransform);
+            RenderCenterFrame();
+        }
+        {
+            UI::Scaling::ScopedActiveTransform layout(rightTransform);
+            RenderRightFrame();
+        }
+        {
+            UI::Scaling::ScopedActiveTransform layout(experienceTransform);
+            RenderExperienceBackground();
+        }
     }
 
     {
@@ -236,13 +245,16 @@ bool SEASON3B::CNewUIMainFrameWindow::Render()
         UI::Scaling::ScopedActiveTransform layout(centerTransform, true);
         RenderCenterRegion();
     }
+    if (legacyMenuAndExperience)
     {
-        UI::Scaling::ScopedActiveTransform layout(rightTransform, true);
-        RenderRightRegion();
-    }
-    {
-        UI::Scaling::ScopedActiveTransform layout(experienceTransform, true);
-        RenderExperienceRegion();
+        {
+            UI::Scaling::ScopedActiveTransform layout(rightTransform, true);
+            RenderRightRegion();
+        }
+        {
+            UI::Scaling::ScopedActiveTransform layout(experienceTransform, true);
+            RenderExperienceRegion();
+        }
     }
     DisableAlphaBlend();
 
@@ -273,14 +285,14 @@ void SEASON3B::CNewUIMainFrameWindow::RenderLeftRegion()
 
 void SEASON3B::CNewUIMainFrameWindow::RenderCenterRegion()
 {
-    g_pSkillList->RenderCurrentSkillAndHotSkillList();
     PlayLowLifeWarning();
 
-    // The modern HUD (UI/Modern) shows these gauges instead.
+    // The modern HUD (UI/Modern) shows the skill bar and these gauges instead.
     if (UI::Modern::IsEnabled())
     {
         return;
     }
+    g_pSkillList->RenderCurrentSkillAndHotSkillList();
     RenderLifeMana();
     RenderGuageSD();
     RenderGuageAG();
@@ -502,225 +514,113 @@ void SEASON3B::CNewUIMainFrameWindow::RenderGuageSD()
     }
 }
 
-void SEASON3B::CNewUIMainFrameWindow::RenderExperience()
+namespace
 {
-    __int64 wLevel;
-    __int64 dwNexExperience;
-    __int64 dwExperience;
-    double x, y, width, height;
-    const auto buildExpSegment = [](const double ratio, int& digit, double& fraction)
+    // Legacy experience bar layout, in 640x480 HUD coordinates.
+    constexpr float kExpBarX = 2.0f;
+    constexpr float kExpBarY = 473.0f;
+    constexpr float kExpBarWidth = 629.0f;
+    constexpr float kExpBarHeight = 4.0f;
+    constexpr float kExpBarU = 6.0f / 8.0f;
+    constexpr float kExpBarV = 1.0f;
+    constexpr float kExpNumberX = 635.0f;
+    constexpr float kExpNumberY = 469.0f;
+    constexpr int kExpTipX = 280;
+    constexpr int kExpTipY = 418;
+    constexpr DWORD kExpGainFlash = 0x66FFFFFFu;
+    constexpr DWORD kMasterExpGainFlash = 0x99FFFFFFu;
+    constexpr int kExpSegmentCount = 10;
+
+    // The bar is split into ten segments: digit is the completed segment count (shown as a
+    // number), fraction the progress through the current one (drawn as the bar).
+    struct ExpSegment
+    {
+        int digit = 0;
+        double fraction = 0.0;
+    };
+
+    ExpSegment BuildExpSegment(double ratio)
     {
         const double clampedRatio = std::clamp(ratio, 0.0, 1.0);
         if (clampedRatio >= 1.0)
         {
-            digit = 9;
-            fraction = 1.0;
+            return {kExpSegmentCount - 1, 1.0};
+        }
+        const double scaled = clampedRatio * kExpSegmentCount;
+        const int digit = std::clamp(static_cast<int>(scaled), 0, kExpSegmentCount - 1);
+        return {digit, std::clamp(scaled - static_cast<double>(digit), 0.0, 1.0)};
+    }
+
+    double RatioInLevel(const Character::Experience::Progress& progress, __int64 experience)
+    {
+        const double span = static_cast<double>(progress.levelEnd - progress.levelStart);
+        if (span <= 0.0)
+        {
+            return 0.0;
+        }
+        const double clamped = std::clamp(static_cast<double>(experience), static_cast<double>(progress.levelStart),
+                                          static_cast<double>(progress.levelEnd));
+        return std::clamp((clamped - static_cast<double>(progress.levelStart)) / span, 0.0, 1.0);
+    }
+
+    void RenderExpBarPart(int image, double fromFraction, double toFraction, bool flash, DWORD flashColor)
+    {
+        const float x = kExpBarX + static_cast<float>(fromFraction) * kExpBarWidth;
+        const float width = static_cast<float>(toFraction - fromFraction) * kExpBarWidth;
+        RenderBitmap(image, x, kExpBarY, width, kExpBarHeight, 0.f, 0.f, kExpBarU, kExpBarV);
+        if (flash)
+        {
+            RenderColorQuadARGB(x, kExpBarY, width, kExpBarHeight, flashColor);
+        }
+    }
+
+    // While experience was just gained, the newly earned part of the segment flashes.
+    void RenderExpGain(const Character::Experience::Progress& progress, const ExpSegment& current,
+                       __int64 previousExperience, int image, DWORD flashColor)
+    {
+        if (previousExperience < progress.levelStart)
+        {
+            RenderExpBarPart(image, 0.0, current.fraction, true, flashColor);
             return;
         }
 
-        const double scaled = clampedRatio * 10.0;
-        digit = std::clamp(static_cast<int>(scaled), 0, 9);
-        fraction = scaled - static_cast<double>(static_cast<long long>(scaled));
-        fraction = std::clamp(fraction, 0.0, 1.0);
-    };
+        const ExpSegment previous = BuildExpSegment(RatioInLevel(progress, previousExperience));
+        if (current.digit > previous.digit)
+        {
+            RenderExpBarPart(image, 0.0, current.fraction, true, flashColor);
+            return;
+        }
 
-    if (gCharacterManager.IsMasterExperienceActive(CharacterAttribute->Class, CharacterAttribute->Level) == true)
+        const double gainEnd = std::clamp(current.fraction, previous.fraction, 1.0);
+        RenderExpBarPart(image, 0.0, previous.fraction, false, flashColor);
+        RenderExpBarPart(image, previous.fraction, gainEnd, true, flashColor);
+    }
+}
+
+void SEASON3B::CNewUIMainFrameWindow::RenderExperience()
+{
+    const Character::Experience::Progress progress = Character::Experience::HeroProgress();
+    const int image = progress.isMaster ? IMAGE_MASTER_GAUGE_BAR : IMAGE_GAUGE_EXBAR;
+    const DWORD flashColor = progress.isMaster ? kMasterExpGainFlash : kExpGainFlash;
+    const __int64 previousExperience = progress.isMaster ? m_loPreExp : m_dwPreExp;
+    const ExpSegment current = BuildExpSegment(progress.ratio);
+
+    if (m_bExpEffect)
     {
-        wLevel = (__int64)Master_Level_Data.nMLevel;
-        dwNexExperience = (__int64)Master_Level_Data.lNext_MasterLevel_Experince;
-        dwExperience = (__int64)Master_Level_Data.lMasterLevel_Experince;
+        RenderExpGain(progress, current, previousExperience, image, flashColor);
     }
     else
     {
-        wLevel = CharacterAttribute->Level;
-        dwNexExperience = CharacterAttribute->NextExperience;
-        dwExperience = CharacterAttribute->Experience;
+        RenderExpBarPart(image, 0.0, current.fraction, false, flashColor);
     }
 
-    if (gCharacterManager.IsMasterExperienceActive(CharacterAttribute->Class, CharacterAttribute->Level) == true)
+    SEASON3B::RenderNumber(kExpNumberX, kExpNumberY, current.digit);
+
+    if (SEASON3B::CheckMouseIn(kExpBarX, kExpBarY, kExpBarWidth, kExpBarHeight))
     {
-        x = 0; y = 470; width = 6; height = 4;
-
-        __int64 iTotalLevel = wLevel + 400;
-        __int64 iTOverLevel = iTotalLevel - 255;
-        __int64 iBaseExperience = 0;
-
-        __int64 iData_Master =	// A
-            (
-                (
-                    (__int64)9 + (__int64)iTotalLevel
-                    )
-                * (__int64)iTotalLevel
-                * (__int64)iTotalLevel
-                * (__int64)10
-                )
-            +
-            (
-                (
-                    (__int64)9 + (__int64)iTOverLevel
-                    )
-                * (__int64)iTOverLevel
-                * (__int64)iTOverLevel
-                * (__int64)1000
-                );
-        iBaseExperience = (iData_Master - (__int64)3892250000) / (__int64)2;	// B
-
-        const __int64 lowerBound = iBaseExperience;
-        __int64 upperBound = dwNexExperience;
-        if (upperBound < lowerBound)
-        {
-            upperBound = lowerBound;
-        }
-
-        const double fNeedExp = static_cast<double>(upperBound - lowerBound);
-        const double fClampedExp = std::clamp(static_cast<double>(dwExperience), static_cast<double>(lowerBound), static_cast<double>(upperBound));
-        const double fRatio = (fNeedExp > 0.0) ? std::clamp((fClampedExp - static_cast<double>(lowerBound)) / fNeedExp, 0.0, 1.0) : 0.0;
-        int iExp = 0;
-        double fProgress = 0.0;
-        buildExpSegment(fRatio, iExp, fProgress);
-
-        if (m_bExpEffect == true)
-        {
-            double fPreProgress = 0.f;
-            if (m_loPreExp < lowerBound)
-            {
-                x = 2.f; y = 473.f; width = fProgress * 629.f; height = 4.f;
-                RenderBitmap(IMAGE_MASTER_GAUGE_BAR, x, y, width, height, 0.f, 0.f, 6.f / 8.f, 4.f / 4.f);
-                RenderColorQuadARGB(x, y, width, height, 0x99FFFFFFu);
-            }
-            else
-            {
-                int iPreExpBarNum = 0;
-                if (fNeedExp > 0.f)
-                {
-                    const double fPreClampedExp = std::clamp(static_cast<double>(m_loPreExp), static_cast<double>(lowerBound), static_cast<double>(upperBound));
-                    const double fPreRatio = std::clamp((fPreClampedExp - static_cast<double>(lowerBound)) / fNeedExp, 0.0, 1.0);
-                    buildExpSegment(fPreRatio, iPreExpBarNum, fPreProgress);
-                }
-
-                if (iExp > iPreExpBarNum)
-                {
-                    x = 2.f; y = 473.f; width = fProgress * 629.f; height = 4.f;
-                    RenderBitmap(IMAGE_MASTER_GAUGE_BAR, x, y, width, height, 0.f, 0.f, 6.f / 8.f, 4.f / 4.f);
-                    RenderColorQuadARGB(x, y, width, height, 0x99FFFFFFu);
-                }
-                else
-                {
-                    double fGapProgress = fProgress - fPreProgress;
-                    fGapProgress = std::clamp(fGapProgress, 0.0, 1.0);
-                    x = 2.f; y = 473.f; width = (double)fPreProgress * (double)629.f; height = 4.f;
-                    RenderBitmap(IMAGE_MASTER_GAUGE_BAR, x, y, width, height, 0.f, 0.f, 6.f / 8.f, 4.f / 4.f);
-
-                    x += width; width = (double)fGapProgress * (double)629.f;
-                    RenderBitmap(IMAGE_MASTER_GAUGE_BAR, x, y, width, height, 0.f, 0.f, 6.f / 8.f, 4.f / 4.f);
-                    RenderColorQuadARGB(x, y, width, height, 0x99FFFFFFu);
-                }
-            }
-        }
-        else
-        {
-            x = 2.f; y = 473.f; width = fProgress * 629.f; height = 4.f;
-            RenderBitmap(IMAGE_MASTER_GAUGE_BAR, x, y, width, height, 0.f, 0.f, 6.f / 8.f, 4.f / 4.f);
-        }
-
-        x = 635.f; y = 469.f;
-        SEASON3B::RenderNumber(x, y, iExp);
-
-        x = 2.f; y = 473.f; width = 629.f; height = 4.f;
-        if (SEASON3B::CheckMouseIn(x, y, width, height) == true)
-        {
-            wchar_t strTipText[256];
-
-            mu_swprintf(strTipText, I18N::Game::EXPI64dI64d, dwExperience, dwNexExperience);
-            RenderTipText(280, 418, strTipText);
-        }
-    }
-    else
-    {
-        x = 0; y = 470; width = 6; height = 4;
-
-        __int64 iPriorLevel = wLevel - 1;
-        __int64 iPriorExperience = 0;
-
-        if (iPriorLevel > 0)
-        {
-            iPriorExperience = (9 + iPriorLevel) * iPriorLevel * iPriorLevel * 10;
-
-            if (iPriorLevel > 255)
-            {
-                const __int64 iLevelOverN = iPriorLevel - 255;
-                iPriorExperience += (9 + iLevelOverN) * iLevelOverN * iLevelOverN * 1000;
-            }
-        }
-
-        const __int64 lowerBound = iPriorExperience;
-        __int64 upperBound = dwNexExperience;
-        if (upperBound < lowerBound)
-        {
-            upperBound = lowerBound;
-        }
-
-        const double fNeedExp = static_cast<double>(upperBound - lowerBound);
-        const double fClampedExp = std::clamp(static_cast<double>(dwExperience), static_cast<double>(lowerBound), static_cast<double>(upperBound));
-        const double fRatio = (fNeedExp > 0.0) ? std::clamp((fClampedExp - static_cast<double>(lowerBound)) / fNeedExp, 0.0, 1.0) : 0.0;
-        int iExp = 0;
-        double fProgress = 0.0;
-        buildExpSegment(fRatio, iExp, fProgress);
-
-        if (m_bExpEffect == true)
-        {
-            double fPreProgress = 0.f;
-            if (m_dwPreExp < lowerBound)
-            {
-                x = 2.f; y = 473.f; width = fProgress * 629.f; height = 4.f;
-                RenderBitmap(IMAGE_GAUGE_EXBAR, x, y, width, height, 0.f, 0.f, 6.f / 8.f, 4.f / 4.f);
-                RenderColorQuadARGB(x, y, width, height, 0x66FFFFFFu);
-            }
-            else
-            {
-                int iPreExpBarNum = 0;
-                if (fNeedExp > 0.f)
-                {
-                    const double fPreClampedExp = std::clamp(static_cast<double>(m_dwPreExp), static_cast<double>(lowerBound), static_cast<double>(upperBound));
-                    const double fPreRatio = std::clamp((fPreClampedExp - static_cast<double>(lowerBound)) / fNeedExp, 0.0, 1.0);
-                    buildExpSegment(fPreRatio, iPreExpBarNum, fPreProgress);
-                }
-
-                if (iExp > iPreExpBarNum)
-                {
-                    x = 2.f; y = 473.f; width = fProgress * 629.f; height = 4.f;
-                    RenderBitmap(IMAGE_GAUGE_EXBAR, x, y, width, height, 0.f, 0.f, 6.f / 8.f, 4.f / 4.f);
-                    RenderColorQuadARGB(x, y, width, height, 0x66FFFFFFu);
-                }
-                else
-                {
-                    double fGapProgress = fProgress - fPreProgress;
-                    fGapProgress = std::clamp(fGapProgress, 0.0, 1.0);
-                    x = 2.f; y = 473.f; width = fPreProgress * 629.f; height = 4.f;
-                    RenderBitmap(IMAGE_GAUGE_EXBAR, x, y, width, height, 0.f, 0.f, 6.f / 8.f, 4.f / 4.f);
-                    x += width; width = fGapProgress * 629.f;
-                    RenderBitmap(IMAGE_GAUGE_EXBAR, x, y, width, height, 0.f, 0.f, 6.f / 8.f, 4.f / 4.f);
-                    RenderColorQuadARGB(x, y, width, height, 0x66FFFFFFu);
-                }
-            }
-        }
-        else
-        {
-            x = 2.f; y = 473.f; width = fProgress * 629.f; height = 4.f;
-            RenderBitmap(IMAGE_GAUGE_EXBAR, x, y, width, height, 0.f, 0.f, 6.f / 8.f, 4.f / 4.f);
-        }
-
-        x = 635.f; y = 469.f;
-        SEASON3B::RenderNumber(x, y, iExp);
-
-        x = 2.f; y = 473.f; width = 629.f; height = 4.f;
-        if (SEASON3B::CheckMouseIn(x, y, width, height) == true)
-        {
-            wchar_t strTipText[256];
-
-            mu_swprintf(strTipText, I18N::Game::EXPI64dI64d, dwExperience, dwNexExperience);
-            RenderTipText(280, 418, strTipText);
-        }
+        wchar_t strTipText[256];
+        mu_swprintf(strTipText, I18N::Game::EXPI64dI64d, progress.experience, progress.levelEnd);
+        RenderTipText(kExpTipX, kExpTipY, strTipText);
     }
 }
 
@@ -819,6 +719,9 @@ bool SEASON3B::CNewUIMainFrameWindow::UpdateMouseEvent()
 {
     if (g_pNewUIHotKey->IsStateGameOver())
         return true;
+    // The modern HUD owns the menu buttons; their clicks never reach this window.
+    if (UI::Modern::IsEnabled())
+        return true;
 
     const auto transform = UI::Scaling::BottomHudRightTransform(WindowWidth, WindowHeight);
     UI::Scaling::ScopedActiveTransform layout(transform, true);
@@ -827,107 +730,37 @@ bool SEASON3B::CNewUIMainFrameWindow::UpdateMouseEvent()
 
 bool SEASON3B::CNewUIMainFrameWindow::BtnProcess()
 {
-    if (g_pNewUIHotKey->CanUpdateKeyEventRelatedMyInventory() == true)
+    using UI::MainMenu::Action;
+
+    // While the inventory is locked to another window (trade, storage, ...), only its own
+    // button reacts; the others are not even updated, as before.
+    const bool inventoryOnly = g_pNewUIHotKey->CanUpdateKeyEventRelatedMyInventory();
+    if (!inventoryOnly && !g_pNewUIHotKey->CanUpdateKeyEvent())
     {
-        if (m_BtnMyInven.UpdateMouseEvent() == true)
-        {
-            g_pNewUISystem->Toggle(SEASON3B::INTERFACE_INVENTORY);
-            PlayBuffer(SOUND_CLICK01);
-            return true;
-        }
+        return false;
     }
-    else if (g_pNewUIHotKey->CanUpdateKeyEvent() == true)
-    {
-        if (m_BtnMyInven.UpdateMouseEvent() == true)
-        {
-            g_pNewUISystem->Toggle(SEASON3B::INTERFACE_INVENTORY);
-            PlayBuffer(SOUND_CLICK01);
-            return true;
-        }
-        else if (m_BtnChaInfo.UpdateMouseEvent() == true)
-        {
-            g_pNewUISystem->Toggle(SEASON3B::INTERFACE_CHARACTER);
 
-            PlayBuffer(SOUND_CLICK01);
-
-            if (g_pNewUISystem->IsVisible(SEASON3B::INTERFACE_CHARACTER))
-                g_QuestMng.SendQuestIndexByEtcSelection();
-
-            return true;
-        }
-        else if (m_BtnFriend.UpdateMouseEvent() == true)
-        {
-            if (gMapManager.InChaosCastle() == true)
-            {
-                PlayBuffer(SOUND_CLICK01);
-                return true;
-            }
-
-            int iLevel = CharacterAttribute->Level;
-
-            if (iLevel < 6)
-            {
-                if (g_pSystemLogBox->CheckChatRedundancy(I18N::Game::YouMustBeAtLeastLevel6ToUseTheMyFriendFunction) == FALSE)
-                {
-                    g_pSystemLogBox->AddText(I18N::Game::YouMustBeAtLeastLevel6ToUseTheMyFriendFunction, SEASON3B::TYPE_SYSTEM_MESSAGE);
-                }
-            }
-            else
-            {
-                g_pNewUISystem->Toggle(SEASON3B::INTERFACE_FRIEND);
-            }
-            PlayBuffer(SOUND_CLICK01);
-            return true;
-        }
-        else if (m_BtnWindow.UpdateMouseEvent() == true)
-        {
-            g_pNewUISystem->Toggle(SEASON3B::INTERFACE_WINDOW_MENU);
-            PlayBuffer(SOUND_CLICK01);
-            return true;
-        }
-
+    const std::pair<CNewUIButton*, Action> buttons[] = {
+        {&m_BtnMyInven, Action::Inventory},
+        {&m_BtnChaInfo, Action::Character},
+        {&m_BtnFriend, Action::Friends},
+        {&m_BtnWindow, Action::WindowMenu},
 #ifdef PBG_ADD_INGAMESHOP_UI_MAINFRAME
-        else if (m_BtnCShop.UpdateMouseEvent() == true)
+        {&m_BtnCShop, Action::CashShop},
+#endif
+    };
+
+    for (const auto& [button, action] : buttons)
+    {
+        if (inventoryOnly && action != Action::Inventory)
         {
-            if (g_pInGameShop->IsInGameShopOpen() == false)
-                return false;
-
-#ifdef KJH_MOD_SHOP_SCRIPT_DOWNLOAD
-            if (g_InGameShopSystem->IsScriptDownload() == true)
-            {
-                if (g_InGameShopSystem->ScriptDownload() == false)
-                    return false;
-            }
-
-            if (g_InGameShopSystem->IsBannerDownload() == true)
-            {
-                g_InGameShopSystem->BannerDownload();
-            }
-#endif // KJH_MOD_SHOP_SCRIPT_DOWNLOAD
-
-            if (g_pNewUISystem->IsVisible(SEASON3B::INTERFACE_INGAMESHOP) == false)
-            {
-                if (g_InGameShopSystem->GetIsRequestShopOpenning() == false)
-                {
-                    SocketClient->ToGameServer()->SendCashShopOpenState(0);
-                    g_InGameShopSystem->SetIsRequestShopOpenning(true);
-
-#ifdef KJH_MOD_SHOP_SCRIPT_DOWNLOAD
-                    g_pMainFrame->SetBtnState(MAINFRAME_BTN_PARTCHARGE, true);
-#endif // KJH_MOD_SHOP_SCRIPT_DOWNLOAD
-                }
-            }
-            else
-            {
-                SocketClient->ToGameServer()->SendCashShopOpenState(1);
-                g_pNewUISystem->Hide(SEASON3B::INTERFACE_INGAMESHOP);
-            }
-
-            return true;
+            continue;
         }
-#endif //PBG_ADD_INGAMESHOP_UI_MAINFRAME
+        if (button->UpdateMouseEvent())
+        {
+            return UI::MainMenu::Trigger(action);
+        }
     }
-
     return false;
 }
 
@@ -1460,9 +1293,11 @@ bool SEASON3B::CNewUISkillList::UpdateMouseEvent()
     }
 #endif //MOD_SKILLLIST_UPDATEMOUSE_BLOCK
 
-    if (g_isCharacterBuff((&Hero->Object), eBuff_DuelWatch))
+    // While duel-watching, or when the modern HUD owns the skill bar, this list takes no clicks.
+    if (g_isCharacterBuff((&Hero->Object), eBuff_DuelWatch) || UI::Modern::IsEnabled())
     {
         m_bSkillList = false;
+        m_bRenderSkillInfo = false;
         return true;
     }
 
@@ -1610,9 +1445,7 @@ bool SEASON3B::CNewUISkillList::UpdateMouseEvent()
                     if (m_iRenderSkillInfoType == m_iHotKeySkillType[iIndex])
                     {
                         m_EventState = EVENT_NONE;
-                        m_wHeroPriorSkill = CharacterAttribute->Skill[Hero->CurrentSkill];
-                        Hero->CurrentSkill = m_iHotKeySkillType[iIndex];
-                        PlayBuffer(SOUND_CLICK01);
+                        SelectCurrentSkill(m_iHotKeySkillType[iIndex]);
                         return false;
                     }
                     else
@@ -1723,13 +1556,8 @@ bool SEASON3B::CNewUISkillList::UpdateMouseEvent()
             && m_iRenderSkillInfoType == i && SEASON3B::CheckMouseIn(x, y, width, height) == true)
         {
             m_EventState = EVENT_NONE;
-
-            m_wHeroPriorSkill = CharacterAttribute->Skill[Hero->CurrentSkill];
-
-            Hero->CurrentSkill = i;
+            SelectCurrentSkill(i);
             m_bSkillList = false;
-
-            PlayBuffer(SOUND_CLICK01);
             return false;
         }
     }
@@ -1773,12 +1601,8 @@ bool SEASON3B::CNewUISkillList::UpdateMouseEvent()
                     && m_iRenderSkillInfoType == i)
                 {
                     m_EventState = EVENT_NONE;
-
-                    m_wHeroPriorSkill = CharacterAttribute->Skill[Hero->CurrentSkill];
-
-                    Hero->CurrentSkill = i;
+                    SelectCurrentSkill(i);
                     m_bSkillList = false;
-                    PlayBuffer(SOUND_CLICK01);
                     return false;
                 }
             }
@@ -1936,6 +1760,13 @@ int SEASON3B::CNewUISkillList::GetSkillIndex(int iSkillType)
     return iReturn;
 }
 
+void SEASON3B::CNewUISkillList::SelectCurrentSkill(int skillIndex)
+{
+    m_wHeroPriorSkill = CharacterAttribute->Skill[Hero->CurrentSkill];
+    Hero->CurrentSkill = skillIndex;
+    PlayBuffer(SOUND_CLICK01);
+}
+
 void SEASON3B::CNewUISkillList::UseHotKey(int iHotKey)
 {
     if (m_iHotKeySkillType[iHotKey] != -1)
@@ -2051,6 +1882,11 @@ void SEASON3B::CNewUISkillList::RenderCurrentSkillAndHotSkillList()
 
 bool SEASON3B::CNewUISkillList::Render()
 {
+    if (UI::Modern::IsEnabled())
+    {
+        return true;
+    }
+
     int i;
     float x, y, width, height;
 
@@ -2202,387 +2038,12 @@ void SEASON3B::CNewUISkillList::RenderSkillIcon(int iIndex, float x, float y, fl
         bySkillType = (ActionSkillType)iIndex;
     }
 
-    bool bCantSkill = false;
-
-    BYTE bySkillUseType = SkillAttribute[bySkillType].SkillUseType;
-    int Skill_Icon = SkillAttribute[bySkillType].Magic_Icon;
-
-    if (!gSkillManager.AreSkillAttributeRequirementsMet(bySkillType))
+    const bool bCantSkill = !GameLogic::Skills::Availability::CanUseNow(bySkillType);
+    const UI::Skills::Icon::Source icon = UI::Skills::Icon::Lookup(bySkillType, !bCantSkill);
+    if (icon.bitmap != 0)
     {
-        bCantSkill = true;
-    }
-
-    if (IsCanBCSkill(bySkillType) == false)
-    {
-        bCantSkill = true;
-    }
-    if (g_isCharacterBuff((&Hero->Object), eBuff_AddSkill) && bySkillUseType == SKILL_USE_TYPE_BRAND)
-    {
-        bCantSkill = true;
-    }
-    auto isSittingOnPet = GameLogic::Items::IsHornMountModel(Hero->Helper.Type);
-    if (bySkillType == AT_SKILL_IMPALE && !isSittingOnPet)
-    {
-        bCantSkill = true;
-    }
-
-    if (bySkillType == AT_SKILL_IMPALE && isSittingOnPet)
-    {
-        int iTypeL = CharacterMachine->Equipment[EQUIPMENT_WEAPON_LEFT].Type;
-        int iTypeR = CharacterMachine->Equipment[EQUIPMENT_WEAPON_RIGHT].Type;
-        if ((iTypeL < ITEM_SPEAR || iTypeL >= ITEM_BOW) && (iTypeR < ITEM_SPEAR || iTypeR >= ITEM_BOW))
-        {
-            bCantSkill = true;
-        }
-    }
-
-    if (isSittingOnPet
-        && ((bySkillType >= AT_SKILL_BLOCKING && bySkillType <= AT_SKILL_SLASH)
-            || bySkillType == AT_SKILL_FALLING_SLASH_STR
-            || bySkillType == AT_SKILL_LUNGE_STR
-            || bySkillType == AT_SKILL_CYCLONE_STR
-            || bySkillType == AT_SKILL_CYCLONE_STR_MG
-            || bySkillType == AT_SKILL_SLASH_STR
-            ))
-    {
-        bCantSkill = true;
-    }
-
-    if ((bySkillType == AT_SKILL_POWER_SLASH || bySkillType == AT_SKILL_POWER_SLASH_STR)
-        && isSittingOnPet)
-    {
-        bCantSkill = true;
-    }
-
-    if (bySkillType == AT_SKILL_PARTY_TELEPORT && PartyNumber <= 0)
-    {
-        bCantSkill = true;
-    }
-
-    if (bySkillType == AT_SKILL_PARTY_TELEPORT && (IsDoppelGanger1() || IsDoppelGanger2() || IsDoppelGanger3() || IsDoppelGanger4()))
-    {
-        bCantSkill = true;
-    }
-
-    if (bySkillType == AT_SKILL_EARTHSHAKE || bySkillType == AT_SKILL_EARTHSHAKE_STR || bySkillType == AT_SKILL_EARTHSHAKE_MASTERY)
-    {
-        BYTE byDarkHorseLife = 0;
-        byDarkHorseLife = CharacterMachine->Equipment[EQUIPMENT_HELPER].Durability;
-        if (byDarkHorseLife == 0 || Hero->Helper.Type != MODEL_DARK_HORSE_ITEM)
-        {
-            bCantSkill = true;
-        }
-    }
-#ifdef PJH_FIX_SPRIT
-    /*박종훈*/
-    if (bySkillType >= AT_PET_COMMAND_DEFAULT && bySkillType < AT_PET_COMMAND_END)
-    {
-        int iCharisma = CharacterAttribute->Charisma + CharacterAttribute->AddCharisma;
-        PET_INFO PetInfo;
-        giPetManager::GetPetInfo(PetInfo, 421 - PET_TYPE_DARK_SPIRIT);
-        int RequireCharisma = (185 + (PetInfo.m_wLevel * 15));
-        if (RequireCharisma > iCharisma)
-        {
-            bCantSkill = true;
-        }
-    }
-#endif //PJH_FIX_SPRIT
-    if ((bySkillType == AT_SKILL_INFINITY_ARROW)
-        || (bySkillType == AT_SKILL_INFINITY_ARROW_STR)
-        || (bySkillType == AT_SKILL_EXPANSION_OF_WIZARDRY)
-        || (bySkillType == AT_SKILL_EXPANSION_OF_WIZARDRY_STR)
-        || (bySkillType == AT_SKILL_EXPANSION_OF_WIZARDRY_MASTERY)
-        )
-    {
-        if ((g_isCharacterBuff((&Hero->Object), eBuff_InfinityArrow)) || (g_isCharacterBuff((&Hero->Object), eBuff_SwellOfMagicPower)))
-        {
-            bCantSkill = true;
-        }
-    }
-
-    if (bySkillType == AT_SKILL_FIRE_SLASH || bySkillType == AT_SKILL_FIRE_SLASH_STR)
-    {
-        WORD Strength;
-        const WORD wRequireStrength = 596;
-        Strength = CharacterAttribute->Strength + CharacterAttribute->AddStrength;
-        if (Strength < wRequireStrength)
-        {
-            bCantSkill = true;
-        }
-        int iTypeL = CharacterMachine->Equipment[EQUIPMENT_WEAPON_LEFT].Type;
-        int iTypeR = CharacterMachine->Equipment[EQUIPMENT_WEAPON_RIGHT].Type;
-
-        if (!(iTypeR != -1 && (iTypeR < ITEM_STAFF || iTypeR >= ITEM_STAFF + MAX_ITEM_INDEX) && (iTypeL < ITEM_STAFF || iTypeL >= ITEM_STAFF + MAX_ITEM_INDEX)))
-        {
-            bCantSkill = true;
-        }
-    }
-
-    switch (bySkillType)
-    {
-        //case AT_SKILL_PIERCING:
-    case AT_SKILL_ICE_ARROW:
-    case AT_SKILL_ICE_ARROW_STR:
-    {
-        WORD  Dexterity;
-        const WORD wRequireDexterity = 646;
-        Dexterity = CharacterAttribute->Dexterity + CharacterAttribute->AddDexterity;
-        if (Dexterity < wRequireDexterity)
-        {
-            bCantSkill = true;
-        }
-    }break;
-    }
-
-    if (bySkillType == AT_SKILL_TWISTING_SLASH
-        || bySkillType == AT_SKILL_TWISTING_SLASH_STR
-        || bySkillType == AT_SKILL_TWISTING_SLASH_STR_MG
-        || bySkillType == AT_SKILL_TWISTING_SLASH_MASTERY
-        || bySkillType == AT_SKILL_RAGEFUL_BLOW
-        || bySkillType == AT_SKILL_RAGEFUL_BLOW_STR
-        || bySkillType == AT_SKILL_RAGEFUL_BLOW_MASTERY
-        || bySkillType == AT_SKILL_DEATHSTAB
-        || bySkillType == AT_SKILL_DEATHSTAB_STR
-        )
-    {
-        int iTypeL = CharacterMachine->Equipment[EQUIPMENT_WEAPON_LEFT].Type;
-        int iTypeR = CharacterMachine->Equipment[EQUIPMENT_WEAPON_RIGHT].Type;
-
-        if (!(iTypeR != -1 && (iTypeR < ITEM_STAFF || iTypeR >= ITEM_STAFF + MAX_ITEM_INDEX) && (iTypeL < ITEM_STAFF || iTypeL >= ITEM_STAFF + MAX_ITEM_INDEX)))
-        {
-            bCantSkill = true;
-        }
-    }
-
-    if (gMapManager.InChaosCastle() == true)
-    {
-        if (bySkillType == AT_SKILL_EARTHSHAKE
-            || bySkillType == AT_SKILL_EARTHSHAKE_STR
-            || bySkillType == AT_SKILL_EARTHSHAKE_MASTERY
-            || bySkillType == AT_SKILL_RIDER
-            || (static_cast<int>(bySkillType) >= static_cast<int>(AT_PET_COMMAND_DEFAULT) && static_cast<int>(bySkillType) <= static_cast<int>(AT_PET_COMMAND_TARGET))
-            )
-        {
-            bCantSkill = true;
-        }
-    }
-    else
-    {
-        if (bySkillType == AT_SKILL_EARTHSHAKE
-            || bySkillType == AT_SKILL_EARTHSHAKE_STR
-            || bySkillType == AT_SKILL_EARTHSHAKE_MASTERY)
-        {
-            BYTE byDarkHorseLife = 0;
-            byDarkHorseLife = CharacterMachine->Equipment[EQUIPMENT_HELPER].Durability;
-            if (byDarkHorseLife == 0)
-            {
-                bCantSkill = true;
-            }
-        }
-    }
-
-    if (!g_CMonkSystem.IsSwordformGlovesUseSkill(bySkillType))
-    {
-        bCantSkill = true;
-    }
-    if (g_CMonkSystem.IsRideNotUseSkill(bySkillType, Hero->Helper.Type))
-    {
-        bCantSkill = true;
-    }
-
-    ITEM* pLeftRing = &CharacterMachine->Equipment[EQUIPMENT_RING_LEFT];
-    ITEM* pRightRing = &CharacterMachine->Equipment[EQUIPMENT_RING_RIGHT];
-
-    if (g_CMonkSystem.IsChangeringNotUseSkill(pLeftRing->Type, pRightRing->Type, pLeftRing->Level, pRightRing->Level)
-        && (gCharacterManager.GetBaseClass(Hero->Class) == CLASS_RAGEFIGHTER))
-    {
-        bCantSkill = true;
-    }
-
-    float fU, fV;
-    int iKindofSkill = 0;
-
-    if (!g_csItemOption.IsNonWeaponSkillOrIsSkillEquipped(bySkillType))
-    {
-        bCantSkill = true;
-    }
-
-    if (static_cast<int>(bySkillType) >= static_cast<int>(AT_PET_COMMAND_DEFAULT) && static_cast<int>(bySkillType) <= static_cast<int>(AT_PET_COMMAND_END))
-    {
-        fU = ((static_cast<int>(bySkillType) - AT_PET_COMMAND_DEFAULT) % 8) * width / 256.f;
-        fV = ((static_cast<int>(bySkillType) - AT_PET_COMMAND_DEFAULT) / 8) * height / 256.f;
-        iKindofSkill = KOS_COMMAND;
-    }
-    else if (bySkillType == AT_SKILL_PLASMA_STORM_FENRIR)
-    {
-        fU = 4 * width / 256.f;
-        fV = 0.f;
-        iKindofSkill = KOS_COMMAND;
-    }
-    else if ((bySkillType >= AT_SKILL_ALICE_DRAINLIFE && bySkillType <= AT_SKILL_ALICE_THORNS))
-    {
-        fU = ((bySkillType - AT_SKILL_ALICE_DRAINLIFE) % 8) * width / 256.f;
-        fV = 3 * height / 256.f;
-        iKindofSkill = KOS_SKILL2;
-    }
-    else if (bySkillType >= AT_SKILL_ALICE_SLEEP && bySkillType <= AT_SKILL_ALICE_BLIND)
-    {
-        fU = ((bySkillType - AT_SKILL_ALICE_SLEEP + 4) % 8) * width / 256.f;
-        fV = 3 * height / 256.f;
-        iKindofSkill = KOS_SKILL2;
-    }
-    else if (bySkillType == AT_SKILL_ALICE_BERSERKER)
-    {
-        fU = 10 * width / 256.f;
-        fV = 3 * height / 256.f;
-        iKindofSkill = KOS_SKILL2;
-    }
-    else if (bySkillType >= AT_SKILL_ALICE_WEAKNESS && bySkillType <= AT_SKILL_ALICE_ENERVATION)
-    {
-        fU = (bySkillType - AT_SKILL_ALICE_WEAKNESS + 8) * width / 256.f;
-        fV = 3 * height / 256.f;
-        iKindofSkill = KOS_SKILL2;
-    }
-    else if (bySkillType >= AT_SKILL_SUMMON_EXPLOSION && bySkillType <= AT_SKILL_SUMMON_REQUIEM)
-    {
-        fU = ((bySkillType - AT_SKILL_SUMMON_EXPLOSION + 6) % 8) * width / 256.f;
-        fV = 3 * height / 256.f;
-        iKindofSkill = KOS_SKILL2;
-    }
-    else if (bySkillType == AT_SKILL_SUMMON_POLLUTION)
-    {
-        fU = 11 * width / 256.f;
-        fV = 3 * height / 256.f;
-        iKindofSkill = KOS_SKILL2;
-    }
-    else if (bySkillType == AT_SKILL_STRIKE_OF_DESTRUCTION)
-    {
-        fU = 7 * width / 256.f;
-        fV = 2 * height / 256.f;
-        iKindofSkill = KOS_SKILL2;
-    }
-    else if (bySkillType == AT_SKILL_CHAOTIC_DISEIER)
-    {
-        fU = 3 * width / 256.f;
-        fV = 8 * height / 256.f;
-        iKindofSkill = KOS_SKILL2;
-    }
-    else if (bySkillType == AT_SKILL_RECOVER)
-    {
-        fU = 9 * width / 256.f;
-        fV = 2 * height / 256.f;
-        iKindofSkill = KOS_SKILL2;
-    }
-    else if (bySkillType == AT_SKILL_MULTI_SHOT)
-    {
-        if (gCharacterManager.GetEquipedBowType_Skill() == BOWTYPE_NONE)
-        {
-            bCantSkill = true;
-        }
-
-        fU = 0 * width / 256.f;
-        fV = 8 * height / 256.f;
-        iKindofSkill = KOS_SKILL2;
-    }
-    else if (bySkillType == AT_SKILL_FLAME_STRIKE)
-    {
-        int iTypeL = CharacterMachine->Equipment[EQUIPMENT_WEAPON_LEFT].Type;
-        int iTypeR = CharacterMachine->Equipment[EQUIPMENT_WEAPON_RIGHT].Type;
-
-        if (!(iTypeR != -1 && (iTypeR < ITEM_STAFF || iTypeR >= ITEM_STAFF + MAX_ITEM_INDEX) && (iTypeL < ITEM_STAFF || iTypeL >= ITEM_STAFF + MAX_ITEM_INDEX)))
-        {
-            bCantSkill = true;
-        }
-
-        fU = 1 * width / 256.f;
-        fV = 8 * height / 256.f;
-        iKindofSkill = KOS_SKILL2;
-    }
-    else if (bySkillType == AT_SKILL_GIGANTIC_STORM)
-    {
-        fU = 2 * width / 256.f;
-        fV = 8 * height / 256.f;
-        iKindofSkill = KOS_SKILL2;
-    }
-    else if (bySkillType == AT_SKILL_LIGHTNING_SHOCK)
-    {
-        fU = 2 * width / 256.f;
-        fV = 3 * height / 256.f;
-        iKindofSkill = KOS_SKILL2;
-    }
-    else if (bySkillType == AT_SKILL_EXPANSION_OF_WIZARDRY)
-    {
-        fU = 8 * width / 256.f;
-        fV = 2 * height / 256.f;
-        iKindofSkill = KOS_SKILL2;
-    }
-    else if (bySkillUseType == 4)
-    {
-        fU = (width / 256.f) * (Skill_Icon % 12);
-        fV = (height / 256.f) * ((Skill_Icon / 12) + 4);
-        iKindofSkill = KOS_SKILL2;
-    }
-    else if (bySkillType >= AT_SKILL_KILLING_BLOW)
-    {
-        fU = ((bySkillType - AT_SKILL_KILLING_BLOW) % 12) * width / 256.f;
-        fV = ((bySkillType - AT_SKILL_KILLING_BLOW) / 12) * height / 256.f;
-        iKindofSkill = KOS_SKILL3;
-    }
-    else if (bySkillType >= AT_SKILL_SPIRAL_SLASH)
-    {
-        fU = ((bySkillType - AT_SKILL_SPIRAL_SLASH) % 8) * width / 256.f;
-        fV = ((bySkillType - AT_SKILL_SPIRAL_SLASH) / 8) * height / 256.f;
-        iKindofSkill = KOS_SKILL2;
-    }
-    else
-    {
-        fU = ((bySkillType - 1) % 8) * width / 256.f;
-        fV = ((bySkillType - 1) / 8) * height / 256.f;
-        iKindofSkill = KOS_SKILL1;
-    }
-    int iSkillIndex = 0;
-    switch (iKindofSkill)
-    {
-    case KOS_COMMAND:
-    {
-        iSkillIndex = IMAGE_COMMAND;
-    }break;
-    case KOS_SKILL1:
-    {
-        iSkillIndex = IMAGE_SKILL1;
-    }break;
-    case KOS_SKILL2:
-    {
-        iSkillIndex = IMAGE_SKILL2;
-    }break;
-    case KOS_SKILL3:
-    {
-        iSkillIndex = IMAGE_SKILL3;
-    }break;
-    }
-
-    if (bySkillType >= AT_SKILL_MASTER_BEGIN)
-    {
-        if (bCantSkill)
-        {
-            RenderImage(BITMAP_INTERFACE_MASTER_BEGIN + 3, x, y, width, height, (20.f / 512.f) * (Skill_Icon % 25), ((28.f / 512.f) * ((Skill_Icon / 25))), 20.f / 512.f, 28.f / 512.f);
-        }
-        else
-        {
-            RenderImage(BITMAP_INTERFACE_MASTER_BEGIN + 2, x, y, width, height, (20.f / 512.f)* (Skill_Icon % 25), ((28.f / 512.f)* ((Skill_Icon / 25))), 20.f / 512.f, 28.f / 512.f);
-        }
-    }
-    else
-    {
-        if (bCantSkill == true)
-        {
-            iSkillIndex += 6;
-        }
-
-        if (iSkillIndex != 0)
-        {
-            RenderBitmap(iSkillIndex, x, y, width, height, fU, fV, width / 256.f, height / 256.f);
-        }
+        RenderBitmap(icon.bitmap, x, y, width, height, icon.x / icon.sheetWidth, icon.y / icon.sheetHeight,
+                     width / icon.sheetWidth, height / icon.sheetHeight);
     }
 
     int iHotKey = -1;
@@ -2600,19 +2061,7 @@ void SEASON3B::CNewUISkillList::RenderSkillIcon(int iIndex, float x, float y, fl
         SEASON3B::RenderNumber(x + 20, y + 20, iHotKey);
     }
 
-    if ((bySkillType == AT_SKILL_CHAIN_DRIVE
-        || bySkillType == AT_SKILL_CHAIN_DRIVE_STR
-        || bySkillType == AT_SKILL_DRAGON_KICK
-        || bySkillType == AT_SKILL_DRAGON_ROAR
-        || bySkillType == AT_SKILL_DRAGON_ROAR_STR) && (bCantSkill))
-        return;
-
-    if ((bySkillType != AT_SKILL_INFINITY_ARROW)
-        && (bySkillType != AT_SKILL_INFINITY_ARROW_STR)
-        && (bySkillType != AT_SKILL_EXPANSION_OF_WIZARDRY)
-        && (bySkillType != AT_SKILL_EXPANSION_OF_WIZARDRY_STR)
-        && (bySkillType != AT_SKILL_EXPANSION_OF_WIZARDRY_MASTERY)
-        )
+    if (UI::Skills::Icon::ShowsCooldown(bySkillType, !bCantSkill))
     {
         RenderSkillDelay(iIndex, x, y, width, height);
     }
@@ -2620,27 +2069,16 @@ void SEASON3B::CNewUISkillList::RenderSkillIcon(int iIndex, float x, float y, fl
 
 void SEASON3B::CNewUISkillList::RenderSkillDelay(int iIndex, float x, float y, float width, float height)
 {
-    int iSkillDelay = CharacterAttribute->SkillDelay[iIndex];
-    if (iSkillDelay > 0)
+    constexpr DWORD kCooldownTint = 0x80FF8080u;
+    const float ratio = UI::Skills::Icon::CooldownRatio(iIndex);
+    if (ratio <= 0.0f)
     {
-        int iSkillType = CharacterAttribute->Skill[iIndex];
-
-        if (iSkillType == AT_SKILL_PLASMA_STORM_FENRIR)
-        {
-            if (!CheckAttack())
-            {
-                return;
-            }
-        }
-
-        int iSkillMaxDelay = SkillAttribute[iSkillType].Delay;
-
-        auto fPersent = (float)(iSkillDelay / (float)iSkillMaxDelay);
-
-        EnableAlphaTest();
-        float fdeltaH = height * fPersent;
-        RenderColorQuadARGB(x, y + height - fdeltaH, width, fdeltaH, 0x80FF8080u);
+        return;
     }
+
+    EnableAlphaTest();
+    const float coveredHeight = height * ratio;
+    RenderColorQuadARGB(x, y + height - coveredHeight, width, coveredHeight, kCooldownTint);
 }
 
 bool SEASON3B::CNewUISkillList::IsSkillListUp()

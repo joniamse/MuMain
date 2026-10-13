@@ -108,6 +108,10 @@ namespace SEASON3B
         void Toggle(DWORD dwKey);	//. Show <-> Hide
         void HideAll();
 
+        // Re-applies the layout that depends on which HUD is active (legacy or modern),
+        // e.g. after the "HD interface" option was toggled.
+        void ApplyHudLayout();
+
         // Shared handler for the top-right "X" close glyph baked into the common
         // item-frame (newui_item_back04.tga). Hides `dwKey` when the corner is
         // left-clicked and swallows the mouse so the click can't fall through to

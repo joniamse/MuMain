@@ -66,6 +66,329 @@
     font-effect: outline(1dp #000000cc);
 }
 
+/* ==== Bottom bar ============================================================================ */
+
+/* ---- Skill bar: bottom-centre, above the experience bar ---------------------------------- */
+
+#skillbar {
+    position: absolute;
+    left: 50%;
+    bottom: 14dp;
+    width: 452dp;
+    margin-left: -226dp;
+}
+
+#skill-row {
+    display: flex;
+    align-items: center;
+    padding: 4dp;
+}
+
+.skill-current,
+.skill-slot {
+    position: relative;
+    border: 1dp #2b3a4f;
+    border-radius: 3dp;
+    decorator: vertical-gradient(#141c28 #0a0f16);
+}
+
+.skill-current {
+    width: 44dp;
+    height: 44dp;
+    margin-right: 8dp;
+    border-color: #6f9bd1aa;
+}
+
+.skill-slot {
+    width: 36dp;
+    height: 36dp;
+    margin-left: 3dp;
+}
+
+.skill-current img,
+.skill-slot img,
+.skill-cell img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+}
+
+.skill-current img { width: 28dp; height: 38dp; margin-left: -14dp; margin-top: -19dp; }
+.skill-slot img    { width: 22dp; height: 30dp; margin-left: -11dp; margin-top: -15dp; }
+.skill-cell img    { width: 21dp; height: 29dp; margin-left: -10dp; margin-top: -14dp; }
+
+.skill-current:hover,
+.skill-slot:hover,
+.skill-cell:hover {
+    border-color: #9cc2ee;
+}
+
+.skill-current.open {
+    border-color: #ffd24a;
+}
+
+.skill-slot.selected,
+.skill-cell.selected {
+    border-color: #ffd24a;
+    decorator: vertical-gradient(#3a2f12 #14100a);
+}
+
+.skill-slot.empty {
+    decorator: none;
+    background-color: #0a0f1680;
+}
+
+.disabled img {
+    image-color: #ffffff80;
+}
+
+/* Small marker under the current skill hinting that it opens the picker. */
+.current-caret {
+    position: absolute;
+    left: 50%;
+    bottom: 2dp;
+    width: 12dp;
+    height: 2dp;
+    margin-left: -6dp;
+    background-color: #6f9bd1;
+}
+
+.skill-current.open .current-caret {
+    background-color: #ffd24a;
+}
+
+/* Remaining cooldown covers the icon from the bottom up. */
+.cooldown {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #000000a6;
+    border-top: 1dp #ff8080;
+}
+
+.slot-key {
+    position: absolute;
+    left: 3dp;
+    top: 1dp;
+    font-size: 9dp;
+    font-weight: bold;
+    color: #cdd8e6;
+    font-effect: outline(1dp #000000);
+}
+
+.skill-slot.empty .slot-key {
+    color: #5b6b80;
+}
+
+/* ---- Skill picker (opens above the bar, left) -------------------------------------------- */
+
+#skill-picker {
+    position: absolute;
+    left: 0;
+    bottom: 100%;
+    width: 300dp;
+    margin-bottom: 6dp;
+    padding: 6dp 8dp 8dp 8dp;
+}
+
+.picker-title {
+    font-size: 12dp;
+    font-weight: bold;
+    margin-bottom: 6dp;
+}
+
+.picker-title .text-muted {
+    font-weight: normal;
+    margin-left: 6dp;
+}
+
+.picker-grid {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.skill-cell {
+    position: relative;
+    width: 32dp;
+    height: 32dp;
+    margin: 0 3dp 3dp 0;
+    border: 1dp #2b3a4f;
+    border-radius: 3dp;
+    decorator: vertical-gradient(#141c28 #0a0f16);
+}
+
+/* ---- Skill tooltip (opens above the bar, right) ------------------------------------------ */
+
+#skill-tooltip {
+    position: absolute;
+    right: 0;
+    bottom: 100%;
+    width: 230dp;
+    margin-bottom: 6dp;
+    padding: 6dp 8dp;
+}
+
+.tip-line {
+    font-size: 11dp;
+    line-height: 15dp;
+    color: #e9eef5;
+}
+
+.tip-line.bold  { font-weight: bold; color: #ffd24a; font-size: 12dp; }
+.tip-line.blue  { color: #7fb8ff; }
+.tip-line.red   { color: #ff6b6b; }
+.tip-line.warning {
+    color: #ffffff;
+    background-color: #9e1019cc;
+    padding: 0 3dp;
+}
+.tip-line.blank { height: 6dp; }
+
+/* ---- Menu dock: bottom-right, above the experience bar ----------------------------------- */
+
+#menu-dock {
+    position: absolute;
+    right: 6dp;
+    bottom: 14dp;
+    display: flex;
+    padding: 4dp;
+}
+
+.dock-btn {
+    position: relative;
+    width: 34dp;
+    height: 34dp;
+    margin-left: 4dp;
+    border: 1dp #2b3a4f;
+    border-radius: 3dp;
+    decorator: vertical-gradient(#1a2433 #0d131c);
+}
+
+.dock-btn:first-child {
+    margin-left: 0;
+}
+
+.dock-btn img {
+    position: absolute;
+    left: 7dp;
+    top: 7dp;
+    width: 20dp;
+    height: 20dp;
+    image-color: #b9c8db;
+}
+
+.dock-btn:hover {
+    border-color: #6f9bd1;
+    decorator: vertical-gradient(#24364f #121b28);
+}
+
+.dock-btn:hover img {
+    image-color: #ffffff;
+}
+
+.dock-btn:active {
+    decorator: vertical-gradient(#0d131c #1a2433);
+}
+
+.dock-btn.shop img {
+    image-color: #ffd24a;
+}
+
+.dock-key {
+    position: absolute;
+    right: 2dp;
+    bottom: 0;
+    font-size: 8dp;
+    font-weight: bold;
+    color: #8fa3bd;
+    font-effect: outline(1dp #000000);
+}
+
+/* Fixed width: RmlUi under-measures shrink-to-fit absolute boxes, which clipped the background. */
+.dock-btn .tooltip {
+    left: 50%;
+    width: 76dp;
+    margin-left: -38dp;
+    padding: 4dp 0;
+    text-align: center;
+}
+
+.dock-btn:last-child .tooltip {
+    left: auto;
+    right: 0;
+    margin-left: 0;
+}
+
+/* Character (quest waiting) / friends (unread mail or chat) want attention. */
+@keyframes dock-alert {
+    from { border-color: #2b3a4f; }
+    to   { border-color: #ffd24a; }
+}
+
+.dock-btn.alert {
+    animation: 0.5s sine-in-out infinite alternate dock-alert;
+}
+
+.dock-btn.alert img {
+    image-color: #ffe27a;
+}
+
+/* ---- Experience: full width, very bottom ------------------------------------------------- */
+
+#exp {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 11dp;
+    padding: 3dp 4dp 2dp 4dp;
+    background-color: #05080dcc;
+}
+
+.exp-track {
+    position: relative;
+    height: 6dp;
+    background-color: #0e141d;
+    border: 1dp #000000;
+    border-radius: 2dp;
+}
+
+.exp-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    border-radius: 1dp;
+    decorator: vertical-gradient(#c79bff #5b2fa6);
+    transition: width 0.4s cubic-out;
+}
+
+#exp.master .exp-fill {
+    decorator: vertical-gradient(#ffe27a #b5770c);
+}
+
+.exp-tick {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1dp;
+    background-color: #000000aa;
+}
+
+#exp:hover .exp-track {
+    border-color: #6f9bd1;
+}
+
+.exp-tooltip {
+    left: 50%;
+    margin-left: -90dp;
+    width: 180dp;
+    text-align: center;
+}
+
+/* ==== Status window stat colours ============================================================ */
+
 .shield  .stat-label { color: #ffd24a; }
 .life    .stat-label { color: #ff6b6b; }
 .mana    .stat-label { color: #62b3ff; }

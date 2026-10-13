@@ -15,6 +15,10 @@ div, p, h1, h2, h3 {
     display: block;
 }
 
+b, strong {
+    font-weight: bold;
+}
+
 body {
     display: block;
     width: 100%;
@@ -55,6 +59,27 @@ body {
 .text-muted {
     font-size: 10dp;
     color: #8fa3bd;
+}
+
+/* ---- Tooltips: a ".tooltip" child appears above its parent while hovered -------------------- */
+
+.tooltip {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    margin-bottom: 6dp;
+    padding: 4dp 7dp;
+    white-space: nowrap;
+    font-size: 11dp;
+    color: #eef2f7;
+    background-color: #0b1018f2;
+    border: 1dp #2b3a4f;
+    border-radius: 3dp;
+}
+
+*:hover > .tooltip {
+    display: block;
 }
 
 /* ---- Gauges: <div class="gauge [thin] <kind>"><div class="gauge-fill"/><div class="gauge-gloss"/>

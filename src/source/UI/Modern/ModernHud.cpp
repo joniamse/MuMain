@@ -6,10 +6,12 @@
 
 #include "Core/Utilities/Log/MuLogger.h"
 #include "Data/GameConfig/GameConfig.h"
+#include "UI/Modern/BottomBarDataModel.h"
 #include "UI/Modern/HudDataModel.h"
 #include "UI/Modern/RmlInput.h"
 #include "UI/Modern/RmlRenderInterface.h"
 #include "UI/Modern/RmlSystemInterface.h"
+#include "UI/Modern/SkillBarDataModel.h"
 
 #include "UI/Modern/RmlIncludes.h"
 
@@ -42,6 +44,8 @@ struct HudState
     RmlSystemInterface systemInterface;
     std::unique_ptr<RmlRenderInterface> renderInterface;
     HudDataModel dataModel;
+    BottomBarDataModel barModel;
+    SkillBarDataModel skillModel;
     ::Rml::Context* context = nullptr;
     // Buttons whose press went to the UI; their release must not reach the game either.
     std::array<bool, kMouseButtonCount> capturedButtons{};
@@ -73,12 +77,15 @@ bool LoadFonts()
 bool CreateHud(HudState& state)
 {
     state.context = ::Rml::CreateContext(kContextName, WindowSize());
-    if (!state.context || !state.dataModel.Bind(*state.context))
+    if (!state.context || !state.dataModel.Bind(*state.context) || !state.barModel.Bind(*state.context) ||
+        !state.skillModel.Bind(*state.context))
     {
         return false;
     }
-    // Fill the model before the document is built so its first layout shows real values.
+    // Fill the models before the document is built so its first layout shows real values.
     state.dataModel.Refresh();
+    state.barModel.Refresh();
+    state.skillModel.Refresh();
 
     ::Rml::ElementDocument* document = state.context->LoadDocument(kHudDocument);
     if (!document)
@@ -224,6 +231,8 @@ void RenderHud()
 
     UpdateLayout(*state.context);
     state.dataModel.Refresh();
+    state.barModel.Refresh();
+    state.skillModel.Refresh();
     state.context->Update();
 
     state.renderInterface->BeginFrame(static_cast<int>(WindowWidth), static_cast<int>(WindowHeight));

@@ -144,8 +144,7 @@ bool CNewUISystem::Create()
         return false;
 
     m_pNewSystemLogWindow = new CNewUISystemLogWindow;
-    const int systemLogTop = UI::Modern::IsEnabled() ? kSystemLogTopBelowModernHud : kSystemLogTop;
-    if (false == m_pNewSystemLogWindow->Create(m_pNewUIMng, 0, systemLogTop))
+    if (false == m_pNewSystemLogWindow->Create(m_pNewUIMng, 0, kSystemLogTop))
         return false;
 
     m_pNewOptionWindow = new CNewUIOptionWindow;
@@ -199,11 +198,21 @@ bool CNewUISystem::CreateChatCommandWindow()
     return false;
 }
 
+void CNewUISystem::ApplyHudLayout()
+{
+    if (m_pNewSystemLogWindow)
+    {
+        const int systemLogTop = UI::Modern::IsEnabled() ? kSystemLogTopBelowModernHud : kSystemLogTop;
+        m_pNewSystemLogWindow->SetPosition(0, systemLogTop);
+    }
+}
+
 bool CNewUISystem::LoadMainSceneInterface()
 {
     g_MessageBox->Show(true);
     m_pNewChatLogWindow->Show(true);
     m_pNewSystemLogWindow->Show(true);
+    ApplyHudLayout();
     m_pNewSlideWindow->Show(true);
 
     m_pNewItemMng = new CNewUIItemMng;

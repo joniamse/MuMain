@@ -12,6 +12,9 @@ class RmlSystemInterface final : public ::Rml::SystemInterface
 public:
     double GetElapsedTime() override;
     bool LogMessage(::Rml::Log::Type type, const ::Rml::String& message) override;
+    // Leaves "legacy:<index>" texture sources untouched instead of resolving them as paths.
+    void JoinPath(::Rml::String& translatedPath, const ::Rml::String& documentPath,
+                  const ::Rml::String& path) override;
 };
 } // namespace UI::Modern
 

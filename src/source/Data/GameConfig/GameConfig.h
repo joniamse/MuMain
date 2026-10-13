@@ -70,6 +70,7 @@ public:
 
     // Modern (RmlUi) HUD instead of the legacy gauges. Needs a build with RmlUi.
     bool GetModernHud() const { return m_modernHud; }
+    void SetModernHud(bool enabled);
 
     // Chat commands - the favourites and the named templates of the command
     // window. They belong to the installation, not to a character.

@@ -4,8 +4,9 @@
     <link type="text/rcss" href="theme.rcss"/>
     <link type="text/rcss" href="hud.rcss"/>
 </head>
-<body data-model="hud">
-    <div id="status" class="panel interactive" data-class-compact="compact" data-event-click="toggle_compact">
+<body>
+    <!-- Status window (data model "hud") -->
+    <div id="status" class="panel interactive" data-model="hud" data-class-compact="compact" data-event-click="toggle_compact">
         <div class="status-header">
             <div class="level-badge">{{level}}</div>
             <div class="identity">
@@ -44,6 +45,97 @@
             <div class="gauge thin">
                 <div class="gauge-fill" data-style-width="ability_width"></div>
                 <div class="gauge-gloss"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Skill bar: current skill, hotkeys 1..0, picker and tooltip (data model "skills") -->
+    <div id="skillbar" data-model="skills">
+        <div id="skill-tooltip" class="panel" data-if="tooltip.size > 0">
+            <div class="tip-line" data-for="line : tooltip"
+                 data-class-blue="line.color == 'blue'" data-class-red="line.color == 'red'"
+                 data-class-warning="line.color == 'warning'" data-class-bold="line.bold"
+                 data-class-blank="line.blank">{{line.text}}</div>
+        </div>
+
+        <div id="skill-picker" class="panel interactive" data-if="picker_open">
+            <div class="picker-title">Skills <span class="text-muted">Click: use · Ctrl+1..0: assign</span></div>
+            <div class="picker-grid">
+                <div class="skill-cell" data-for="skill : picker"
+                     data-class-selected="skill.selected" data-class-disabled="!skill.usable"
+                     data-event-click="pick(skill.index)" data-event-mouseover="hover(skill.index, true)"
+                     data-event-mouseout="unhover">
+                    <img data-attr-src="skill.icon" data-attr-rect="skill.rect"/>
+                </div>
+            </div>
+        </div>
+
+        <div id="skill-row" class="panel">
+            <div class="skill-current interactive" data-class-open="picker_open" data-class-disabled="!current.usable"
+                 data-event-click="toggle_picker" data-event-mouseover="hover(current.index, false)"
+                 data-event-mouseout="unhover">
+                <img data-if="current.filled" data-attr-src="current.icon" data-attr-rect="current.rect"/>
+                <div class="cooldown" data-if="current.cooling" data-style-height="current.cooldown"></div>
+                <div class="current-caret"></div>
+            </div>
+            <div class="skill-slot interactive" data-for="slot : slots"
+                 data-class-selected="slot.selected" data-class-empty="!slot.filled"
+                 data-class-disabled="!slot.usable"
+                 data-event-click="use_slot(slot.key)" data-event-mouseover="hover(slot.index, false)"
+                 data-event-mouseout="unhover">
+                <img data-if="slot.filled" data-attr-src="slot.icon" data-attr-rect="slot.rect"/>
+                <div class="cooldown" data-if="slot.cooling" data-style-height="slot.cooldown"></div>
+                <span class="slot-key">{{slot.key}}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom bar: menu dock and experience (data model "bar") -->
+    <div id="bottom" data-model="bar">
+        <div id="menu-dock" class="panel">
+            <div class="dock-btn interactive" data-event-click="menu('character')" data-class-alert="quest_alert">
+                <img src="img/icon-character.png"/>
+                <span class="dock-key">C</span>
+                <div class="tooltip">Character</div>
+            </div>
+            <div class="dock-btn interactive" data-event-click="menu('inventory')">
+                <img src="img/icon-inventory.png"/>
+                <span class="dock-key">I</span>
+                <div class="tooltip">Inventory</div>
+            </div>
+            <div class="dock-btn interactive" data-event-click="menu('friends')" data-class-alert="friend_alert">
+                <img src="img/icon-friends.png"/>
+                <span class="dock-key">F</span>
+                <div class="tooltip">Friends</div>
+            </div>
+            <div class="dock-btn interactive" data-event-click="menu('menu')">
+                <img src="img/icon-menu.png"/>
+                <span class="dock-key">U</span>
+                <div class="tooltip">Menu</div>
+            </div>
+            <div class="dock-btn shop interactive" data-event-click="menu('shop')">
+                <img src="img/icon-shop.png"/>
+                <span class="dock-key">X</span>
+                <div class="tooltip">Item Shop</div>
+            </div>
+        </div>
+
+        <div id="exp" class="interactive" data-class-master="exp_master">
+            <div class="exp-track">
+                <div class="exp-fill" data-style-width="exp_width"></div>
+                <div class="exp-tick" style="left: 10%;"></div>
+                <div class="exp-tick" style="left: 20%;"></div>
+                <div class="exp-tick" style="left: 30%;"></div>
+                <div class="exp-tick" style="left: 40%;"></div>
+                <div class="exp-tick" style="left: 50%;"></div>
+                <div class="exp-tick" style="left: 60%;"></div>
+                <div class="exp-tick" style="left: 70%;"></div>
+                <div class="exp-tick" style="left: 80%;"></div>
+                <div class="exp-tick" style="left: 90%;"></div>
+            </div>
+            <div class="tooltip exp-tooltip">
+                <span data-if="exp_master">Master </span>Level {{exp_level}} · <b>{{exp_percent}}</b><br/>
+                <span class="text-muted">{{exp_current}} / {{exp_next}}</span>
             </div>
         </div>
     </div>

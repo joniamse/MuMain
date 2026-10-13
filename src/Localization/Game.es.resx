@@ -1433,6 +1433,9 @@
   <data name="Windowed mode" xml:space="preserve">
     <value>Modo ventana</value>
   </data>
+  <data name="Modern interface" xml:space="preserve">
+    <value>Interfaz HD (moderna)</value>
+  </data>
   <data name="Close388" xml:space="preserve">
     <value>Cerca</value>
     <comment>legacy_id=388,1002</comment>

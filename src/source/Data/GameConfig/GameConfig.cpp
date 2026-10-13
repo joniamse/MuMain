@@ -195,6 +195,11 @@ void GameConfig::SetVSyncEnabled(bool enabled)
     m_vsyncEnabled = enabled;
 }
 
+void GameConfig::SetModernHud(bool enabled)
+{
+    m_modernHud = enabled;
+}
+
 void GameConfig::SetRememberMe(bool remember)
 {
     m_rememberMe = remember;
