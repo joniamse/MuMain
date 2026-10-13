@@ -6273,23 +6273,23 @@
     <comment>legacy_id=1680</comment>
   </data>
   <data name="Regular chat" xml:space="preserve">
-    <value>charla regular</value>
+    <value>Chat general</value>
     <comment>legacy_id=1681</comment>
   </data>
   <data name="Party chat" xml:space="preserve">
-    <value>charla de fiesta</value>
+    <value>Chat de grupo</value>
     <comment>legacy_id=1682</comment>
   </data>
   <data name="Guilt chat" xml:space="preserve">
-    <value>Charla de culpa</value>
+    <value>Chat de guild</value>
     <comment>legacy_id=1683</comment>
   </data>
   <data name="Whisper block: On/Off" xml:space="preserve">
-    <value>Bloqueo de susurros: activado/desactivado</value>
+    <value>Bloquear mensajes privados: sí/no</value>
     <comment>legacy_id=1684</comment>
   </data>
   <data name="System message pop-up" xml:space="preserve">
-    <value>Ventana emergente de mensaje del sistema</value>
+    <value>Mostrar mensajes del sistema</value>
     <comment>legacy_id=1685</comment>
   </data>
   <data name="Chat window background On/Off (F5)" xml:space="preserve">

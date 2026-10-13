@@ -1,4 +1,5 @@
 ﻿#include "stdafx.h"
+#include "Data/GameConfig/GameConfig.h"
 #include "UI/Legacy/UIControls.h"
 #include "Render/Models/ZzzBMD.h"
 #include "Engine/Object/ZzzInfomation.h"
@@ -3938,21 +3939,30 @@ static void OpenItemDataAndShowModelProblems()
     }
 }
 
+// [Modern] HdCursor: the cursors of tools/cursor_hd.py (Data\Interface\HD), else the classic
+// ones. Read when the client starts.
+static void LoadGameCursor(const wchar_t* name, GLuint bitmapIndex)
+{
+    const bool hd = GameConfig::GetInstance().GetHdCursor();
+    const std::wstring path = std::wstring(hd ? L"Interface\\HD\\" : L"Interface\\") + name + L".tga";
+    LoadBitmap(path.c_str(), bitmapIndex, GL_LINEAR, GL_CLAMP_TO_EDGE);
+}
+
 void OpenBasicData(HDC hDC)
 {
     CUIMng& rUIMng = CUIMng::Instance();
 
     rUIMng.RenderTitleSceneUI(hDC, 0, 11);
 
-    LoadBitmap(L"Interface\\Cursor.tga", BITMAP_CURSOR, GL_LINEAR, GL_CLAMP_TO_EDGE);
-    LoadBitmap(L"Interface\\CursorPush.tga", BITMAP_CURSOR + 1, GL_LINEAR, GL_CLAMP_TO_EDGE);
-    LoadBitmap(L"Interface\\CursorAttack.tga", BITMAP_CURSOR + 2, GL_LINEAR, GL_CLAMP_TO_EDGE);
-    LoadBitmap(L"Interface\\CursorGet.tga", BITMAP_CURSOR + 3, GL_LINEAR, GL_CLAMP_TO_EDGE);
-    LoadBitmap(L"Interface\\CursorTalk.tga", BITMAP_CURSOR + 4, GL_LINEAR, GL_CLAMP_TO_EDGE);
-    LoadBitmap(L"Interface\\CursorRepair.tga", BITMAP_CURSOR + 5, GL_LINEAR, GL_CLAMP_TO_EDGE);
-    LoadBitmap(L"Interface\\CursorLeanAgainst.tga", BITMAP_CURSOR + 6, GL_LINEAR, GL_CLAMP_TO_EDGE);
-    LoadBitmap(L"Interface\\CursorSitDown.tga", BITMAP_CURSOR + 7, GL_LINEAR, GL_CLAMP_TO_EDGE);
-    LoadBitmap(L"Interface\\CursorDontMove.tga", BITMAP_CURSOR + 8, GL_LINEAR, GL_CLAMP_TO_EDGE);
+    LoadGameCursor(L"Cursor", BITMAP_CURSOR);
+    LoadGameCursor(L"CursorPush", BITMAP_CURSOR + 1);
+    LoadGameCursor(L"CursorAttack", BITMAP_CURSOR + 2);
+    LoadGameCursor(L"CursorGet", BITMAP_CURSOR + 3);
+    LoadGameCursor(L"CursorTalk", BITMAP_CURSOR + 4);
+    LoadGameCursor(L"CursorRepair", BITMAP_CURSOR + 5);
+    LoadGameCursor(L"CursorLeanAgainst", BITMAP_CURSOR + 6);
+    LoadGameCursor(L"CursorSitDown", BITMAP_CURSOR + 7);
+    LoadGameCursor(L"CursorDontMove", BITMAP_CURSOR + 8);
     //interface
     LoadBitmap(L"Interface\\ok.jpg", BITMAP_INTERFACE + 11);
     LoadBitmap(L"Interface\\ok2.jpg", BITMAP_INTERFACE + 12);
@@ -4200,7 +4210,7 @@ void OpenBasicData(HDC hDC)
     LoadBitmap(L"Interface\\DoorOP.jpg", BITMAP_INTERFACE_EX + 41);
     //OpenJpeg( "Effect\\FireSnuff.jpg"       , BITMAP_FIRE_SNUFF,    GL_LINEAR, GL_CLAMP_TO_EDGE );
     LoadBitmap(L"Object31\\Flag.tga", BITMAP_INTERFACE_MAP + 0, GL_LINEAR, GL_CLAMP_TO_EDGE);
-    LoadBitmap(L"Interface\\CursorAttack2.tga", BITMAP_CURSOR2);
+    LoadGameCursor(L"CursorAttack2", BITMAP_CURSOR2);
     LoadBitmap(L"Effect\\Cratered.tga", BITMAP_CRATER);
     LoadBitmap(L"Effect\\FormationMark.tga", BITMAP_FORMATION_MARK);
     LoadBitmap(L"Effect\\Plus.tga", BITMAP_PLUS);

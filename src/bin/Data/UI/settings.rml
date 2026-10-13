@@ -27,6 +27,14 @@
                 </div>
                 <div class="switch" data-class-on="modern_windows"><div class="knob"></div></div>
             </div>
+            <div class="setting" data-event-click="toggle('cursor')">
+                <div class="setting-text">
+                    <div class="setting-name">HD cursor</div>
+                    <div class="setting-help">Sharp, modern mouse cursors.</div>
+                    <div class="setting-note" data-if="cursor_restart">Restart the game to apply.</div>
+                </div>
+                <div class="switch" data-class-on="hd_cursor"><div class="knob"></div></div>
+            </div>
 
             <div class="section-title">Controls</div>
             <div class="setting" data-event-click="toggle('wasd')">
