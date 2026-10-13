@@ -114,8 +114,6 @@ namespace SEASON3B
         bool m_bRenderAllEffects;
         int m_iResolutionIndex;
         bool m_bWindowedMode;
-        // "HD interface": modern RmlUi HUD instead of the legacy one ([UI] ModernHud).
-        bool m_bModernHud = true;
         int m_iLanguageIndex;
         int m_iFontIndex;
 
@@ -136,7 +134,7 @@ namespace SEASON3B
         void InitResolutionCombo();
         void SyncResolutionComboToWindow();
         void ApplyWindowModeToggle();
-        void ApplyModernHudToggle();
+        bool HandleModernSettingsLink();
 
         void ApplyLanguage();
         int FindCurrentLanguageIndex();

@@ -197,12 +197,15 @@ namespace
     constexpr int FONT_COMBO_HEIGHT  = 16;
     constexpr int FONT_COMBO_MAX_VISIBLE = 5;
 
-    // Checkboxes share one column. "HD interface" (modern RmlUi HUD) is the last row,
-    // below "Windowed mode"; the frame, close button and hit area grew by one row for it.
+    // Checkboxes share one column. The last row, below "Windowed mode", opens the Modern
+    // settings window; the frame, close button and hit area grew by one row for it.
     constexpr int CHECKBOX_X_LOCAL = 150;
     constexpr int WINDOWED_CHECK_Y_LOCAL = 356;
-    constexpr int MODERN_HUD_CHECK_Y_LOCAL = 378;
-    constexpr int MODERN_HUD_LABEL_Y_LOCAL = 383;
+    constexpr int MODERN_SETTINGS_ROW_Y_LOCAL = 378;
+    constexpr int MODERN_SETTINGS_LABEL_Y_LOCAL = 383;
+    constexpr int MODERN_SETTINGS_ROW_X_LOCAL = 20;
+    constexpr int MODERN_SETTINGS_ROW_WIDTH = 150;
+    constexpr int MODERN_SETTINGS_ROW_HEIGHT = 18;
     constexpr int CLOSE_BUTTON_Y_LOCAL = 410;
     constexpr int WINDOW_WIDTH = 190;
     constexpr int WINDOW_HEIGHT = 441;
@@ -227,7 +230,6 @@ SEASON3B::CNewUIOptionWindow::CNewUIOptionWindow()
     m_bRenderAllEffects = true;
     m_iResolutionIndex = 0;
     m_bWindowedMode = (g_bUseWindowMode == TRUE);
-    m_bModernHud = GameConfig::GetInstance().GetModernHud();
     m_iLanguageIndex = FindCurrentLanguageIndex();
     m_iFontIndex = FindCurrentFontIndex();
 }
@@ -414,14 +416,14 @@ bool SEASON3B::CNewUIOptionWindow::UpdateMouseEvent()
         return false;
     }
 
+    if (HandleModernSettingsLink())
+        return false;
+
     bool oldWindowedMode = m_bWindowedMode;
-    const bool oldModernHud = m_bModernHud;
     HandleCheckboxInputs();
 
     if (m_bWindowedMode != oldWindowedMode)
         ApplyWindowModeToggle();
-    if (m_bModernHud != oldModernHud)
-        ApplyModernHudToggle();
 
     if (HandleVolumeSlider(m_iVolumeLevel, 104))
         OnSoundVolumeChanged();
@@ -448,7 +450,6 @@ void SEASON3B::CNewUIOptionWindow::HandleCheckboxInputs()
         { 155, &m_bSlideHelp         },
         { 238, &m_bRenderAllEffects  },
         { WINDOWED_CHECK_Y_LOCAL, &m_bWindowedMode },
-        { MODERN_HUD_CHECK_Y_LOCAL, &m_bModernHud },
     };
 
     constexpr int CHECKBOX_SIZE = 15;
@@ -592,7 +593,6 @@ void SEASON3B::CNewUIOptionWindow::OpenningProcess()
     m_FontCombo.SetSelectedIndex(m_iFontIndex);
     m_FontCombo.Close();
     m_bWindowedMode = (g_bUseWindowMode == TRUE);
-    m_bModernHud = GameConfig::GetInstance().GetModernHud();
 }
 
 void SEASON3B::CNewUIOptionWindow::ClosingProcess()
@@ -723,8 +723,12 @@ void SEASON3B::CNewUIOptionWindow::RenderContents()
     g_pRenderText->RenderText(m_Pos.x + 40, m_Pos.y + 361, I18N::Game::WindowedMode);
 
     y += 22.f;
-    RenderImage(IMAGE_OPTION_POINT, x, y, 10.f, 10.f);       // HD interface
-    g_pRenderText->RenderText(m_Pos.x + 40, m_Pos.y + MODERN_HUD_LABEL_Y_LOCAL, I18N::Game::ModernInterface);
+    RenderImage(IMAGE_OPTION_POINT, x, y, 10.f, 10.f);       // Modern settings link
+    const bool linkHovered = CheckMouseIn(m_Pos.x + MODERN_SETTINGS_ROW_X_LOCAL, m_Pos.y + MODERN_SETTINGS_ROW_Y_LOCAL,
+                                          MODERN_SETTINGS_ROW_WIDTH, MODERN_SETTINGS_ROW_HEIGHT);
+    g_pRenderText->SetTextColor(255, linkHovered ? 240 : 210, linkHovered ? 140 : 74, 255);
+    g_pRenderText->RenderText(m_Pos.x + 40, m_Pos.y + MODERN_SETTINGS_LABEL_Y_LOCAL, I18N::Game::ModernSettings);
+    g_pRenderText->SetTextColor(255, 255, 255, 255);
 }
 
 void SEASON3B::CNewUIOptionWindow::RenderButtons()
@@ -802,8 +806,6 @@ void SEASON3B::CNewUIOptionWindow::RenderButtons()
         RenderImage(IMAGE_OPTION_BTN_CHECK, m_Pos.x + 150, m_Pos.y + WINDOWED_CHECK_Y_LOCAL, 15, 15, 0, 15.f);
     }
 
-    RenderImage(IMAGE_OPTION_BTN_CHECK, m_Pos.x + CHECKBOX_X_LOCAL, m_Pos.y + MODERN_HUD_CHECK_Y_LOCAL, 15, 15, 0,
-                m_bModernHud ? 0.f : 15.f);
 
     // Combo boxes drawn last so their expanded dropdowns sit on top of
     // anything else in the window. Within the combo pair, render the
@@ -981,13 +983,19 @@ void SEASON3B::CNewUIOptionWindow::SyncResolutionComboToWindow()
 // rather than driving the OS directly: the old Win32 ChangeDisplaySettings /
 // SetWindowLongPtr path fought SDL and left its state inconsistent with a
 // later resolution change. Keeps the current size and applies the new mode.
-// Takes effect immediately: the legacy HUD parts check UI::Modern::IsEnabled() every frame,
-// and the modern HUD initialises itself on its first frame.
-void SEASON3B::CNewUIOptionWindow::ApplyModernHudToggle()
+// The last row opens the Modern settings window (UI/Modern) in place of this one.
+bool SEASON3B::CNewUIOptionWindow::HandleModernSettingsLink()
 {
-    GameConfig::GetInstance().SetModernHud(m_bModernHud);
-    GameConfig::GetInstance().Save();
-    g_pNewUISystem->ApplyHudLayout();
+    if (!SEASON3B::IsPress(VK_LBUTTON) ||
+        !CheckMouseIn(m_Pos.x + MODERN_SETTINGS_ROW_X_LOCAL, m_Pos.y + MODERN_SETTINGS_ROW_Y_LOCAL,
+                      MODERN_SETTINGS_ROW_WIDTH, MODERN_SETTINGS_ROW_HEIGHT))
+    {
+        return false;
+    }
+    PlayBuffer(SOUND_CLICK01);
+    g_pNewUISystem->Hide(SEASON3B::INTERFACE_OPTION);
+    UI::Modern::OpenSettings();
+    return true;
 }
 
 void SEASON3B::CNewUIOptionWindow::ApplyWindowModeToggle()

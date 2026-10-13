@@ -15,7 +15,7 @@ namespace UI::Modern
 //   exp_current, exp_next        total experience and target, digit-grouped
 //   friend_alert, quest_alert    the friend/character buttons should draw attention
 // Events:
-//   menu('character' | 'inventory' | 'friends' | 'menu' | 'shop')
+//   menu('character' | 'inventory' | 'friends' | 'menu' | 'shop' | 'settings')
 class BottomBarDataModel
 {
 public:

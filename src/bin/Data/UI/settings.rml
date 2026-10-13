@@ -1,0 +1,49 @@
+<rml>
+<head>
+    <title>Modern settings</title>
+    <link type="text/rcss" href="theme.rcss"/>
+    <link type="text/rcss" href="settings.rcss"/>
+</head>
+<body>
+    <div id="backdrop" class="interactive" data-model="settings">
+        <div id="settings" class="panel interactive">
+            <div class="settings-header">
+                <div class="text-title">Modern settings</div>
+                <div class="text-muted">Optional improvements. Switch any of them off to play classic MU.</div>
+            </div>
+
+            <div class="section-title">Interface</div>
+            <div class="setting" data-event-click="toggle('hd')">
+                <div class="setting-text">
+                    <div class="setting-name">HD interface</div>
+                    <div class="setting-help">Modern HUD: status window, skill bar, menu dock and experience bar.</div>
+                </div>
+                <div class="switch" data-class-on="hd_interface"><div class="knob"></div></div>
+            </div>
+
+            <div class="section-title">Controls</div>
+            <div class="setting" data-event-click="toggle('wasd')">
+                <div class="setting-text">
+                    <div class="setting-name">WASD movement</div>
+                    <div class="setting-help">Walk with W, A, S and D. The W potion, master tree (A), commands (D) and personal shop (S) move to Shift + key.</div>
+                </div>
+                <div class="switch" data-class-on="wasd_movement"><div class="knob"></div></div>
+            </div>
+
+            <div class="section-title">Graphics</div>
+            <div class="setting" data-event-click="toggle('textures')">
+                <div class="setting-text">
+                    <div class="setting-name">Enhanced textures</div>
+                    <div class="setting-help">Mipmaps and anisotropic filtering: steadier, sharper ground and objects in the distance.</div>
+                    <div class="setting-note" data-if="textures_restart">Restart the game to apply.</div>
+                </div>
+                <div class="switch" data-class-on="enhanced_textures"><div class="knob"></div></div>
+            </div>
+
+            <div class="settings-footer">
+                <div class="button" data-event-click="close">Close</div>
+            </div>
+        </div>
+    </div>
+</body>
+</rml>

@@ -113,6 +113,10 @@
                 <span class="dock-key">U</span>
                 <div class="tooltip">Menu</div>
             </div>
+            <div class="dock-btn interactive" data-event-click="menu('settings')">
+                <img src="img/icon-settings.png"/>
+                <div class="tooltip">Modern settings</div>
+            </div>
             <div class="dock-btn shop interactive" data-event-click="menu('shop')">
                 <img src="img/icon-shop.png"/>
                 <span class="dock-key">X</span>

@@ -4,7 +4,9 @@
 
 #include "UI/Modern/BottomBarDataModel.h"
 
+#include "Audio/DSPlaySound.h"
 #include "Character/ExperienceProgress.h"
+#include "UI/Modern/ModernHud.h"
 #include "Core/Utilities/Log/MuLogger.h"
 #include "Engine/Object/ZzzCharacter.h"
 #include "UI/Modern/RmlFormat.h"
@@ -37,6 +39,12 @@ void OnMenuEvent(::Rml::DataModelHandle, ::Rml::Event&, const ::Rml::VariantList
         return;
     }
     const ::Rml::String name = arguments[0].Get<::Rml::String>();
+    if (name == "settings")
+    {
+        PlayBuffer(SOUND_CLICK01);
+        OpenSettings();
+        return;
+    }
     for (const auto& [actionName, action] : kMenuActions)
     {
         if (actionName == name)

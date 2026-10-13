@@ -10,6 +10,11 @@ namespace UI::Modern
 // Legacy HUD parts that the modern HUD replaces skip their rendering when this is true.
 [[nodiscard]] bool IsEnabled();
 
+// Opens the "Modern settings" window (Data/UI/settings.rml). It works with the classic
+// interface too: RmlUi is then drawn just for this window.
+void OpenSettings();
+[[nodiscard]] bool IsSettingsOpen();
+
 // Lazily initialises RmlUi on the first call, then refreshes and draws the HUD.
 // Call inside the main scene's 2D pass, after the legacy UI.
 void RenderHud();

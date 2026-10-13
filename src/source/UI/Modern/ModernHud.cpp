@@ -11,6 +11,7 @@
 #include "UI/Modern/RmlInput.h"
 #include "UI/Modern/RmlRenderInterface.h"
 #include "UI/Modern/RmlSystemInterface.h"
+#include "UI/Modern/SettingsDataModel.h"
 #include "UI/Modern/SkillBarDataModel.h"
 
 #include "UI/Modern/RmlIncludes.h"
@@ -30,6 +31,7 @@ namespace
 {
 constexpr const char* kContextName = "hud";
 constexpr const char* kHudDocument = "Data/UI/hud.rml";
+constexpr const char* kSettingsDocument = "Data/UI/settings.rml";
 // Documents are authored in dp at this window height; larger windows scale up.
 constexpr float kReferenceWindowHeight = 720.0f;
 constexpr std::array kFontFaces = {
@@ -46,7 +48,11 @@ struct HudState
     HudDataModel dataModel;
     BottomBarDataModel barModel;
     SkillBarDataModel skillModel;
+    SettingsDataModel settingsModel;
     ::Rml::Context* context = nullptr;
+    ::Rml::ElementDocument* hudDocument = nullptr;
+    ::Rml::ElementDocument* settingsDocument = nullptr;
+    bool settingsOpen = false;
     // Buttons whose press went to the UI; their release must not reach the game either.
     std::array<bool, kMouseButtonCount> capturedButtons{};
     bool initialised = false;
@@ -78,7 +84,7 @@ bool CreateHud(HudState& state)
 {
     state.context = ::Rml::CreateContext(kContextName, WindowSize());
     if (!state.context || !state.dataModel.Bind(*state.context) || !state.barModel.Bind(*state.context) ||
-        !state.skillModel.Bind(*state.context))
+        !state.skillModel.Bind(*state.context) || !state.settingsModel.Bind(*state.context))
     {
         return false;
     }
@@ -87,13 +93,27 @@ bool CreateHud(HudState& state)
     state.barModel.Refresh();
     state.skillModel.Refresh();
 
-    ::Rml::ElementDocument* document = state.context->LoadDocument(kHudDocument);
-    if (!document)
+    state.hudDocument = state.context->LoadDocument(kHudDocument);
+    state.settingsDocument = state.context->LoadDocument(kSettingsDocument);
+    return state.hudDocument != nullptr && state.settingsDocument != nullptr;
+}
+
+// Shows each document while it is wanted: the HUD with the HD interface, the settings window
+// while open (also with the classic interface).
+void SyncDocumentVisibility(HudState& state, bool hudEnabled)
+{
+    if (state.settingsModel.ConsumeCloseRequest())
     {
-        return false;
+        state.settingsOpen = false;
     }
-    document->Show();
-    return true;
+    const auto setVisible = [](::Rml::ElementDocument* document, bool visible) {
+        if (document->IsVisible() != visible)
+        {
+            visible ? document->Show() : document->Hide();
+        }
+    };
+    setVisible(state.hudDocument, hudEnabled);
+    setVisible(state.settingsDocument, state.settingsOpen);
 }
 
 bool Initialise(HudState& state)
@@ -211,9 +231,30 @@ bool IsEnabled()
     return !State().failed && GameConfig::GetInstance().GetModernHud();
 }
 
+// Something of the modern UI is on screen: the HUD, or the settings window.
+bool IsActive()
+{
+    return !State().failed && (IsEnabled() || State().settingsOpen);
+}
+
+void OpenSettings()
+{
+    HudState& state = State();
+    state.settingsOpen = true;
+    if (state.context)
+    {
+        state.settingsModel.Load();
+    }
+}
+
+bool IsSettingsOpen()
+{
+    return State().settingsOpen;
+}
+
 void RenderHud()
 {
-    if (!IsEnabled())
+    if (!IsActive())
     {
         return;
     }
@@ -229,10 +270,15 @@ void RenderHud()
         }
     }
 
+    const bool hudEnabled = IsEnabled();
+    SyncDocumentVisibility(state, hudEnabled);
     UpdateLayout(*state.context);
-    state.dataModel.Refresh();
-    state.barModel.Refresh();
-    state.skillModel.Refresh();
+    if (hudEnabled)
+    {
+        state.dataModel.Refresh();
+        state.barModel.Refresh();
+        state.skillModel.Refresh();
+    }
     state.context->Update();
 
     state.renderInterface->BeginFrame(static_cast<int>(WindowWidth), static_cast<int>(WindowHeight));
@@ -243,7 +289,7 @@ void RenderHud()
 bool ProcessEvent(const SDL_Event& event)
 {
     HudState& state = State();
-    if (!IsEnabled() || !state.context)
+    if (!IsActive() || !state.context)
     {
         return false;
     }
@@ -292,6 +338,11 @@ void Shutdown()
 namespace UI::Modern
 {
 bool IsEnabled()
+{
+    return false;
+}
+void OpenSettings() {}
+bool IsSettingsOpen()
 {
     return false;
 }

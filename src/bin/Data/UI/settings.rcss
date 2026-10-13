@@ -1,0 +1,131 @@
+/* Modern settings window. Shared styles live in theme.rcss. */
+
+/* Dims the game and takes every click while the window is open. */
+#backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #00000080;
+}
+
+#settings {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 380dp;
+    margin-left: -190dp;
+    margin-top: -170dp;
+    padding: 14dp 16dp 12dp 16dp;
+}
+
+.settings-header {
+    margin-bottom: 8dp;
+    padding-bottom: 8dp;
+    border-bottom: 1dp #2b3a4f;
+}
+
+.settings-header .text-title {
+    font-size: 16dp;
+    margin-bottom: 2dp;
+}
+
+.section-title {
+    margin-top: 10dp;
+    margin-bottom: 2dp;
+    font-size: 10dp;
+    font-weight: bold;
+    color: #6f9bd1;
+}
+
+/* A whole row toggles its switch. */
+.setting {
+    display: flex;
+    align-items: center;
+    padding: 6dp 8dp;
+    border-radius: 3dp;
+}
+
+.setting:hover {
+    background-color: #ffffff0d;
+}
+
+.setting-text {
+    flex: 1;
+    margin-right: 12dp;
+}
+
+.setting-name {
+    font-size: 12dp;
+    font-weight: bold;
+    color: #eef2f7;
+}
+
+.setting-help {
+    font-size: 10dp;
+    line-height: 13dp;
+    color: #8fa3bd;
+}
+
+.setting-note {
+    margin-top: 2dp;
+    font-size: 10dp;
+    color: #ffd24a;
+}
+
+/* ---- Switch ------------------------------------------------------------------------------ */
+
+.switch {
+    position: relative;
+    width: 34dp;
+    height: 18dp;
+    border-radius: 9dp;
+    background-color: #1b2533;
+    border: 1dp #2b3a4f;
+    transition: background-color 0.15s linear-in-out;
+}
+
+.switch.on {
+    background-color: #2f6fcf;
+    border-color: #6f9bd1;
+}
+
+.knob {
+    position: absolute;
+    left: 2dp;
+    top: 2dp;
+    width: 14dp;
+    height: 14dp;
+    border-radius: 7dp;
+    background-color: #b9c8db;
+    transition: left 0.15s cubic-out;
+}
+
+.switch.on .knob {
+    left: 18dp;
+    background-color: #ffffff;
+}
+
+/* ---- Footer ------------------------------------------------------------------------------ */
+
+.settings-footer {
+    margin-top: 12dp;
+    text-align: right;
+}
+
+.button {
+    display: inline-block;
+    padding: 5dp 18dp;
+    font-size: 12dp;
+    font-weight: bold;
+    color: #eef2f7;
+    border: 1dp #6f9bd1;
+    border-radius: 3dp;
+    decorator: vertical-gradient(#24364f #121b28);
+}
+
+.button:hover {
+    border-color: #9cc2ee;
+    decorator: vertical-gradient(#2c4566 #16212f);
+}
