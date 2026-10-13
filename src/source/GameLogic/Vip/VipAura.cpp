@@ -32,6 +32,8 @@ enum Level
     kOro = 2,
     kPlatino = 3,
     kDiamante = 4,
+    // Not a VIP level: the weekly top 1 of the PvP ranking.
+    kTopPvp = 5,
 };
 
 // The textures of tools/aura_textures.py (ours and some from Kenney's Particle Pack, CC0), loaded on
@@ -96,7 +98,7 @@ std::unordered_map<std::wstring, int>& Levels()
 
 // How bright the aura being drawn is, per level (kIntensity): every light of it is scaled by this.
 float g_intensity = 1.f;
-constexpr std::array<float, 5> kIntensity = {0.f, 0.85f, 0.8f, 0.7f, 0.55f};
+constexpr std::array<float, 6> kIntensity = {0.f, 0.85f, 0.8f, 0.7f, 0.55f, 0.6f};
 
 struct Color
 {
@@ -334,8 +336,7 @@ void RenderPlatino(OBJECT* object, float time, const Textures& textures, float s
 }
 
 // The most glorious: a prismatic vortex and two sigils turning on the ground, a column of light,
-// a halo over the head, crackling electricity, a ring of flames, rising embers and ash and,
-// every few seconds, a ring of fire spreading over the ground.
+// a halo over the head, crackling electricity and rising embers and ash.
 void RenderDiamante(OBJECT* object, float time, const Textures& textures, float seed)
 {
     const float pulse = Pulse(time, 0.0025f, 0.2f);
@@ -357,10 +358,22 @@ void RenderDiamante(OBJECT* object, float time, const Textures& textures, float 
     Decal(object, textures.halo, 0.55f, kWhiteGold, Pulse(time, 0.004f, 0.15f), time * 0.01f, 205.f);
 
     Electricity(object, time, 3, main, textures, seed);
-    Flames(object, time, 10, main, textures, seed);
     Embers(object, time, 24, textures, seed);
     Ash(object, time, 18, textures, seed);
-    Shockwave(object, time, main, textures, seed);
+}
+// The weekly top 1 of the PvP ranking: a ring of violet flames around the feet, a ring of fire
+// spreading over the ground every few seconds, embers and ash.
+void RenderTopPvp(OBJECT* object, float time, const Textures& textures, float seed)
+{
+    const Color flame = Prismatic(time);
+    vec3_t light;
+    flame.To(Pulse(time) * 0.8f, light);
+    RenderTerrainAlphaBitmap(BITMAP_GM_AURORA, object->Position[0], object->Position[1], 1.3f, 1.3f, light, time * 0.01f);
+    Flames(object, time, 10, flame, textures, seed);
+    Shockwave(object, time, flame, textures, seed);
+    Glow(object, 25.f, 2.8f, flame, 0.4f);
+    Embers(object, time, 20, textures, seed);
+    Ash(object, time, 14, textures, seed);
 }
 } // namespace
 
@@ -385,7 +398,7 @@ bool HandleNotice(const wchar_t* text)
     }
     const std::wstring name(rest.substr(0, bar));
     const int level = static_cast<int>(std::wcstol(std::wstring(rest.substr(bar + 1)).c_str(), nullptr, 10));
-    if (level <= kNone || level > kDiamante)
+    if (level <= kNone || level > kTopPvp)
     {
         Levels().erase(name);
     }
@@ -424,6 +437,7 @@ void Render(CHARACTER* character, OBJECT* object)
     case kOro: RenderOro(object, time, GetTextures()); break;
     case kPlatino: RenderPlatino(object, time, GetTextures(), seed); break;
     case kDiamante: RenderDiamante(object, time, GetTextures(), seed); break;
+    case kTopPvp: RenderTopPvp(object, time, GetTextures(), seed); break;
     default: break;
     }
 }

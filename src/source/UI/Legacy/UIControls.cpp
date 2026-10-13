@@ -3880,9 +3880,14 @@ void CUISlideHelp::Render(BOOL bForceFadeOut)
 
     EnableAlphaTest();
 
-    RenderColor(0, m_iPos_y - 3, WindowWidth, 1);
-    RenderColor(0, m_iPos_y + m_iFontHeight + 2, WindowWidth, 1);
-    RenderColor(0, m_iPos_y - 2, WindowWidth, m_iFontHeight + 4);
+    // A dark translucent band with thin lines above and below, fading with the text. (The
+    // colour was lost when the glColor calls were stripped: the band came out white.)
+    const auto fade = static_cast<unsigned int>(std::clamp(m_iAlphaRate / 205.f, 0.f, 1.f) * 255.f);
+    const unsigned int band = ((fade * 150 / 255) << 24) | 0x05080Du;
+    const unsigned int line = ((fade * 110 / 255) << 24) | 0x6F9BD1u;
+    RenderColorQuadARGB(0, m_iPos_y - 3, WindowWidth, 1, line);
+    RenderColorQuadARGB(0, m_iPos_y + m_iFontHeight + 2, WindowWidth, 1, line);
+    RenderColorQuadARGB(0, m_iPos_y - 2, WindowWidth, m_iFontHeight + 4, band);
 
     EndRenderColor();
 
