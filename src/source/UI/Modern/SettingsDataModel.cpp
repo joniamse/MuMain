@@ -23,6 +23,7 @@ bool SettingsDataModel::Bind(::Rml::Context& context)
     m_texturesAtStartup = GameConfig::GetInstance().GetEnhancedTextures();
 
     constructor.Bind("hd_interface", &m_hdInterface);
+    constructor.Bind("modern_windows", &m_modernWindows);
     constructor.Bind("wasd_movement", &m_wasdMovement);
     constructor.Bind("enhanced_textures", &m_enhancedTextures);
     constructor.Bind("textures_restart", &m_texturesRestart);
@@ -50,6 +51,7 @@ void SettingsDataModel::Load()
 {
     const GameConfig& config = GameConfig::GetInstance();
     m_hdInterface = config.GetModernHud();
+    m_modernWindows = config.GetModernWindows();
     m_wasdMovement = config.GetWasdMovement();
     m_enhancedTextures = config.GetEnhancedTextures();
     m_texturesRestart = m_enhancedTextures != m_texturesAtStartup;
@@ -74,6 +76,10 @@ void SettingsDataModel::Toggle(const ::Rml::String& setting)
     {
         config.SetModernHud(!config.GetModernHud());
         g_pNewUISystem->ApplyHudLayout();
+    }
+    else if (setting == "windows")
+    {
+        config.SetModernWindows(!config.GetModernWindows());
     }
     else if (setting == "wasd")
     {
@@ -117,6 +123,7 @@ void SettingsDataModel::Dirty()
         return;
     }
     m_handle.DirtyVariable("hd_interface");
+    m_handle.DirtyVariable("modern_windows");
     m_handle.DirtyVariable("wasd_movement");
     m_handle.DirtyVariable("enhanced_textures");
     m_handle.DirtyVariable("textures_restart");

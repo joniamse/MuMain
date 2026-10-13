@@ -81,6 +81,7 @@ void GameConfig::Load()
     m_fontSelection = ReadString(CfgSectionUI, CfgKeyFont, CfgDefaultFont);
     m_modernHud = ReadBool(CfgSectionUI, CfgKeyModernHud, CfgDefaultModernHud);
     m_wasdMovement = ReadBool(CfgSectionModern, CfgKeyWasdMovement, CfgDefaultWasdMovement);
+    m_modernWindows = ReadBool(CfgSectionModern, CfgKeyModernWindows, CfgDefaultModernWindows);
     m_enhancedTextures = ReadBool(CfgSectionModern, CfgKeyEnhancedTextures, CfgDefaultEnhancedTextures);
     m_antiAliasing = ReadBool(CfgSectionModern, CfgKeyAntiAliasing, CfgDefaultAntiAliasing);
     m_sharpening = ReadBool(CfgSectionModern, CfgKeySharpening, CfgDefaultSharpening);
@@ -133,6 +134,7 @@ void GameConfig::Save()
     WriteString(CfgSectionUI, CfgKeyFont, m_fontSelection);
     WriteBool(CfgSectionUI, CfgKeyModernHud, m_modernHud);
     WriteBool(CfgSectionModern, CfgKeyWasdMovement, m_wasdMovement);
+    WriteBool(CfgSectionModern, CfgKeyModernWindows, m_modernWindows);
     WriteBool(CfgSectionModern, CfgKeyEnhancedTextures, m_enhancedTextures);
     WriteBool(CfgSectionModern, CfgKeyAntiAliasing, m_antiAliasing);
     WriteBool(CfgSectionModern, CfgKeySharpening, m_sharpening);
@@ -215,6 +217,11 @@ void GameConfig::SetModernHud(bool enabled)
 void GameConfig::SetWasdMovement(bool enabled)
 {
     m_wasdMovement = enabled;
+}
+
+void GameConfig::SetModernWindows(bool enabled)
+{
+    m_modernWindows = enabled;
 }
 
 void GameConfig::SetEnhancedTextures(bool enabled)

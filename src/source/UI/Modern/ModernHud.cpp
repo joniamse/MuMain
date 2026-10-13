@@ -11,6 +11,7 @@
 #include "Data/GameConfig/GameConfig.h"
 #include "UI/Modern/BottomBarDataModel.h"
 #include "UI/Modern/HudDataModel.h"
+#include "UI/Modern/InventoryDataModel.h"
 #include "UI/Modern/ItemIconAtlas.h"
 #include "UI/Modern/PotionBarDataModel.h"
 #include "UI/Modern/RmlInput.h"
@@ -36,6 +37,9 @@ namespace UI::Modern
 namespace
 {
 constexpr const char* kContextName = "hud";
+// Drawn before the legacy UI: the modern look of legacy windows, under their items.
+constexpr const char* kUnderlayContextName = "underlay";
+constexpr const char* kInventoryDocument = "Data/UI/inventory.rml";
 constexpr const char* kHudDocument = "Data/UI/hud.rml";
 constexpr const char* kSettingsDocument = "Data/UI/settings.rml";
 constexpr const char* kVipDocument = "Data/UI/vip.rml";
@@ -58,7 +62,9 @@ struct HudState
     PotionBarDataModel potionModel;
     SettingsDataModel settingsModel;
     VipWindowDataModel vipModel;
+    InventoryDataModel inventoryModel;
     ::Rml::Context* context = nullptr;
+    ::Rml::Context* underlayContext = nullptr;
     ::Rml::ElementDocument* hudDocument = nullptr;
     ::Rml::ElementDocument* settingsDocument = nullptr;
     ::Rml::ElementDocument* vipDocument = nullptr;
@@ -91,6 +97,28 @@ bool LoadFonts()
     return anyLoaded;
 }
 
+// The underlay is optional: without it the legacy windows keep their classic look.
+void CreateUnderlay(HudState& state)
+{
+    state.underlayContext = ::Rml::CreateContext(kUnderlayContextName, WindowSize());
+    if (state.underlayContext == nullptr || !state.inventoryModel.Bind(*state.underlayContext))
+    {
+        mu::log::Get("rmlui")->error("modern windows disabled: the underlay context could not be created");
+        state.underlayContext = nullptr;
+        return;
+    }
+    state.inventoryModel.Refresh();
+    if (::Rml::ElementDocument* inventory = state.underlayContext->LoadDocument(kInventoryDocument))
+    {
+        inventory->Show();
+    }
+    else
+    {
+        mu::log::Get("rmlui")->error("modern inventory disabled: {} could not be loaded", kInventoryDocument);
+        state.underlayContext = nullptr;
+    }
+}
+
 bool CreateHud(HudState& state)
 {
     state.context = ::Rml::CreateContext(kContextName, WindowSize());
@@ -115,6 +143,7 @@ bool CreateHud(HudState& state)
     {
         mu::log::Get("rmlui")->error("VIP window disabled: {} could not be loaded", kVipDocument);
     }
+    CreateUnderlay(state);
     return state.hudDocument != nullptr && state.settingsDocument != nullptr;
 }
 
@@ -278,6 +307,29 @@ bool IsActive()
     return !State().failed && (IsEnabled() || State().settingsOpen || State().vipOpen);
 }
 
+bool AreWindowsModern()
+{
+    const HudState& state = State();
+    return IsEnabled() && state.initialised && state.underlayContext != nullptr
+           && GameConfig::GetInstance().GetModernWindows();
+}
+
+void RenderUnderlay()
+{
+    if (!AreWindowsModern())
+    {
+        return;
+    }
+    HudState& state = State();
+    UpdateLayout(*state.underlayContext);
+    state.inventoryModel.Refresh();
+    state.underlayContext->Update();
+
+    state.renderInterface->BeginFrame(static_cast<int>(WindowWidth), static_cast<int>(WindowHeight));
+    state.underlayContext->Render();
+    state.renderInterface->EndFrame();
+}
+
 void OpenSettings()
 {
     HudState& state = State();
@@ -376,6 +428,13 @@ bool ProcessEvent(const SDL_Event& event)
     case SDL_EVENT_MOUSE_MOTION:
         context.ProcessMouseMove(static_cast<int>(event.motion.x), static_cast<int>(event.motion.y),
                                  CurrentModifiers());
+        // The underlay only takes motion, for its hover styles: the legacy windows over it
+        // handle the clicks.
+        if (state.underlayContext != nullptr)
+        {
+            state.underlayContext->ProcessMouseMove(static_cast<int>(event.motion.x),
+                                                    static_cast<int>(event.motion.y), CurrentModifiers());
+        }
         return false;
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
     case SDL_EVENT_MOUSE_BUTTON_UP:
@@ -384,6 +443,10 @@ bool ProcessEvent(const SDL_Event& event)
         return ProcessMouseWheel(context, event);
     case SDL_EVENT_WINDOW_MOUSE_LEAVE:
         context.ProcessMouseLeave();
+        if (state.underlayContext != nullptr)
+        {
+            state.underlayContext->ProcessMouseLeave();
+        }
         return false;
     case SDL_EVENT_KEY_DOWN:
     case SDL_EVENT_KEY_UP:
@@ -437,6 +500,11 @@ bool ProcessEvent(const SDL_Event& /*event*/)
     return false;
 }
 void RenderHud() {}
+bool AreWindowsModern()
+{
+    return false;
+}
+void RenderUnderlay() {}
 void Shutdown() {}
 } // namespace UI::Modern
 

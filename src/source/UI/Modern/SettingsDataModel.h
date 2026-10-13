@@ -11,12 +11,13 @@ namespace UI::Modern
 //
 // RML names:
 //   hd_interface        [UI] ModernHud, applies immediately
+//   modern_windows      [Modern] ModernWindows, applies immediately (with the HD interface)
 //   wasd_movement       [Modern] WasdMovement, applies immediately
 //   enhanced_textures   [Modern] EnhancedTextures, applies to textures loaded afterwards
 //   textures_restart    the texture setting differs from the one the client started with
 //   anti_aliasing, sharpening, color_enhance, bloom   [Modern] post-processing, immediate
 // Events:
-//   toggle('hd' | 'wasd' | 'textures' | 'aa' | 'sharpen' | 'color' | 'bloom'), close
+//   toggle('hd' | 'windows' | 'wasd' | 'textures' | 'aa' | 'sharpen' | 'color' | 'bloom'), close
 class SettingsDataModel
 {
 public:
@@ -32,6 +33,7 @@ private:
 
     ::Rml::DataModelHandle m_handle;
     bool m_hdInterface = true;
+    bool m_modernWindows = true;
     bool m_wasdMovement = false;
     bool m_enhancedTextures = true;
     bool m_antiAliasing = true;

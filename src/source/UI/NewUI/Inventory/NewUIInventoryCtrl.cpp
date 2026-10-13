@@ -1022,6 +1022,27 @@ void SEASON3B::CNewUIInventoryCtrl::UpdateProcess()
     }
 }
 
+void SEASON3B::CNewUIInventoryCtrl::RenderTableFrame()
+{
+    EnableAlphaTest();
+    RenderImage(IMAGE_ITEM_TABLE_TOP_LEFT, m_Pos.x - WND_LEFT_EDGE, m_Pos.y - WND_TOP_EDGE, 14, 14);
+    RenderImage(IMAGE_ITEM_TABLE_TOP_RIGHT, m_Pos.x + m_Size.cx - WND_RIGHT_EDGE, m_Pos.y - WND_TOP_EDGE, 14, 14);
+    RenderImage(IMAGE_ITEM_TABLE_BOTTOM_LEFT, m_Pos.x - WND_LEFT_EDGE, m_Pos.y + m_Size.cy - WND_BOTTOM_EDGE, 14, 14);
+    RenderImage(IMAGE_ITEM_TABLE_BOTTOM_RIGHT, m_Pos.x + m_Size.cx - WND_RIGHT_EDGE,
+                m_Pos.y + m_Size.cy - WND_BOTTOM_EDGE, 14, 14);
+
+    for (int x = m_Pos.x - WND_LEFT_EDGE + 14; x < m_Pos.x + m_Size.cx - WND_RIGHT_EDGE; x++)
+    {
+        RenderImage(IMAGE_ITEM_TABLE_TOP_PIXEL, x, m_Pos.y - WND_TOP_EDGE, 1, 14);
+        RenderImage(IMAGE_ITEM_TABLE_BOTTOM_PIXEL, x, m_Pos.y + m_Size.cy - WND_BOTTOM_EDGE, 1, 14);
+    }
+    for (int y = m_Pos.y - WND_TOP_EDGE + 14; y < m_Pos.y + m_Size.cy - WND_BOTTOM_EDGE; y++)
+    {
+        RenderImage(IMAGE_ITEM_TABLE_LEFT_PIXEL, m_Pos.x - WND_LEFT_EDGE, y, 14, 1);
+        RenderImage(IMAGE_ITEM_TABLE_RIGHT_PIXEL, m_Pos.x + m_Size.cx - WND_RIGHT_EDGE, y, 14, 1);
+    }
+}
+
 void SEASON3B::CNewUIInventoryCtrl::Render()
 {
     int x, y;
@@ -1072,8 +1093,13 @@ void SEASON3B::CNewUIInventoryCtrl::Render()
                         tintARGB = 0x66FF331Au; // red-orange — not tradeable
                     }
 
-                    RenderColorQuadARGB(m_Pos.x + (x * INVENTORY_SQUARE_WIDTH), m_Pos.y + (y * INVENTORY_SQUARE_HEIGHT),
-                                        INVENTORY_SQUARE_WIDTH, INVENTORY_SQUARE_HEIGHT, tintARGB);
+                    // The modern look marks items itself; it keeps only the warnings.
+                    if (!m_bModernLook || tintARGB != 0x99508080u)
+                    {
+                        RenderColorQuadARGB(m_Pos.x + (x * INVENTORY_SQUARE_WIDTH),
+                                            m_Pos.y + (y * INVENTORY_SQUARE_HEIGHT), INVENTORY_SQUARE_WIDTH,
+                                            INVENTORY_SQUARE_HEIGHT, tintARGB);
+                    }
                 }
                 else
                 {
@@ -1084,28 +1110,18 @@ void SEASON3B::CNewUIInventoryCtrl::Render()
                 EndRenderColor();
             }
 
-            EnableAlphaTest();
-            RenderImage(IMAGE_ITEM_SQUARE, m_Pos.x + (x * INVENTORY_SQUARE_WIDTH),
-                        m_Pos.y + (y * INVENTORY_SQUARE_HEIGHT), 21, 21);
+            if (!m_bModernLook)
+            {
+                EnableAlphaTest();
+                RenderImage(IMAGE_ITEM_SQUARE, m_Pos.x + (x * INVENTORY_SQUARE_WIDTH),
+                            m_Pos.y + (y * INVENTORY_SQUARE_HEIGHT), 21, 21);
+            }
         }
     }
 
-    EnableAlphaTest();
-    RenderImage(IMAGE_ITEM_TABLE_TOP_LEFT, m_Pos.x - WND_LEFT_EDGE, m_Pos.y - WND_TOP_EDGE, 14, 14);
-    RenderImage(IMAGE_ITEM_TABLE_TOP_RIGHT, m_Pos.x + m_Size.cx - WND_RIGHT_EDGE, m_Pos.y - WND_TOP_EDGE, 14, 14);
-    RenderImage(IMAGE_ITEM_TABLE_BOTTOM_LEFT, m_Pos.x - WND_LEFT_EDGE, m_Pos.y + m_Size.cy - WND_BOTTOM_EDGE, 14, 14);
-    RenderImage(IMAGE_ITEM_TABLE_BOTTOM_RIGHT, m_Pos.x + m_Size.cx - WND_RIGHT_EDGE,
-                m_Pos.y + m_Size.cy - WND_BOTTOM_EDGE, 14, 14);
-
-    for (x = m_Pos.x - WND_LEFT_EDGE + 14; x < m_Pos.x + m_Size.cx - WND_RIGHT_EDGE; x++)
+    if (!m_bModernLook)
     {
-        RenderImage(IMAGE_ITEM_TABLE_TOP_PIXEL, x, m_Pos.y - WND_TOP_EDGE, 1, 14);
-        RenderImage(IMAGE_ITEM_TABLE_BOTTOM_PIXEL, x, m_Pos.y + m_Size.cy - WND_BOTTOM_EDGE, 1, 14);
-    }
-    for (y = m_Pos.y - WND_TOP_EDGE + 14; y < m_Pos.y + m_Size.cy - WND_BOTTOM_EDGE; y++)
-    {
-        RenderImage(IMAGE_ITEM_TABLE_LEFT_PIXEL, m_Pos.x - WND_LEFT_EDGE, y, 14, 1);
-        RenderImage(IMAGE_ITEM_TABLE_RIGHT_PIXEL, m_Pos.x + m_Size.cx - WND_RIGHT_EDGE, y, 14, 1);
+        RenderTableFrame();
     }
 
     if (ms_pPickedItem)

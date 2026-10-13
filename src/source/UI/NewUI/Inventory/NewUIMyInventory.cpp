@@ -38,6 +38,7 @@ extern bool SelectFlag;
 #include "Audio/DSPlaySound.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "UI/Scaling/UITransform.h"
+#include "UI/Modern/ModernHud.h"
 #include "GameLogic/Items/ShopRestrictions.h"
 #include "GameLogic/Items/TradeRestrictions.h"
 
@@ -698,26 +699,38 @@ bool CNewUIMyInventory::Update()
 
 bool CNewUIMyInventory::Render()
 {
+    // The modern look (UI::Modern) draws the frame, slots, texts and buttons under this window.
+    const bool modern = UI::Modern::AreWindowsModern();
     EnableAlphaTest();
-    RenderFrame();
-    RenderInventoryDetails();
-    RenderSetOption();
-    RenderSocketOption();
-    RenderButtons();
+    if (!modern)
+    {
+        RenderFrame();
+        RenderInventoryDetails();
+    }
+    RenderSetOption(modern);
+    RenderSocketOption(modern);
+    if (!modern)
+    {
+        RenderButtons();
+    }
 
     if (m_pNewInventoryCtrl)
+    {
+        m_pNewInventoryCtrl->SetModernLook(modern);
         m_pNewInventoryCtrl->Render();
+    }
 
     RenderEquippedItem();
     DisableAlphaBlend();
     return true;
 }
 
-void CNewUIMyInventory::RenderSetOption()
+// The "[Set option]" / "[Socket option]" titles; the modern look draws its own.
+void CNewUIMyInventory::RenderOptionTitle(const wchar_t* name, float x, bool active) const
 {
     g_pRenderText->SetFont(g_hFontBold);
     g_pRenderText->SetBgColor(0, 0, 0, 0);
-    if (g_csItemOption.IsAncientSetEquipped())
+    if (active)
     {
         g_pRenderText->SetTextColor(255, 204, 25, 255);
     }
@@ -727,8 +740,16 @@ void CNewUIMyInventory::RenderSetOption()
     }
 
     wchar_t strText[128];
-    mu_swprintf(strText, L"[%ls]", I18N::Game::SetOption);
-    g_pRenderText->RenderText(m_Pos.x + INVENTORY_WIDTH * 0.2f, m_Pos.y + 25, strText, INVENTORY_WIDTH * 0.3f, 0, RT3_SORT_CENTER);
+    mu_swprintf(strText, L"[%ls]", name);
+    g_pRenderText->RenderText(x, m_Pos.y + 25, strText, INVENTORY_WIDTH * 0.3f, 0, RT3_SORT_CENTER);
+}
+
+void CNewUIMyInventory::RenderSetOption(bool modern)
+{
+    if (!modern)
+    {
+        RenderOptionTitle(I18N::Game::SetOption, m_Pos.x + INVENTORY_WIDTH * 0.2f, g_csItemOption.IsAncientSetEquipped());
+    }
 
     if (g_csItemOption.IsViewOptionList() == true)
     {
@@ -736,23 +757,13 @@ void CNewUIMyInventory::RenderSetOption()
     }
 }
 
-void CNewUIMyInventory::RenderSocketOption()
+void CNewUIMyInventory::RenderSocketOption(bool modern)
 {
-    g_pRenderText->SetFont(g_hFontBold);
-    g_pRenderText->SetBgColor(0, 0, 0, 0);
-
-    if (g_SocketItemMgr.IsSocketSetOptionEnabled())
+    if (!modern)
     {
-        g_pRenderText->SetTextColor(255, 204, 25, 255);
+        RenderOptionTitle(I18N::Game::SocketOption, m_Pos.x + INVENTORY_WIDTH * 0.5f,
+                          g_SocketItemMgr.IsSocketSetOptionEnabled());
     }
-    else
-    {
-        g_pRenderText->SetTextColor(100, 100, 100, 255);
-    }
-
-    wchar_t strText[128];
-    mu_swprintf(strText, L"[%ls]", I18N::Game::SocketOption);
-    g_pRenderText->RenderText(m_Pos.x + INVENTORY_WIDTH * 0.5f, m_Pos.y + 25, strText, INVENTORY_WIDTH * 0.3f, 0, RT3_SORT_CENTER);
 
     if (CheckMouseIn(m_Pos.x + INVENTORY_WIDTH * 0.5f, m_Pos.y + 20, INVENTORY_WIDTH * 0.5f, 15) == true)
     {
@@ -1271,8 +1282,11 @@ void CNewUIMyInventory::RenderEquippedItem()
 
         EnableAlphaTest();
 
-        RenderImage(m_EquipmentSlots[i].dwBgImage, m_EquipmentSlots[i].x, m_EquipmentSlots[i].y,
-            m_EquipmentSlots[i].width, m_EquipmentSlots[i].height);
+        if (!UI::Modern::AreWindowsModern())
+        {
+            RenderImage(m_EquipmentSlots[i].dwBgImage, m_EquipmentSlots[i].x, m_EquipmentSlots[i].y,
+                m_EquipmentSlots[i].width, m_EquipmentSlots[i].height);
+        }
         DisableAlphaBlend();
 
         ITEM* pEquipmentItemSlot = &CharacterMachine->Equipment[i];
@@ -1910,3 +1924,34 @@ BOOL SEASON3B::CNewUIMyInventory::IsInvenItem(const short sType)
     return bInvenItem;
 }
 #endif //LJH_ADD_SYSTEM_OF_EQUIPPING_ITEM_FROM_INVENTORY
+
+void CNewUIMyInventory::GetModernLayout(ModernLayout& layout)
+{
+    const auto toRect = [](int x, int y, int width, int height) { return RECT{x, y, x + width, y + height}; };
+    const auto baseClass = gCharacterManager.GetBaseClass(Hero->Class);
+    for (int i = 0; i < MAX_EQUIPMENT_INDEX; i++)
+    {
+        const EQUIPMENT_ITEM& slot = m_EquipmentSlots[i];
+        layout.equipment[i].rect = toRect(slot.x, slot.y, slot.width, slot.height);
+        // Same slots as RenderEquippedItem: no helm for the Dark Lord, no gloves for the Rage Fighter.
+        layout.equipment[i].shown = !(i == EQUIPMENT_HELM && baseClass == CLASS_DARK)
+                                    && !(i == EQUIPMENT_GLOVES && baseClass == CLASS_RAGEFIGHTER);
+    }
+
+    const auto describe = [&](CNewUIButton& button, bool shown, ModernLayout::Box& box) {
+        const POINT& pos = button.GetPos();
+        const POINT& size = button.GetSize();
+        box.rect = toRect(pos.x, pos.y, size.x, size.y);
+        box.shown = shown;
+    };
+    const bool shopButtons = AreShopButtonsShown();
+    describe(m_BtnExit, true, layout.exit);
+    describe(m_BtnExpand, true, layout.expand);
+    describe(m_BtnRepair, shopButtons && m_bRepairEnableLevel, layout.repair);
+    describe(m_BtnMyShop, shopButtons && m_bMyShopOpen, layout.myShop);
+    layout.myShopLocked = m_BtnMyShop.IsLock();
+    layout.myShopCloses = m_MyShopMode == MYSHOP_MODE_CLOSE;
+    layout.repairing = m_RepairMode == REPAIR_MODE_ON;
+    layout.setOptionActive = g_csItemOption.IsAncientSetEquipped();
+    layout.socketOptionActive = g_SocketItemMgr.IsSocketSetOptionEnabled();
+}

@@ -10,6 +10,14 @@ namespace UI::Modern
 // Legacy HUD parts that the modern HUD replaces skip their rendering when this is true.
 [[nodiscard]] bool IsEnabled();
 
+// True when legacy windows (the inventory) use the modern look: the HD interface is on, so is
+// [Modern] ModernWindows, and the underlay loaded. Those windows then draw only their items.
+[[nodiscard]] bool AreWindowsModern();
+
+// Draws the modern look of the open legacy windows. Call inside the main scene's 2D pass,
+// right before the legacy UI, which draws the items over it.
+void RenderUnderlay();
+
 // Opens the "Modern settings" window (Data/UI/settings.rml). It works with the classic
 // interface too: RmlUi is then drawn just for this window.
 void OpenSettings();

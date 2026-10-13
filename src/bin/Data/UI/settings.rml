@@ -20,6 +20,13 @@
                 </div>
                 <div class="switch" data-class-on="hd_interface"><div class="knob"></div></div>
             </div>
+            <div class="setting" data-event-click="toggle('windows')">
+                <div class="setting-text">
+                    <div class="setting-name">Modern windows</div>
+                    <div class="setting-help">Inventory with the modern look (needs the HD interface).</div>
+                </div>
+                <div class="switch" data-class-on="modern_windows"><div class="knob"></div></div>
+            </div>
 
             <div class="section-title">Controls</div>
             <div class="setting" data-event-click="toggle('wasd')">

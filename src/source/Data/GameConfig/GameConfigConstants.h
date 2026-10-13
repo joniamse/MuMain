@@ -54,6 +54,8 @@ namespace CfgKeys
     // Modern
     // Move the hero with W/A/S/D; the original W/A/S/D actions move to Shift+W/A/S/D.
     inline constexpr wchar_t CfgKeyWasdMovement[] = L"WasdMovement";
+    // Game windows (inventory...) drawn with the modern UI look; needs the HD interface.
+    inline constexpr wchar_t CfgKeyModernWindows[] = L"ModernWindows";
     // Mipmaps + anisotropic filtering for textures loaded from then on (restart to apply fully).
     inline constexpr wchar_t CfgKeyEnhancedTextures[] = L"EnhancedTextures";
     // Post-processing of the 3D world (the UI is drawn on top, unprocessed).
@@ -103,6 +105,7 @@ namespace CfgDefaults
 
     // WASD changes long-standing hotkeys, so players opt in.
     inline constexpr bool CfgDefaultWasdMovement = false;
+    inline constexpr bool CfgDefaultModernWindows = true;
     inline constexpr bool CfgDefaultEnhancedTextures = true;
     inline constexpr bool CfgDefaultAntiAliasing = true;
     inline constexpr bool CfgDefaultSharpening = true;

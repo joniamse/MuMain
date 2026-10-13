@@ -165,11 +165,14 @@ namespace SEASON3B
         bool m_bRepairMode;
 
         bool m_bCanPushItem;
+        // The modern UI draws the grid under this control: only items and warnings are drawn.
+        bool m_bModernLook = false;
 
         void Init();
 
         void LoadImages();
         void UnloadImages();
+        void RenderTableFrame();
 
         void SetItemColorState(ITEM* pItem);
         bool CanChangeItemColorState(ITEM* pItem);
@@ -237,6 +240,7 @@ namespace SEASON3B
         bool Update();
 
         void Render();
+        void SetModernLook(bool modern) { m_bModernLook = modern; }
 
         void SetPos(int x, int y);
         const POINT& GetPos() const;

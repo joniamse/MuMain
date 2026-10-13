@@ -189,6 +189,29 @@ namespace SEASON3B
         // Public to allow refresh when resolution changes
         void SetEquipmentSlotInfo();
 
+        // What the modern look (UI/Modern/InventoryDataModel) draws under the items, in
+        // window-local coordinates. With it, this window draws only the items, their warning
+        // colours and its tooltips.
+        struct ModernLayout
+        {
+            struct Box
+            {
+                RECT rect{};
+                bool shown = false;
+            };
+            Box equipment[MAX_EQUIPMENT_INDEX];
+            Box exit, repair, myShop, expand;
+            bool myShopLocked = false;
+            // The shop button closes the personal shop (else it opens it).
+            bool myShopCloses = false;
+            bool repairing = false;
+            bool setOptionActive = false;
+            bool socketOptionActive = false;
+        };
+        void GetModernLayout(ModernLayout& layout);
+        static constexpr float GetWidth() { return INVENTORY_WIDTH; }
+        static constexpr float GetHeight() { return INVENTORY_HEIGHT; }
+
     protected:
         void DeleteEquippingEffect();
         void DeleteEquippingEffectBug(ITEM* pItem);
@@ -199,8 +222,9 @@ namespace SEASON3B
         void UnloadImages();
 
         void RenderFrame() const;
-        void RenderSetOption();
-        void RenderSocketOption();
+        void RenderOptionTitle(const wchar_t* name, float x, bool active) const;
+        void RenderSetOption(bool modern);
+        void RenderSocketOption(bool modern);
         void RenderEquippedItem();
         void RenderButtons();
         void RenderInventoryDetails() const;

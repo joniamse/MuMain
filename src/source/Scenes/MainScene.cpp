@@ -639,6 +639,9 @@ static void RenderMainSceneUI()
     EndBitmap();
 
     g_pPartyManager->Render();
+    BeginBitmap();
+    UI::Modern::RenderUnderlay();
+    EndBitmap();
     g_pNewUISystem->Render();
 
     BeginBitmap();

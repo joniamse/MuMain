@@ -1,0 +1,51 @@
+<rml>
+<head>
+    <title>Inventory</title>
+    <link type="text/rcss" href="theme.rcss"/>
+    <link type="text/rcss" href="inventory.rcss"/>
+</head>
+<!-- Drawn under the legacy inventory window, which draws the items over it and takes the
+     clicks: this document only takes mouse motion (hover styles and tooltips). -->
+<body data-model="inventory">
+    <div id="inventory" class="panel" data-if="visible"
+         data-style-left="panel_left + 'px'" data-style-top="panel_top + 'px'"
+         data-style-width="panel_width + 'px'" data-style-height="panel_height + 'px'">
+        <div class="inv-header">
+            <div class="text-title">Inventario</div>
+            <div class="inv-options">
+                <span class="inv-option" data-class-on="set_active">Set</span>
+                <span class="inv-option" data-class-on="socket_active">Socket</span>
+            </div>
+        </div>
+
+        <div class="inv-equipment"></div>
+        <div data-for="slot : slots" data-attr-class="'slot ' + slot.kind" data-class-filled="slot.filled"
+             data-style-left="slot.left + 'px'" data-style-top="slot.top + 'px'"
+             data-style-width="slot.width + 'px'" data-style-height="slot.height + 'px'">
+            <span class="slot-label" data-if="!slot.filled">{{slot.label}}</span>
+        </div>
+
+        <div class="inv-grid"
+             data-style-left="grid.left + 'px'" data-style-top="grid.top + 'px'"
+             data-style-width="grid.width + 'px'" data-style-height="grid.height + 'px'">
+            <div class="cell" data-for="cell : cells"></div>
+            <div data-for="item : items" data-attr-class="'item ' + item.kind"
+                 data-style-left="item.left + 'px'" data-style-top="item.top + 'px'"
+                 data-style-width="item.width + 'px'" data-style-height="item.height + 'px'"></div>
+        </div>
+
+        <div class="inv-zen" data-attr-class="'inv-zen ' + zen_tier">
+            <span class="zen-label">ZEN</span>
+            <span class="zen-value">{{zen}}</span>
+        </div>
+
+        <div data-for="button : buttons" data-attr-class="'inv-button interactive ' + button.kind"
+             data-class-active="button.active" data-class-locked="button.locked"
+             data-style-left="button.left + 'px'" data-style-top="button.top + 'px'"
+             data-style-width="button.width + 'px'" data-style-height="button.height + 'px'">
+            <span class="inv-button-label">{{button.label}}</span>
+            <div class="tooltip">{{button.tip}}</div>
+        </div>
+    </div>
+</body>
+</rml>

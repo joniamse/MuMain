@@ -75,6 +75,8 @@ public:
     // Modern settings ([Modern] section)
     bool GetWasdMovement() const { return m_wasdMovement; }
     void SetWasdMovement(bool enabled);
+    bool GetModernWindows() const { return m_modernWindows; }
+    void SetModernWindows(bool enabled);
     bool GetEnhancedTextures() const { return m_enhancedTextures; }
     void SetEnhancedTextures(bool enabled);
     bool GetAntiAliasing() const { return m_antiAliasing; }
@@ -147,6 +149,7 @@ private:
     std::wstring m_fontSelection;
     bool m_modernHud = true;
     bool m_wasdMovement = false;
+    bool m_modernWindows = true;
     bool m_enhancedTextures = true;
     bool m_antiAliasing = true;
     bool m_sharpening = true;

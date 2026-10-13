@@ -1,0 +1,192 @@
+/* Modern look of the legacy inventory window. Every box is placed in window pixels by the data
+   model to match the legacy window, which draws the items over this document. Fonts are in dp.
+   Item frames by kind: normal (steel), high (+7, gold), excellent (green), ancient (cyan). */
+
+#inventory {
+    position: absolute;
+    decorator: vertical-gradient(#111a27f2 #070b11f2);
+    border-top-color: #6f9bd1;
+}
+
+/* ---- Header: title and set/socket option state ------------------------------------------- */
+
+.inv-header {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 1.6%;
+    text-align: center;
+}
+
+.inv-options {
+    margin-top: 2dp;
+}
+
+.inv-option {
+    margin: 0 6dp;
+    font-size: 9dp;
+    font-weight: bold;
+    color: #4a5a70;
+}
+
+.inv-option.on {
+    color: #ffd24a;
+}
+
+/* ---- Equipment: a recessed area behind the slots ------------------------------------------ */
+
+.inv-equipment {
+    position: absolute;
+    left: 4%;
+    right: 4%;
+    top: 9.4%;
+    height: 36.4%;
+    background-color: #05080d80;
+    border: 1dp #1c2736;
+    border-radius: 4dp;
+}
+
+.slot {
+    position: absolute;
+    border: 1dp #2b3a4f;
+    border-radius: 3dp;
+    decorator: vertical-gradient(#0d141e #06090e);
+    text-align: center;
+}
+
+.slot-label {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    margin-top: -6dp;
+    font-size: 8dp;
+    color: #3e4d62;
+}
+
+.slot.filled {
+    decorator: vertical-gradient(#16202e #0b1119);
+}
+
+.slot.high { border-color: #c9a44c; }
+.slot.excellent { border-color: #4fd86a; }
+.slot.ancient { border-color: #3db8ff; }
+
+/* ---- Grid ------------------------------------------------------------------------------------ */
+
+.inv-grid {
+    position: absolute;
+    display: flex;
+    flex-wrap: wrap;
+    background-color: #04070b;
+    border: 1dp #2b3a4f;
+    border-radius: 2dp;
+}
+
+/* 8 x 8 squares. */
+.cell {
+    box-sizing: border-box;
+    width: 12.5%;
+    height: 12.5%;
+    border-right: 1dp #0e1520;
+    border-bottom: 1dp #0e1520;
+    background-color: #0a0f16;
+}
+
+.item {
+    position: absolute;
+    border: 1dp #3a4d66;
+    border-radius: 2dp;
+    decorator: vertical-gradient(#1b2737cc #0e1520cc);
+}
+
+.item.high {
+    border-color: #c9a44c;
+    decorator: vertical-gradient(#2a2412cc #120f08cc);
+}
+
+.item.excellent {
+    border-color: #4fd86a;
+    decorator: vertical-gradient(#12291acc #08120bcc);
+}
+
+.item.ancient {
+    border-color: #3db8ff;
+    decorator: vertical-gradient(#0f2233cc #070f17cc);
+}
+
+/* ---- Zen ------------------------------------------------------------------------------------- */
+
+.inv-zen {
+    position: absolute;
+    left: 5.8%;
+    width: 89.4%;
+    top: 84.8%;
+    height: 6%;
+    display: flex;
+    align-items: center;
+    background-color: #05080dcc;
+    border: 1dp #2b3a4f;
+    border-radius: 3dp;
+}
+
+.zen-label {
+    margin-left: 8dp;
+    font-size: 9dp;
+    font-weight: bold;
+    color: #c9a44c;
+}
+
+.zen-value {
+    flex: 1;
+    margin-right: 8dp;
+    text-align: right;
+    font-size: 12dp;
+    font-weight: bold;
+    color: #96dcff;
+}
+
+/* Same tiers as the classic zen colours. */
+.inv-zen.mid .zen-value { color: #18c900; }
+.inv-zen.high .zen-value { color: #ff9600; }
+.inv-zen.max .zen-value { color: #ff0000; }
+
+/* ---- Buttons (the legacy window handles their clicks) ------------------------------------- */
+
+.inv-button {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1dp #2b3a4f;
+    border-radius: 3dp;
+    decorator: vertical-gradient(#1a2534 #0c121b);
+}
+
+.inv-button-label {
+    font-size: 8dp;
+    font-weight: bold;
+    color: #c4d2e4;
+}
+
+.inv-button:hover {
+    border-color: #9cc2ee;
+}
+
+.inv-button:hover .inv-button-label {
+    color: #ffffff;
+}
+
+.inv-button.exit:hover {
+    border-color: #ff6b6b;
+}
+
+.inv-button.active {
+    border-color: #ffd24a;
+    decorator: vertical-gradient(#3a3115 #1a1609);
+}
+
+.inv-button.locked .inv-button-label {
+    color: #4a5a70;
+}
