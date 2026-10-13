@@ -6,6 +6,7 @@
 
 #ifdef MU_RMLUI
 
+#include "Core/Input/KeyState.h"
 #include "Core/Utilities/Log/MuLogger.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "UI/Modern/BottomBarDataModel.h"
@@ -176,6 +177,17 @@ bool IsTextFieldFocused(::Rml::Context& context)
     return tag == "input" || tag == "textarea";
 }
 
+// The game also reads the mouse buttons from the device state (Core::Input::IsKeyDown), not only
+// from these events: a button held on the UI must read as up there.
+void SetCapturedForGame(int rmlButton, bool captured)
+{
+    constexpr std::array kVirtualKeys = {VK_LBUTTON, VK_RBUTTON, VK_MBUTTON};
+    if (rmlButton >= 0 && rmlButton < static_cast<int>(kVirtualKeys.size()))
+    {
+        Core::Input::SetMouseButtonCaptured(kVirtualKeys[static_cast<std::size_t>(rmlButton)], captured);
+    }
+}
+
 bool ProcessMouseButton(HudState& state, const SDL_Event& event)
 {
     const int button = Input::ConvertMouseButton(event.button.button);
@@ -192,12 +204,14 @@ bool ProcessMouseButton(HudState& state, const SDL_Event& event)
     if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN)
     {
         captured = !context.ProcessMouseButtonDown(button, modifiers);
+        SetCapturedForGame(button, captured);
         return captured;
     }
 
     context.ProcessMouseButtonUp(button, modifiers);
     const bool wasCaptured = captured;
     captured = false;
+    SetCapturedForGame(button, false);
     return wasCaptured;
 }
 

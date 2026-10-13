@@ -9,6 +9,20 @@ namespace Core::Input
     namespace
     {
         bool g_leftMouseButtonPressEdge = false;
+        bool g_leftMouseButtonCaptured = false;
+        bool g_rightMouseButtonCaptured = false;
+        bool g_middleMouseButtonCaptured = false;
+
+        // Whether the button is still held on the modern UI; a capture ends with the release even if
+        // the UI missed it.
+        bool ReleaseCapture(bool& captured, int sdlButton)
+        {
+            if (captured && (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(sdlButton)) == 0)
+            {
+                captured = false;
+            }
+            return captured;
+        }
 
         // Map a Win32 virtual-key code (or ASCII letter/digit) to an SDL
         // scancode. Returns SDL_SCANCODE_UNKNOWN for keys we don't translate.
@@ -64,6 +78,17 @@ namespace Core::Input
         g_leftMouseButtonPressEdge = false;
     }
 
+    void SetMouseButtonCaptured(int virtualKey, bool captured)
+    {
+        switch (virtualKey)
+        {
+        case VK_LBUTTON: g_leftMouseButtonCaptured = captured; break;
+        case VK_RBUTTON: g_rightMouseButtonCaptured = captured; break;
+        case VK_MBUTTON: g_middleMouseButtonCaptured = captured; break;
+        default: break;
+        }
+    }
+
     bool IsKeyDown(int virtualKey)
     {
         // A scripted press (control socket) counts as down for the frame it
@@ -82,10 +107,15 @@ namespace Core::Input
         switch (virtualKey)
         {
         case VK_LBUTTON:
-            return g_leftMouseButtonPressEdge
-                || (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)) != 0;
-        case VK_RBUTTON: return (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(SDL_BUTTON_RIGHT)) != 0;
-        case VK_MBUTTON: return (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(SDL_BUTTON_MIDDLE)) != 0;
+            return !ReleaseCapture(g_leftMouseButtonCaptured, SDL_BUTTON_LEFT)
+                && (g_leftMouseButtonPressEdge
+                    || (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(SDL_BUTTON_LEFT)) != 0);
+        case VK_RBUTTON:
+            return !ReleaseCapture(g_rightMouseButtonCaptured, SDL_BUTTON_RIGHT)
+                && (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(SDL_BUTTON_RIGHT)) != 0;
+        case VK_MBUTTON:
+            return !ReleaseCapture(g_middleMouseButtonCaptured, SDL_BUTTON_MIDDLE)
+                && (SDL_GetMouseState(nullptr, nullptr) & SDL_BUTTON_MASK(SDL_BUTTON_MIDDLE)) != 0;
         case VK_SHIFT:   return (SDL_GetModState() & SDL_KMOD_SHIFT) != 0;
         case VK_CONTROL: return (SDL_GetModState() & SDL_KMOD_CTRL) != 0;
         case VK_MENU:    return (SDL_GetModState() & SDL_KMOD_ALT) != 0;
