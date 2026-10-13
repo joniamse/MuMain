@@ -56,6 +56,8 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyWasdMovement[] = L"WasdMovement";
     // Game windows (inventory...) drawn with the modern UI look; needs the HD interface.
     inline constexpr wchar_t CfgKeyModernWindows[] = L"ModernWindows";
+    // The mouse wheel zooms the camera without unlocking it with F10 first.
+    inline constexpr wchar_t CfgKeyWheelZoom[] = L"WheelZoom";
     // Mipmaps + anisotropic filtering for textures loaded from then on (restart to apply fully).
     inline constexpr wchar_t CfgKeyEnhancedTextures[] = L"EnhancedTextures";
     // Post-processing of the 3D world (the UI is drawn on top, unprocessed).
@@ -106,6 +108,7 @@ namespace CfgDefaults
     // WASD changes long-standing hotkeys, so players opt in.
     inline constexpr bool CfgDefaultWasdMovement = false;
     inline constexpr bool CfgDefaultModernWindows = true;
+    inline constexpr bool CfgDefaultWheelZoom = true;
     inline constexpr bool CfgDefaultEnhancedTextures = true;
     inline constexpr bool CfgDefaultAntiAliasing = true;
     inline constexpr bool CfgDefaultSharpening = true;

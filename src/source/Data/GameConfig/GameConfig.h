@@ -77,6 +77,8 @@ public:
     void SetWasdMovement(bool enabled);
     bool GetModernWindows() const { return m_modernWindows; }
     void SetModernWindows(bool enabled);
+    bool GetWheelZoom() const { return m_wheelZoom; }
+    void SetWheelZoom(bool enabled);
     bool GetEnhancedTextures() const { return m_enhancedTextures; }
     void SetEnhancedTextures(bool enabled);
     bool GetAntiAliasing() const { return m_antiAliasing; }
@@ -150,6 +152,7 @@ private:
     bool m_modernHud = true;
     bool m_wasdMovement = false;
     bool m_modernWindows = true;
+    bool m_wheelZoom = true;
     bool m_enhancedTextures = true;
     bool m_antiAliasing = true;
     bool m_sharpening = true;

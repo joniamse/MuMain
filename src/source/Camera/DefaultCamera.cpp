@@ -26,6 +26,7 @@
 #include "World/MapInfra/w_MapHeaders.h"
 #include "UI/Legacy/UIManager.h"
 #include "CameraDebugLog.h"
+#include "Data/GameConfig/GameConfig.h"
 
 // External variable declarations
 extern short g_shCameraLevel;
@@ -85,9 +86,12 @@ namespace
         { 1500.f, 1.08f },  // 5
         { 1600.f, 1.23f },  // 6
         { 1700.f, 1.33f },  // 7
+        { 1850.f, 1.45f },  // 8 — further out: only with the modern wheel zoom
+        { 2000.f, 1.60f },  // 9
     };
     constexpr int PLAYER_ZOOM_LEVEL_DEFAULT = 3;
     constexpr int PLAYER_ZOOM_LEVEL_COUNT   = static_cast<int>(std::size(PLAYER_ZOOM_LADDER));
+    constexpr int PLAYER_ZOOM_LEVEL_CLASSIC_LAST = 7;
 }
 
 DefaultCamera::DefaultCamera(CameraState& state)
@@ -707,7 +711,9 @@ void DefaultCamera::HandleWheelZoom()
     const int wheel = MouseWheel;
     MouseWheel = 0;
 
-    if (CameraManager::Instance().IsZoomLocked())
+    // [Modern] WheelZoom: the wheel zooms without the F10 unlock, and further out.
+    const bool wheelZoom = GameConfig::GetInstance().GetWheelZoom();
+    if (CameraManager::Instance().IsZoomLocked() && !wheelZoom)
         return;
 
     // Wheel up (positive ticks) zooms in -> lower index. MouseWheel is
@@ -717,8 +723,9 @@ void DefaultCamera::HandleWheelZoom()
 
     if (m_PlayerZoomLevel < 0)
         m_PlayerZoomLevel = 0;
-    if (m_PlayerZoomLevel >= PLAYER_ZOOM_LEVEL_COUNT)
-        m_PlayerZoomLevel = PLAYER_ZOOM_LEVEL_COUNT - 1;
+    const int lastLevel = wheelZoom ? PLAYER_ZOOM_LEVEL_COUNT - 1 : PLAYER_ZOOM_LEVEL_CLASSIC_LAST;
+    if (m_PlayerZoomLevel > lastLevel)
+        m_PlayerZoomLevel = lastLevel;
 }
 
 void DefaultCamera::UpdateCameraDistance()

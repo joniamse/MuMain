@@ -36,6 +36,13 @@
                 </div>
                 <div class="switch" data-class-on="wasd_movement"><div class="knob"></div></div>
             </div>
+            <div class="setting" data-event-click="toggle('zoom')">
+                <div class="setting-text">
+                    <div class="setting-name">Mouse wheel zoom</div>
+                    <div class="setting-help">Zoom the camera in and out with the wheel, further out than classic MU. Off: the classic F10 lock and range.</div>
+                </div>
+                <div class="switch" data-class-on="wheel_zoom"><div class="knob"></div></div>
+            </div>
 
             <div class="section-title">Graphics</div>
             <div class="setting" data-event-click="toggle('textures')">
