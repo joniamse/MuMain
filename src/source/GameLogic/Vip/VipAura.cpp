@@ -34,26 +34,55 @@ enum Level
     kDiamante = 4,
 };
 
-// The textures of tools/aura_textures.py, loaded on first use; BITMAP_UNKNOWN if missing.
+// The textures of tools/aura_textures.py (ours and some from Kenney's Particle Pack, CC0), loaded on
+// first use; BITMAP_UNKNOWN when one is missing, and the part that uses it is left out.
 struct Textures
 {
     GLuint sigil = BITMAP_UNKNOWN;
     GLuint halo = BITMAP_UNKNOWN;
-    GLuint beam = BITMAP_UNKNOWN;
     GLuint orb = BITMAP_UNKNOWN;
+    GLuint starSoft = BITMAP_UNKNOWN;
+    GLuint starSharp = BITMAP_UNKNOWN;
+    GLuint starBurst = BITMAP_UNKNOWN;
+    GLuint orbFlare = BITMAP_UNKNOWN;
+    GLuint runes = BITMAP_UNKNOWN;
+    GLuint vortex = BITMAP_UNKNOWN;
+    GLuint vortexWide = BITMAP_UNKNOWN;
+    GLuint pillar = BITMAP_UNKNOWN;
+    GLuint bolt = BITMAP_UNKNOWN;
+    GLuint flash = BITMAP_UNKNOWN;
 };
+
+GLuint Load(const wchar_t* name)
+{
+    return Bitmaps.LoadImage(std::wstring(L"Data\\Effect\\Modern\\") + name + L".jpg", GL_LINEAR, GL_CLAMP_TO_EDGE);
+}
 
 const Textures& GetTextures()
 {
     static const Textures textures = [] {
         Textures loaded;
-        loaded.sigil = Bitmaps.LoadImage(L"Data\\Effect\\Modern\\aura_sigil.jpg", GL_LINEAR, GL_CLAMP_TO_EDGE);
-        loaded.halo = Bitmaps.LoadImage(L"Data\\Effect\\Modern\\aura_halo.jpg", GL_LINEAR, GL_CLAMP_TO_EDGE);
-        loaded.beam = Bitmaps.LoadImage(L"Data\\Effect\\Modern\\aura_beam.jpg", GL_LINEAR, GL_CLAMP_TO_EDGE);
-        loaded.orb = Bitmaps.LoadImage(L"Data\\Effect\\Modern\\aura_orb.jpg", GL_LINEAR, GL_CLAMP_TO_EDGE);
+        loaded.sigil = Load(L"aura_sigil");
+        loaded.halo = Load(L"aura_halo");
+        loaded.orb = Load(L"aura_orb");
+        loaded.starSoft = Load(L"aura_star_soft");
+        loaded.starSharp = Load(L"aura_star_sharp");
+        loaded.starBurst = Load(L"aura_star_burst");
+        loaded.orbFlare = Load(L"aura_orb_flare");
+        loaded.runes = Load(L"aura_runes");
+        loaded.vortex = Load(L"aura_vortex");
+        loaded.vortexWide = Load(L"aura_vortex_wide");
+        loaded.pillar = Load(L"aura_pillar");
+        loaded.bolt = Load(L"aura_bolt");
+        loaded.flash = Load(L"aura_flash");
         return loaded;
     }();
     return textures;
+}
+
+GLuint Or(GLuint texture, GLuint fallback)
+{
+    return texture != BITMAP_UNKNOWN ? texture : fallback;
 }
 
 bool Has(GLuint texture)
@@ -154,82 +183,111 @@ void Column(OBJECT* object, float time, const Color& color, GLuint texture)
     }
 }
 
-void RenderPlata(OBJECT* object, float time)
+// A ground decal centred on the character.
+void Decal(OBJECT* object, GLuint texture, float size, const Color& color, float strength, float rotation,
+           float height = 5.f)
+{
+    if (!Has(texture))
+    {
+        return;
+    }
+    vec3_t light;
+    color.To(strength, light);
+    RenderTerrainAlphaBitmap(static_cast<int>(texture), object->Position[0], object->Position[1], size, size, light,
+                             rotation, 1.f, height);
+}
+
+// Every few seconds a lightning bolt strikes the character from above, with a flash on the
+// ground. Each character has its own rhythm (from its object key).
+void Lightning(OBJECT* object, float time, const Color& color, const Textures& textures, float seed)
+{
+    constexpr float kPeriod = 5200.f;
+    constexpr float kStrike = 260.f;
+    const float phase = std::fmod(time + seed * 997.f, kPeriod);
+    if (phase > kStrike * 2.f)
+    {
+        return;
+    }
+    const float fade = 1.f - phase / (kStrike * 2.f);
+    if (phase < kStrike && Has(textures.bolt))
+    {
+        // Two flickering frames: the bolt jumps a little.
+        const float jitter = std::fmod(phase, 80.f) < 40.f ? 0.f : 8.f;
+        vec3_t position, light;
+        VectorCopy(object->Position, position);
+        position[0] += jitter;
+        position[2] += 170.f;
+        Vector(0.85f + color.red * 0.15f, 0.85f + color.green * 0.15f, 1.f, light);
+        CreateSprite(static_cast<int>(textures.bolt), position, 4.2f, light, object);
+    }
+    Decal(object, textures.flash, 2.4f, kWhiteGold, fade * 0.9f, seed);
+    Glow(object, 60.f, 4.0f, color, fade * 0.8f);
+}
+
+void RenderPlata(OBJECT* object, float time, const Textures& textures)
 {
     vec3_t light;
     kSilver.To(Pulse(time), light);
     RenderTerrainAlphaBitmap(BITMAP_GM_AURORA, object->Position[0], object->Position[1], 1.15f, 1.15f, light, time * 0.01f);
     Glow(object, 25.f, 2.2f, kSilver, 0.3f);
+    Motes(object, time, 3, kSilver, Or(textures.starSoft, BITMAP_LIGHT), 0.35f, 140.f);
 }
 
-void RenderOro(OBJECT* object, float time)
+void RenderOro(OBJECT* object, float time, const Textures& textures)
 {
     vec3_t light;
     const float pulse = Pulse(time);
+    Decal(object, textures.runes, 1.7f, kGold, pulse * 0.8f, time * 0.004f);
     kGold.To(pulse, light);
     RenderTerrainAlphaBitmap(BITMAP_GM_AURORA, object->Position[0], object->Position[1], 1.3f, 1.3f, light, time * 0.01f);
     kGold.To(pulse * 0.8f, light);
     RenderTerrainAlphaBitmap(BITMAP_GM_AURORA, object->Position[0], object->Position[1], 0.9f, 0.9f, light, -time * 0.014f);
     Glow(object, 25.f, 2.6f, kGold, 0.35f);
-    Motes(object, time, 5, kGold, BITMAP_LIGHT, 0.45f, 170.f);
+    Motes(object, time, 6, kGold, Or(textures.starSoft, BITMAP_LIGHT), 0.5f, 180.f);
 }
 
 void RenderPlatino(OBJECT* object, float time, const Textures& textures)
 {
-    vec3_t light;
     const float pulse = Pulse(time);
-    kCyan.To(pulse * 0.9f, light);
-    if (Has(textures.sigil))
-    {
-        RenderTerrainAlphaBitmap(textures.sigil, object->Position[0], object->Position[1], 1.6f, 1.6f, light, time * 0.006f);
-    }
-    kCyan.To(pulse * 0.7f, light);
-    RenderTerrainAlphaBitmap(BITMAP_GM_AURORA, object->Position[0], object->Position[1], 1.0f, 1.0f, light, -time * 0.014f);
+    Decal(object, textures.vortex, 2.0f, kCyan, pulse * 0.75f, -time * 0.008f);
+    Decal(object, textures.sigil, 1.6f, kCyan, pulse * 0.9f, time * 0.006f);
     Glow(object, 25.f, 2.8f, kCyan, 0.4f);
-    Motes(object, time, 7, kCyan, BITMAP_LIGHT, 0.45f, 190.f);
+    Motes(object, time, 8, kCyan, Or(textures.starSharp, BITMAP_LIGHT), 0.55f, 200.f);
     if (Has(textures.orb))
     {
-        Orbs(object, time, 2, 60.f, 110.f, kCyan, textures.orb);
+        Orbs(object, time, 2, 60.f, 110.f, kCyan, Or(textures.orbFlare, textures.orb));
     }
 }
 
-// The most glorious: a prismatic sigil turning on the ground over a second ring of runes, a
-// column of light, a halo over the head, three orbs with trails and rising star sparkles.
-void RenderDiamante(OBJECT* object, float time, const Textures& textures)
+// The most glorious: a prismatic vortex and two sigils turning on the ground, a column of light,
+// a halo over the head, three orbs with trails, rising star bursts and, every few seconds, a
+// lightning bolt from the sky.
+void RenderDiamante(OBJECT* object, float time, const Textures& textures, float seed)
 {
-    vec3_t light;
     const float pulse = Pulse(time, 0.0025f, 0.2f);
     const Color main = Prismatic(time);
     const Color second = Prismatic(time, 2.f);
 
-    if (Has(textures.sigil))
-    {
-        main.To(pulse, light);
-        RenderTerrainAlphaBitmap(textures.sigil, object->Position[0], object->Position[1], 2.1f, 2.1f, light, time * 0.005f);
-        second.To(pulse * 0.6f, light);
-        RenderTerrainAlphaBitmap(textures.sigil, object->Position[0], object->Position[1], 1.25f, 1.25f, light, -time * 0.009f);
-    }
-    kWhiteGold.To(pulse * 0.5f, light);
+    Decal(object, textures.vortexWide, 2.6f, second, pulse * 0.7f, -time * 0.006f);
+    Decal(object, textures.sigil, 2.1f, main, pulse, time * 0.005f);
+    Decal(object, textures.sigil, 1.25f, second, pulse * 0.6f, -time * 0.009f);
+    vec3_t light;
+    kWhiteGold.To(pulse * 0.45f, light);
     RenderTerrainAlphaBitmap(BITMAP_MAGIC + 1, object->Position[0], object->Position[1], 2.9f, 2.9f, light, time * 0.002f);
 
-    if (Has(textures.beam))
+    if (Has(textures.pillar))
     {
-        Column(object, time, main, textures.beam);
+        Column(object, time, main, textures.pillar);
     }
     Glow(object, 25.f, 3.4f, main, 0.55f);
-
-    if (Has(textures.halo))
-    {
-        kWhiteGold.To(Pulse(time, 0.004f, 0.15f), light);
-        RenderTerrainAlphaBitmap(textures.halo, object->Position[0], object->Position[1], 0.55f, 0.55f, light, time * 0.01f,
-                                 1.f, 205.f);
-    }
+    Decal(object, textures.halo, 0.55f, kWhiteGold, Pulse(time, 0.004f, 0.15f), time * 0.01f, 205.f);
 
     if (Has(textures.orb))
     {
-        Orbs(object, time, 3, 70.f, 120.f, second, textures.orb);
+        Orbs(object, time, 3, 70.f, 120.f, second, Or(textures.orbFlare, textures.orb));
     }
-    Motes(object, time, 12, kWhiteGold, BITMAP_SHINY, 0.6f, 230.f);
+    Motes(object, time, 12, kWhiteGold, Or(textures.starBurst, BITMAP_SHINY), 0.65f, 240.f);
+    Lightning(object, time, main, textures, seed);
 }
 } // namespace
 
@@ -286,10 +344,10 @@ void Render(CHARACTER* character, OBJECT* object)
     EnableAlphaBlend();
     switch (found->second)
     {
-    case kPlata: RenderPlata(object, time); break;
-    case kOro: RenderOro(object, time); break;
+    case kPlata: RenderPlata(object, time, GetTextures()); break;
+    case kOro: RenderOro(object, time, GetTextures()); break;
     case kPlatino: RenderPlatino(object, time, GetTextures()); break;
-    case kDiamante: RenderDiamante(object, time, GetTextures()); break;
+    case kDiamante: RenderDiamante(object, time, GetTextures(), static_cast<float>((character->Key & 0x7FFF) % 97)); break;
     default: break;
     }
 }
