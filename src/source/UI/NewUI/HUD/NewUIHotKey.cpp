@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "Input/KeyboardMovement.h"
 #include "GameLogic/Commands/ChatCommandCatalog.h"
 #include "I18N/All.h"
 
@@ -228,7 +229,7 @@ bool SEASON3B::CNewUIHotKey::UpdateKeyEvent()
         PlayBuffer(SOUND_CLICK01);
         return false;
     }
-    else if (SEASON3B::IsPress('A'))
+    else if (Input::KeyboardMovement::IsHotkeyPressed('A'))
     {
         if (gCharacterManager.IsMasterLevel(Hero->Class) == true
             && Hero->Class != CLASS_TEMPLENIGHT)
@@ -246,7 +247,7 @@ bool SEASON3B::CNewUIHotKey::UpdateKeyEvent()
         PlayBuffer(SOUND_CLICK01);
         return false;
     }
-    else if (gMapManager.InChaosCastle() == false && SEASON3B::IsPress('D'))
+    else if (gMapManager.InChaosCastle() == false && Input::KeyboardMovement::IsHotkeyPressed('D'))
     {
         if (::IsStrifeMap(gMapManager.WorldActive))
         {

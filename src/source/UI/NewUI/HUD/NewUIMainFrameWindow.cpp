@@ -30,6 +30,7 @@
 #include "UI/NewUI/HUD/Skills/SkillTooltip.h"
 #include "UI/Scaling/UITransform.h"
 #include "UI/Modern/ModernHud.h"
+#include "Input/KeyboardMovement.h"
 #include "Core/Time/CTimCheck.h"
 #include "GameLogic/Social/MonkSystem.h"
 #include "GameLogic/Items/ItemCategories.h"
@@ -866,7 +867,7 @@ bool SEASON3B::CNewUIItemHotKey::UpdateKeyEvent()
     {
         iIndex = GetHotKeyItemIndex(HOTKEY_Q);
     }
-    else if (SEASON3B::IsPress('W') == true)
+    else if (Input::KeyboardMovement::IsHotkeyPressed('W'))
     {
         iIndex = GetHotKeyItemIndex(HOTKEY_W);
     }

@@ -72,6 +72,12 @@ public:
     bool GetModernHud() const { return m_modernHud; }
     void SetModernHud(bool enabled);
 
+    // Modern settings ([Modern] section)
+    bool GetWasdMovement() const { return m_wasdMovement; }
+    void SetWasdMovement(bool enabled);
+    bool GetEnhancedTextures() const { return m_enhancedTextures; }
+    void SetEnhancedTextures(bool enabled);
+
     // Chat commands - the favourites and the named templates of the command
     // window. They belong to the installation, not to a character.
     // A template is stored as "name|command|value|value|...".
@@ -132,6 +138,8 @@ private:
     std::wstring m_uiLocale;
     std::wstring m_fontSelection;
     bool m_modernHud = true;
+    bool m_wasdMovement = false;
+    bool m_enhancedTextures = true;
 
     int m_zoom;
     bool m_sortParticleDraws;

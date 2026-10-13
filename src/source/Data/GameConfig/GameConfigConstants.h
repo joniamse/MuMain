@@ -10,6 +10,8 @@ namespace CfgSections
     inline constexpr wchar_t CfgSectionConnectionSettings[] = L"CONNECTION SETTINGS";
     inline constexpr wchar_t CfgSectionCamera[] = L"Camera";
     inline constexpr wchar_t CfgSectionRender[] = L"Render";
+    // Optional modernizations, each switchable in the in-game "Modern settings" window.
+    inline constexpr wchar_t CfgSectionModern[] = L"Modern";
 }
 
 namespace CfgKeys
@@ -48,6 +50,12 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyCoreProfile[] = L"CoreProfile";
     inline constexpr wchar_t CfgKeySortParticleDraws[] = L"SortParticleDraws";
     inline constexpr wchar_t CfgKeyVSync[] = L"VSync";
+
+    // Modern
+    // Move the hero with W/A/S/D; the original W/A/S/D actions move to Shift+W/A/S/D.
+    inline constexpr wchar_t CfgKeyWasdMovement[] = L"WasdMovement";
+    // Mipmaps + anisotropic filtering for textures loaded from then on (restart to apply fully).
+    inline constexpr wchar_t CfgKeyEnhancedTextures[] = L"EnhancedTextures";
 }
 
 namespace CfgDefaults
@@ -87,4 +95,8 @@ namespace CfgDefaults
     // Opt-in until real effects have been visually checked on target hardware.
     inline constexpr bool CfgDefaultSortParticleDraws = false;
     inline constexpr bool CfgDefaultVSync = true;
+
+    // WASD changes long-standing hotkeys, so players opt in.
+    inline constexpr bool CfgDefaultWasdMovement = false;
+    inline constexpr bool CfgDefaultEnhancedTextures = true;
 }

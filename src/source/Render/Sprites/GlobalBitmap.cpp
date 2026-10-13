@@ -7,9 +7,11 @@
 #include "Render/Sprites/GlobalBitmap.h"
 #include "Core/Platform/PathResolve.h"
 #include "Core/Utilities/Log/MuLogger.h"
+#include "Data/GameConfig/GameConfig.h"
 
 #include <SDL3/SDL_gpu.h>
 #include "Render/Renderer/MuRenderer.h"
+#include "Render/Textures/MipChain.h"
 #include "Render/Textures/OztFile.h"
 #ifdef _EDITOR
 #include "Core/Utilities/AssetLoadWorld.h"
@@ -25,6 +27,8 @@
 #include <memory>
 #include <span>
 #include <string>
+#include <string_view>
+#include <cwctype>
 #include <vector>
 
 namespace mu
@@ -131,13 +135,106 @@ std::vector<std::uint8_t> PadRGBToRGBA(const BYTE* rgbData, int width, int heigh
     return rgba;
 }
 
+// [Modern] EnhancedTextures: full mip chain (built on the CPU, see MipChain.h) and
+// trilinear, anisotropic minification. Magnification keeps the requested filter, so
+// close-up looks are unchanged; distant ground and objects stop shimmering. Applies to
+// textures loaded while enabled.
+constexpr float kEnhancedMaxAnisotropy = 8.0f;
+constexpr float kAllMipLevels = 1000.0f;
+
+// Samplers are shared per (filter, wrap, enhanced) instead of created per texture: there are
+// thousands of textures but only a handful of sampler states, and per-texture samplers
+// exhaust driver resources (see MuMain issue #620). Bitmaps never release these.
+struct SharedSamplerEntry
+{
+    SDL_GPUFilter filter;
+    SDL_GPUSamplerAddressMode wrapMode;
+    bool enhanced;
+    SDL_GPUSampler* sampler;
+};
+
+std::vector<SharedSamplerEntry>& SharedSamplers()
+{
+    static std::vector<SharedSamplerEntry> samplers;
+    return samplers;
+}
+
+SDL_GPUSampler* SharedSampler(SDL_GPUDevice* device, SDL_GPUFilter filter, SDL_GPUSamplerAddressMode wrapMode,
+                              bool enhanced)
+{
+    for (const SharedSamplerEntry& entry : SharedSamplers())
+    {
+        if (entry.filter == filter && entry.wrapMode == wrapMode && entry.enhanced == enhanced)
+        {
+            return entry.sampler;
+        }
+    }
+
+    SDL_GPUSamplerCreateInfo samplerInfo{};
+    samplerInfo.min_filter = enhanced ? SDL_GPU_FILTER_LINEAR : filter;
+    samplerInfo.mag_filter = filter;
+    samplerInfo.mipmap_mode = enhanced ? SDL_GPU_SAMPLERMIPMAPMODE_LINEAR : SDL_GPU_SAMPLERMIPMAPMODE_NEAREST;
+    samplerInfo.address_mode_u = wrapMode;
+    samplerInfo.address_mode_v = wrapMode;
+    samplerInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
+    if (enhanced)
+    {
+        samplerInfo.max_lod = kAllMipLevels;
+        // Anisotropic filtering replaces min, mag and mip filtering at once (Direct3D 12 has
+        // no anisotropic + point-magnification mode), so point-magnified textures get
+        // trilinear filtering only. Enabling it for them broke later texture creations.
+        samplerInfo.enable_anisotropy = filter == SDL_GPU_FILTER_LINEAR;
+        samplerInfo.max_anisotropy = kEnhancedMaxAnisotropy;
+    }
+
+    SDL_GPUSampler* sampler = SDL_CreateGPUSampler(device, &samplerInfo);
+    if (sampler)
+    {
+        SharedSamplers().push_back({filter, wrapMode, enhanced, sampler});
+    }
+    return sampler;
+}
+
+void ReleaseSharedSamplers(SDL_GPUDevice* device)
+{
+    for (const SharedSamplerEntry& entry : SharedSamplers())
+    {
+        SDL_ReleaseGPUSampler(device, entry.sampler);
+    }
+    SharedSamplers().clear();
+}
+
+// Interface textures are drawn at or above their size and never need mipmaps.
+bool AllowsMipmaps(const std::wstring& filename)
+{
+    constexpr std::wstring_view kInterfaceFolder = L"interface\\";
+    std::wstring lower = filename;
+    std::transform(lower.begin(), lower.end(), lower.begin(), [](wchar_t ch) { return static_cast<wchar_t>(towlower(ch)); });
+    return lower.find(kInterfaceFolder) == std::wstring::npos;
+}
+
 bool UploadTextureSDLGpu(BITMAP_t* bitmap, const std::uint8_t* pixelData, int width, int height, SDL_GPUFilter filter,
-                         SDL_GPUSamplerAddressMode wrapMode)
+                         SDL_GPUSamplerAddressMode wrapMode, bool allowMipmaps)
 {
     SDL_GPUDevice* device = static_cast<SDL_GPUDevice*>(mu::GetRenderer().GetDevice());
     if (!device || !bitmap || !pixelData || width <= 0 || height <= 0)
     {
         return false;
+    }
+
+    const bool enhanced = allowMipmaps && GameConfig::GetInstance().GetEnhancedTextures();
+
+    // Level 0 only, or the whole chain when enhanced.
+    constexpr Uint32 bytesPerPixel = 4u;
+    std::vector<Render::Textures::MipChain::Level> mipLevels{{width, height, 0u}};
+    std::vector<std::uint8_t> mipChain;
+    const std::uint8_t* uploadData = pixelData;
+    Uint32 dataSize = static_cast<Uint32>(width) * static_cast<Uint32>(height) * bytesPerPixel;
+    if (enhanced)
+    {
+        mipChain = Render::Textures::MipChain::Build(pixelData, width, height, mipLevels);
+        uploadData = mipChain.data();
+        dataSize = static_cast<Uint32>(mipChain.size());
     }
 
     SDL_GPUTextureCreateInfo texInfo{};
@@ -146,17 +243,24 @@ bool UploadTextureSDLGpu(BITMAP_t* bitmap, const std::uint8_t* pixelData, int wi
     texInfo.width = static_cast<Uint32>(width);
     texInfo.height = static_cast<Uint32>(height);
     texInfo.layer_count_or_depth = 1;
-    texInfo.num_levels = 1;
+    texInfo.num_levels = static_cast<Uint32>(mipLevels.size());
     texInfo.usage = SDL_GPU_TEXTUREUSAGE_SAMPLER;
 
     SDL_GPUTexture* gpuTexture = SDL_CreateGPUTexture(device, &texInfo);
     if (!gpuTexture)
     {
+        // During bulk loading many uploads are still in flight; once the GPU drains them,
+        // their released resources are freed and the creation can succeed.
+        mu::log::Get("render")->warn("texture {}x{} ({} levels): create failed, retrying after GPU idle: {}",
+                                     width, height, mipLevels.size(), SDL_GetError());
+        SDL_WaitForGPUIdle(device);
+        gpuTexture = SDL_CreateGPUTexture(device, &texInfo);
+    }
+    if (!gpuTexture)
+    {
+        mu::log::Get("render")->warn("texture {}x{}: create failed again: {}", width, height, SDL_GetError());
         return false;
     }
-
-    constexpr Uint32 bytesPerPixel = 4u;
-    const Uint32 dataSize = static_cast<Uint32>(width) * static_cast<Uint32>(height) * bytesPerPixel;
 
     SDL_GPUTransferBufferCreateInfo transferInfo{};
     transferInfo.usage = SDL_GPU_TRANSFERBUFFERUSAGE_UPLOAD;
@@ -164,6 +268,7 @@ bool UploadTextureSDLGpu(BITMAP_t* bitmap, const std::uint8_t* pixelData, int wi
     SDL_GPUTransferBuffer* transfer = SDL_CreateGPUTransferBuffer(device, &transferInfo);
     if (!transfer)
     {
+        mu::log::Get("render")->warn("texture {}x{}: transfer buffer failed: {}", width, height, SDL_GetError());
         SDL_ReleaseGPUTexture(device, gpuTexture);
         return false;
     }
@@ -175,12 +280,13 @@ bool UploadTextureSDLGpu(BITMAP_t* bitmap, const std::uint8_t* pixelData, int wi
         SDL_ReleaseGPUTexture(device, gpuTexture);
         return false;
     }
-    std::memcpy(mapped, pixelData, dataSize);
+    std::memcpy(mapped, uploadData, dataSize);
     SDL_UnmapGPUTransferBuffer(device, transfer);
 
     SDL_GPUCommandBuffer* commandBuffer = SDL_AcquireGPUCommandBuffer(device);
     if (!commandBuffer)
     {
+        mu::log::Get("render")->warn("texture {}x{}: command buffer failed: {}", width, height, SDL_GetError());
         SDL_ReleaseGPUTransferBuffer(device, transfer);
         SDL_ReleaseGPUTexture(device, gpuTexture);
         return false;
@@ -195,32 +301,29 @@ bool UploadTextureSDLGpu(BITMAP_t* bitmap, const std::uint8_t* pixelData, int wi
         return false;
     }
 
-    SDL_GPUTextureTransferInfo src{};
-    src.transfer_buffer = transfer;
-    src.offset = 0;
-    src.pixels_per_row = static_cast<Uint32>(width);
-    src.rows_per_layer = static_cast<Uint32>(height);
+    for (std::size_t level = 0; level < mipLevels.size(); ++level)
+    {
+        const Render::Textures::MipChain::Level& mip = mipLevels[level];
+        SDL_GPUTextureTransferInfo src{};
+        src.transfer_buffer = transfer;
+        src.offset = mip.offset;
+        src.pixels_per_row = static_cast<Uint32>(mip.width);
+        src.rows_per_layer = static_cast<Uint32>(mip.height);
 
-    SDL_GPUTextureRegion dst{};
-    dst.texture = gpuTexture;
-    dst.w = static_cast<Uint32>(width);
-    dst.h = static_cast<Uint32>(height);
-    dst.d = 1;
+        SDL_GPUTextureRegion dst{};
+        dst.texture = gpuTexture;
+        dst.mip_level = static_cast<Uint32>(level);
+        dst.w = static_cast<Uint32>(mip.width);
+        dst.h = static_cast<Uint32>(mip.height);
+        dst.d = 1;
 
-    SDL_UploadToGPUTexture(copyPass, &src, &dst, false);
+        SDL_UploadToGPUTexture(copyPass, &src, &dst, false);
+    }
     SDL_EndGPUCopyPass(copyPass);
     SDL_SubmitGPUCommandBuffer(commandBuffer);
     SDL_ReleaseGPUTransferBuffer(device, transfer);
 
-    SDL_GPUSamplerCreateInfo samplerInfo{};
-    samplerInfo.min_filter = filter;
-    samplerInfo.mag_filter = filter;
-    samplerInfo.mipmap_mode = SDL_GPU_SAMPLERMIPMAPMODE_NEAREST;
-    samplerInfo.address_mode_u = wrapMode;
-    samplerInfo.address_mode_v = wrapMode;
-    samplerInfo.address_mode_w = SDL_GPU_SAMPLERADDRESSMODE_CLAMP_TO_EDGE;
-
-    SDL_GPUSampler* sampler = SDL_CreateGPUSampler(device, &samplerInfo);
+    SDL_GPUSampler* sampler = SharedSampler(device, filter, wrapMode, enhanced);
     if (!sampler)
     {
         SDL_ReleaseGPUTexture(device, gpuTexture);
@@ -603,11 +706,7 @@ void CGlobalBitmap::UnloadImage(GLuint uiBitmapIndex, bool bForce)
             SDL_GPUDevice* device = static_cast<SDL_GPUDevice*>(mu::GetRenderer().GetDevice());
             if (device)
             {
-                if (pBitmap->sdlSampler)
-                {
-                    SDL_ReleaseGPUSampler(device, pBitmap->sdlSampler);
-                    pBitmap->sdlSampler = nullptr;
-                }
+                pBitmap->sdlSampler = nullptr; // shared, see SharedSampler()
                 if (pBitmap->sdlTexture)
                 {
                     SDL_ReleaseGPUTexture(device, pBitmap->sdlTexture);
@@ -661,17 +760,14 @@ void CGlobalBitmap::UnloadAllImages()
             BITMAP_t* pBitmap = pair.second.get();
             mu::UnregisterTexture(pBitmap->BitmapIndex);
             mu::UnregisterSampler(pBitmap->BitmapIndex);
-            if (pBitmap->sdlSampler)
-            {
-                SDL_ReleaseGPUSampler(device, pBitmap->sdlSampler);
-                pBitmap->sdlSampler = nullptr;
-            }
+            pBitmap->sdlSampler = nullptr; // shared, released below
             if (pBitmap->sdlTexture)
             {
                 SDL_ReleaseGPUTexture(device, pBitmap->sdlTexture);
                 pBitmap->sdlTexture = nullptr;
             }
         }
+        ReleaseSharedSamplers(device);
     }
     else
     {
@@ -902,7 +998,7 @@ bool CGlobalBitmap::OpenJpegTurbo(GLuint uiBitmapIndex, const std::wstring& file
     pNewBitmap->TextureNumber = uiBitmapIndex;
     std::vector<std::uint8_t> rgbaData = PadRGBToRGBA(pNewBitmap->Buffer, textureWidth, textureHeight);
     if (!UploadTextureSDLGpu(pNewBitmap.get(), rgbaData.data(), textureWidth, textureHeight, MapGLFilterToSDL(uiFilter),
-                             MapGLWrapToSDL(uiWrapMode)))
+                             MapGLWrapToSDL(uiWrapMode), AllowsMipmaps(filename)))
     {
         g_ErrorReport.Write(L"SDL texture upload failed %ls (%d)\r\n", filename.c_str(), uiBitmapIndex);
         return false;
@@ -973,7 +1069,7 @@ bool CGlobalBitmap::OpenTga(GLuint uiBitmapIndex, const std::wstring& filename, 
 
     pNewBitmap->TextureNumber = uiBitmapIndex;
     if (!UploadTextureSDLGpu(pNewBitmap.get(), pNewBitmap->Buffer, Width, Height, MapGLFilterToSDL(uiFilter),
-                             MapGLWrapToSDL(uiWrapMode)))
+                             MapGLWrapToSDL(uiWrapMode), AllowsMipmaps(filename)))
     {
         g_ErrorReport.Write(L"SDL texture upload failed %ls (%d)\r\n", filename.c_str(), uiBitmapIndex);
         return false;

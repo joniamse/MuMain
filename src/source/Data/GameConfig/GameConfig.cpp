@@ -80,6 +80,8 @@ void GameConfig::Load()
     m_uiLocale = ReadString(CfgSectionUI, CfgKeyUILocale, CfgDefaultUILocale);
     m_fontSelection = ReadString(CfgSectionUI, CfgKeyFont, CfgDefaultFont);
     m_modernHud = ReadBool(CfgSectionUI, CfgKeyModernHud, CfgDefaultModernHud);
+    m_wasdMovement = ReadBool(CfgSectionModern, CfgKeyWasdMovement, CfgDefaultWasdMovement);
+    m_enhancedTextures = ReadBool(CfgSectionModern, CfgKeyEnhancedTextures, CfgDefaultEnhancedTextures);
 
     m_zoom = ReadInt(CfgSectionCamera, CfgKeyZoom, CfgDefaultZoom);
     m_sortParticleDraws = ReadBool(CfgSectionRender, CfgKeySortParticleDraws, CfgDefaultSortParticleDraws);
@@ -126,6 +128,8 @@ void GameConfig::Save()
     WriteString(CfgSectionUI, CfgKeyUILocale, m_uiLocale);
     WriteString(CfgSectionUI, CfgKeyFont, m_fontSelection);
     WriteBool(CfgSectionUI, CfgKeyModernHud, m_modernHud);
+    WriteBool(CfgSectionModern, CfgKeyWasdMovement, m_wasdMovement);
+    WriteBool(CfgSectionModern, CfgKeyEnhancedTextures, m_enhancedTextures);
 
     WriteInt(CfgSectionCamera, CfgKeyZoom, m_zoom);
     WriteBool(CfgSectionRender, CfgKeyVSync, m_vsyncEnabled);
@@ -198,6 +202,16 @@ void GameConfig::SetVSyncEnabled(bool enabled)
 void GameConfig::SetModernHud(bool enabled)
 {
     m_modernHud = enabled;
+}
+
+void GameConfig::SetWasdMovement(bool enabled)
+{
+    m_wasdMovement = enabled;
+}
+
+void GameConfig::SetEnhancedTextures(bool enabled)
+{
+    m_enhancedTextures = enabled;
 }
 
 void GameConfig::SetRememberMe(bool remember)
