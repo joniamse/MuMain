@@ -88,6 +88,7 @@
 #include "GameLogic/Items/ItemCategories.h"
 #include "Data/GameData/ItemData/ItemModelSlots.h"
 #include "UI/Modern/ModernHud.h"
+#include "GameLogic/Vip/VipAura.h"
 
 #define MAX_DEBUG_MAX 10
 
@@ -2028,8 +2029,9 @@ void ReceiveNotice(const BYTE* ReceiveBuffer)
     wchar_t Text[256]{};
     CMultiLanguage::ConvertFromUtf8(Text, Data->Notice);
 
-    // Data for the modern UI (e.g. the VIP window) travels as notices; it is not shown in the chat.
-    if (UI::Modern::HandleServerNotice(Text))
+    // Data for the modern UI (e.g. the VIP window, the VIP auras) travels as notices; it is not
+    // shown in the chat.
+    if (GameLogic::VipAura::HandleNotice(Text) || UI::Modern::HandleServerNotice(Text))
     {
         return;
     }

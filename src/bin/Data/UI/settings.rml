@@ -45,6 +45,13 @@
                 </div>
                 <div class="switch" data-class-on="modern_skin"><div class="knob"></div></div>
             </div>
+            <div class="setting" data-event-click="toggle('auras')">
+                <div class="setting-text">
+                    <div class="setting-name">VIP auras</div>
+                    <div class="setting-help">Show the aura of the characters with a VIP membership.</div>
+                </div>
+                <div class="switch" data-class-on="vip_auras"><div class="knob"></div></div>
+            </div>
 
             <div class="section-title">Controls</div>
             <div class="setting" data-event-click="toggle('zoom')">

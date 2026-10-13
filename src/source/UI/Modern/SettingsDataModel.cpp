@@ -31,6 +31,7 @@ bool SettingsDataModel::Bind(::Rml::Context& context)
     constructor.Bind("cursor_restart", &m_cursorRestart);
     constructor.Bind("modern_skin", &m_modernSkin);
     constructor.Bind("skin_restart", &m_skinRestart);
+    constructor.Bind("vip_auras", &m_vipAuras);
     constructor.Bind("enhanced_textures", &m_enhancedTextures);
     constructor.Bind("textures_restart", &m_texturesRestart);
     constructor.Bind("anti_aliasing", &m_antiAliasing);
@@ -63,6 +64,7 @@ void SettingsDataModel::Load()
     m_cursorRestart = m_hdCursor != m_cursorAtStartup;
     m_modernSkin = config.GetModernSkin();
     m_skinRestart = m_modernSkin != m_skinAtStartup;
+    m_vipAuras = config.GetVipAuras();
     m_enhancedTextures = config.GetEnhancedTextures();
     m_texturesRestart = m_enhancedTextures != m_texturesAtStartup;
     m_antiAliasing = config.GetAntiAliasing();
@@ -90,6 +92,10 @@ void SettingsDataModel::Toggle(const ::Rml::String& setting)
     else if (setting == "windows")
     {
         config.SetModernWindows(!config.GetModernWindows());
+    }
+    else if (setting == "auras")
+    {
+        config.SetVipAuras(!config.GetVipAuras());
     }
     else if (setting == "skin")
     {
@@ -147,6 +153,7 @@ void SettingsDataModel::Dirty()
     m_handle.DirtyVariable("cursor_restart");
     m_handle.DirtyVariable("modern_skin");
     m_handle.DirtyVariable("skin_restart");
+    m_handle.DirtyVariable("vip_auras");
     m_handle.DirtyVariable("enhanced_textures");
     m_handle.DirtyVariable("textures_restart");
     m_handle.DirtyVariable("anti_aliasing");

@@ -31,6 +31,7 @@
 #include "Engine/Object/ZzzInterface.h"
 #include "Engine/Object/ZzzInventory.h"
 #include "Render/Effects/ZzzEffect.h"
+#include "GameLogic/Vip/VipAura.h"
 #include "Engine/Object/ZzzOpenData.h"
 #include "Scenes/SceneCore.h"
 #include "Scenes/MainScene.h"
@@ -9339,6 +9340,12 @@ void RenderCharacter(CHARACTER* c, OBJECT* o, int Select)
         }
         else
             VectorCopy(AbilityLight, c->Light);
+    }
+
+    // [Modern] VipAuras: the aura of the character's VIP membership, under it.
+    if (o->Kind == KIND_PLAYER && SceneFlag == MAIN_SCENE)
+    {
+        GameLogic::VipAura::Render(c, o);
     }
 
     if (o->Kind == KIND_NPC && gMapManager.WorldActive == WD_0LORENCIA && o->Type == MODEL_PLAYER && (o->SubType >= MODEL_SKELETON1 && o->SubType <= MODEL_SKELETON3))
