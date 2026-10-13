@@ -5,6 +5,7 @@
 #include "UI/Modern/RmlRenderInterface.h"
 
 #include "Core/Utilities/Log/MuLogger.h"
+#include "UI/Modern/ItemIconAtlas.h"
 #include "Render/Sprites/GlobalBitmap.h"
 
 #include <SDL3/SDL_error.h>
@@ -208,8 +209,9 @@ void RmlRenderInterface::ReleaseGeometry(::Rml::CompiledGeometryHandle geometry)
 
 ::Rml::TextureHandle RmlRenderInterface::LoadTexture(::Rml::Vector2i& textureDimensions, const ::Rml::String& source)
 {
-    GpuTexture* texture = StartsWith(source, kLegacyTextureScheme) ? BorrowLegacyTexture(source, textureDimensions)
-                                                                   : LoadPngTexture(source, textureDimensions);
+    GpuTexture* texture = StartsWith(source, kLegacyTextureScheme)            ? BorrowLegacyTexture(source, textureDimensions)
+                          : StartsWith(source, ItemIcons::kSourceScheme) ? BorrowItemIconTexture(source, textureDimensions)
+                                                                         : LoadPngTexture(source, textureDimensions);
     return reinterpret_cast<::Rml::TextureHandle>(texture);
 }
 
@@ -233,6 +235,27 @@ RmlRenderInterface::GpuTexture* RmlRenderInterface::BorrowLegacyTexture(const ::
     texture->sampler = m_borrowedSampler ? m_borrowedSampler : bitmap->sdlSampler;
     texture->owned = false;
     textureDimensions = {static_cast<int>(bitmap->Width), static_cast<int>(bitmap->Height)};
+    return texture;
+}
+
+// "itemicons:<page>:<generation>": a page of item icons (see ItemIconAtlas), drawn with linear filtering.
+RmlRenderInterface::GpuTexture* RmlRenderInterface::BorrowItemIconTexture(const ::Rml::String& source,
+                                                                          ::Rml::Vector2i& textureDimensions)
+{
+    int width = 0;
+    int height = 0;
+    auto* gpuTexture = static_cast<SDL_GPUTexture*>(ItemIcons::FindTexture(source, width, height));
+    if (!gpuTexture || !m_borrowedSampler)
+    {
+        mu::log::Get("rmlui")->warn("item icon page '{}' is not available", source);
+        return nullptr;
+    }
+
+    auto* texture = new GpuTexture();
+    texture->texture = gpuTexture;
+    texture->sampler = m_borrowedSampler;
+    texture->owned = false;
+    textureDimensions = {width, height};
     return texture;
 }
 

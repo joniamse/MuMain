@@ -10,6 +10,8 @@
 #include "Data/GameConfig/GameConfig.h"
 #include "UI/Modern/BottomBarDataModel.h"
 #include "UI/Modern/HudDataModel.h"
+#include "UI/Modern/ItemIconAtlas.h"
+#include "UI/Modern/PotionBarDataModel.h"
 #include "UI/Modern/RmlInput.h"
 #include "UI/Modern/RmlRenderInterface.h"
 #include "UI/Modern/RmlSystemInterface.h"
@@ -52,6 +54,7 @@ struct HudState
     HudDataModel dataModel;
     BottomBarDataModel barModel;
     SkillBarDataModel skillModel;
+    PotionBarDataModel potionModel;
     SettingsDataModel settingsModel;
     VipWindowDataModel vipModel;
     ::Rml::Context* context = nullptr;
@@ -91,7 +94,8 @@ bool CreateHud(HudState& state)
 {
     state.context = ::Rml::CreateContext(kContextName, WindowSize());
     if (!state.context || !state.dataModel.Bind(*state.context) || !state.barModel.Bind(*state.context) ||
-        !state.skillModel.Bind(*state.context) || !state.settingsModel.Bind(*state.context) ||
+        !state.skillModel.Bind(*state.context) || !state.potionModel.Bind(*state.context) ||
+        !state.settingsModel.Bind(*state.context) ||
         !state.vipModel.Bind(*state.context))
     {
         return false;
@@ -100,6 +104,7 @@ bool CreateHud(HudState& state)
     state.dataModel.Refresh();
     state.barModel.Refresh();
     state.skillModel.Refresh();
+    state.potionModel.Refresh();
 
     state.hudDocument = state.context->LoadDocument(kHudDocument);
     state.settingsDocument = state.context->LoadDocument(kSettingsDocument);
@@ -325,9 +330,12 @@ void RenderHud()
     UpdateLayout(*state.context);
     if (hudEnabled)
     {
+        // New item icons are drawn first: the capture runs before this frame's main pass.
+        ItemIcons::RenderPending();
         state.dataModel.Refresh();
         state.barModel.Refresh();
         state.skillModel.Refresh();
+        state.potionModel.Refresh();
     }
     if (state.vipOpen)
     {

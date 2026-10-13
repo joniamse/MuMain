@@ -66,6 +66,7 @@ private:
     };
 
     GpuTexture* CreateGpuTexture(const std::uint8_t* straightRgba, int width, int height);
+    GpuTexture* BorrowItemIconTexture(const ::Rml::String& source, ::Rml::Vector2i& textureDimensions);
     GpuTexture* BorrowLegacyTexture(const ::Rml::String& source, ::Rml::Vector2i& textureDimensions);
     GpuTexture* LoadPngTexture(const ::Rml::String& source, ::Rml::Vector2i& textureDimensions);
     void DestroyGpuTexture(GpuTexture* texture);

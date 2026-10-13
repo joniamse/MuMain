@@ -70,6 +70,64 @@
 
 /* ---- Skill bar: bottom-centre, above the experience bar ---------------------------------- */
 
+/* ---- Potion bar: left of the skill bar ------------------------------------------------- */
+
+#potionbar {
+    position: absolute;
+    left: 50%;
+    bottom: 14dp;
+    /* The skill bar is 452dp wide and centred: this sits 8dp to its left. */
+    margin-left: -397dp;
+    display: flex;
+    padding: 4dp;
+}
+
+.potion-slot {
+    position: relative;
+    width: 36dp;
+    height: 36dp;
+    margin-left: 3dp;
+    border: 1dp #2b3a4f;
+    border-radius: 3dp;
+    decorator: vertical-gradient(#141c28 #0a0f16);
+}
+
+.potion-slot:first-child {
+    margin-left: 0;
+}
+
+.potion-slot:hover {
+    border-color: #9cc2ee;
+}
+
+.potion-slot:active {
+    decorator: vertical-gradient(#0a0f16 #141c28);
+}
+
+.potion-slot.empty {
+    decorator: none;
+    background-color: #0a0f1680;
+}
+
+/* A potion fills one inventory square: square icon. */
+.potion-slot img {
+    position: absolute;
+    left: 3dp;
+    top: 3dp;
+    width: 30dp;
+    height: 30dp;
+}
+
+.potion-count {
+    position: absolute;
+    right: 2dp;
+    bottom: 1dp;
+    font-size: 10dp;
+    font-weight: bold;
+    color: #eef2f7;
+    font-effect: outline(1dp #000000);
+}
+
 #skillbar {
     position: absolute;
     left: 50%;

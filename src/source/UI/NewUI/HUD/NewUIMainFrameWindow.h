@@ -57,6 +57,12 @@ namespace SEASON3B
         void RenderItems();
         void RenderItemCount();
 
+        // For the modern HUD: the inventory index of the item a hotkey (HOTKEY_Q..HOTKEY_R) uses,
+        // or -1; how many of them are in the inventory; and using it like pressing the key.
+        int GetItemInventoryIndex(int iHotKey) { return GetHotKeyItemIndex(iHotKey); }
+        int GetItemCount(int iHotKey) { return GetHotKeyItemIndex(iHotKey, true); }
+        bool UseItem(int iHotKey);
+
     private:
         int GetHotKeyItemIndex(int iType, bool bItemCount = false);
         bool GetHotKeyCommonItem(IN int iHotKey, OUT int& iStart, OUT int& iEnd);
@@ -212,6 +218,8 @@ namespace SEASON3B
         int GetItemHotKey(int iHotKey);
         int GetItemHotKeyLevel(int iHotKey);
         void UseHotKeyItemRButton();
+        // The item hotkeys (Q, W, E, R), for the modern HUD's potion bar.
+        CNewUIItemHotKey& GetItemHotKeys() { return m_ItemHotKey; }
         //void RenderHotKeyItems();
         void UpdateItemHotKey();
 

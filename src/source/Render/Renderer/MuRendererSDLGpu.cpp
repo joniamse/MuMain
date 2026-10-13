@@ -573,12 +573,10 @@ struct RenderCmd
     bool depthTestEnabled{};
     bool depthMaskEnabled{};
     bool cullFaceEnabled{};
-#ifdef _EDITOR
     // Set once this command has been replayed into an editor offscreen capture
     // (see BeginOffscreenCapture/EndOffscreenCapture); the main frame's replay
     // pass then skips it instead of drawing it a second time into the swapchain.
     bool consumedByOffscreenCapture = false;
-#endif
 };
 
 static std::vector<RenderCmd> s_renderCmds;
@@ -885,7 +883,6 @@ static SDL_GPURenderPass* BeginUiPassOverPostProcess()
 }
 static SDL_FColor s_clearColor{0.0f, 0.0f, 0.0f, 1.0f};
 
-#ifdef _EDITOR
 // Editor-only isolated offscreen render captures (e.g. the Map Editor's object
 // preview thumbnails). A capture batches a sub-range of s_renderCmds - recorded
 // between BeginOffscreenCapture()/EndOffscreenCapture() - to be replayed into a
@@ -898,19 +895,20 @@ struct PendingOffscreenCapture
     std::uint32_t textureId;
     Uint32 width;
     Uint32 height;
+    bool transparent;
 };
 static std::vector<PendingOffscreenCapture> s_pendingOffscreenCaptures;
 static std::size_t s_offscreenCaptureStart = 0u;
 static std::uint32_t s_offscreenCaptureTextureId = 0u;
 static Uint32 s_offscreenCaptureWidth = 0u;
 static Uint32 s_offscreenCaptureHeight = 0u;
+static bool s_offscreenCaptureTransparent = false;
 
 // Shared depth buffer for offscreen captures, resized on demand. Captures are
 // processed strictly one at a time (never concurrently), so one is enough.
 static SDL_GPUTexture* s_offscreenDepthTexture = nullptr;
 static Uint32 s_offscreenDepthW = 0u;
 static Uint32 s_offscreenDepthH = 0u;
-#endif
 
 // Story 4.3.2 (AC-10): Fog uniform buffer and transfer buffer.
 static SDL_GPUBuffer* s_fogUniformBuf = nullptr;
@@ -1817,12 +1815,10 @@ public:
         }
         s_textureUpdates.clear();
 
-#ifdef _EDITOR
         // Phase 2b (editor-only): replay any pending offscreen captures (e.g. Map
         // Editor object thumbnails) into their own dedicated textures now that the
         // GPU vertex buffer holds their data, before the main pass below runs.
         ProcessPendingOffscreenCaptures(boneDataReady);
-#endif
 
         // ---------------------------------------------------------------
         // Phase 3: Render pass — replay all recorded draw commands.
@@ -1909,12 +1905,10 @@ public:
                 {
                     continue;
                 }
-#ifdef _EDITOR
                 if (cmd.consumedByOffscreenCapture)
                 {
                     continue; // already drawn into its own offscreen texture above
                 }
-#endif
                 ++s_dbgRenderCmdsReplayedThisFrame;
 
                 switch (cmd.type)
@@ -2637,7 +2631,6 @@ public:
         ReleaseOwnedTextureById(textureId);
     }
 
-#ifdef _EDITOR
     // Same shape as EnsureTexture, but with COLOR_TARGET usage added so the result
     // can be rendered into (not just sampled) - needed for offscreen captures.
     void EnsureOffscreenColorTexture(std::uint32_t textureId, std::uint32_t width, std::uint32_t height)
@@ -2666,7 +2659,9 @@ public:
 
         SDL_GPUTextureCreateInfo texInfo{};
         texInfo.type = SDL_GPU_TEXTURETYPE_2D;
-        texInfo.format = SDL_GPU_TEXTUREFORMAT_R8G8B8A8_UNORM;
+        // The graphics pipelines are built for the swapchain format; a render pass into a
+        // texture of another format doesn't match them (D3D12 needs the same RTV format).
+        texInfo.format = SDL_GetGPUSwapchainTextureFormat(s_device, s_window);
         texInfo.usage = SDL_GPU_TEXTUREUSAGE_COLOR_TARGET | SDL_GPU_TEXTUREUSAGE_SAMPLER;
         texInfo.width = width;
         texInfo.height = height;
@@ -2690,7 +2685,7 @@ public:
     }
 
     [[nodiscard]] std::uint32_t BeginOffscreenCapture(std::uint32_t textureId, std::uint32_t width,
-                                                       std::uint32_t height) override
+                                                       std::uint32_t height, bool transparent) override
     {
         if (!s_device || !s_frameActive || width == 0u || height == 0u)
         {
@@ -2730,6 +2725,7 @@ public:
         s_offscreenCaptureTextureId = textureId;
         s_offscreenCaptureWidth = width;
         s_offscreenCaptureHeight = height;
+        s_offscreenCaptureTransparent = transparent;
         return textureId;
     }
 
@@ -2742,7 +2738,7 @@ public:
 
         s_pendingOffscreenCaptures.push_back({s_offscreenCaptureStart, s_renderCmds.size(),
                                               s_offscreenCaptureTextureId, s_offscreenCaptureWidth,
-                                              s_offscreenCaptureHeight});
+                                              s_offscreenCaptureHeight, s_offscreenCaptureTransparent});
         s_offscreenCaptureTextureId = 0u;
     }
 
@@ -2756,7 +2752,6 @@ public:
     {
         return !s_pendingOffscreenCaptures.empty();
     }
-#endif // _EDITOR
 
     [[nodiscard]] std::uint32_t CreateTexture(std::uint32_t width, std::uint32_t height, const void* pixels) override
     {
@@ -4309,7 +4304,6 @@ private:
         return true;
     }
 
-#ifdef _EDITOR
     // Depth buffer for editor offscreen captures (see BeginOffscreenCapture). Same
     // shape as CreateOrResizeDepthTexture but keeps its own texture, since it's
     // sized for a small thumbnail, not the swapchain.
@@ -4375,7 +4369,8 @@ private:
 
             SDL_GPUColorTargetInfo colorTarget{};
             colorTarget.texture = static_cast<SDL_GPUTexture*>(textureIt->second);
-            colorTarget.clear_color = SDL_FColor{0.10f, 0.10f, 0.12f, 1.0f};
+            colorTarget.clear_color = capture.transparent ? SDL_FColor{0.0f, 0.0f, 0.0f, 0.0f}
+                                                         : SDL_FColor{0.10f, 0.10f, 0.12f, 1.0f};
             colorTarget.load_op = SDL_GPU_LOADOP_CLEAR;
             colorTarget.store_op = SDL_GPU_STOREOP_STORE;
 
@@ -4424,7 +4419,6 @@ private:
 
         s_pendingOffscreenCaptures.clear();
     }
-#endif // _EDITOR
 
     // -----------------------------------------------------------------------
     // Story 4.3.2 (AC-10): CreateFogUniformBuffers

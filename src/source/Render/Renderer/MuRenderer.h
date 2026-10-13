@@ -387,21 +387,19 @@ public:
         return false;
     }
 
-#ifdef _EDITOR
     // -----------------------------------------------------------------------
-    // Editor-only: isolated offscreen render captures for UI preview thumbnails
-    // (e.g. the Map Editor's object-model preview grid). Draw calls issued
-    // between BeginOffscreenCapture()/EndOffscreenCapture() render into a
-    // dedicated texture instead of the main frame and never appear on screen.
-    // Not available in non-editor builds - exists solely for editor preview UI,
-    // never on the normal gameplay rendering path.
+    // Isolated offscreen render captures, e.g. the Map Editor's object-model preview
+    // grid and the modern UI's item icons (UI/Modern/ItemIconAtlas). Draw calls issued
+    // between BeginOffscreenCapture()/EndOffscreenCapture() render into a dedicated
+    // texture instead of the main frame and never appear on screen.
     // -----------------------------------------------------------------------
 
     // `textureId` may be an existing id (reused/resized as needed) or 0 to
     // allocate a new one. Returns the texture id, or 0 on failure. Calls don't
     // nest - only one capture may be open at a time.
+    // `transparent` clears the texture to transparent black instead of the editor's dark grey.
     [[nodiscard]] virtual std::uint32_t BeginOffscreenCapture(std::uint32_t /*textureId*/, std::uint32_t /*width*/,
-                                                              std::uint32_t /*height*/)
+                                                              std::uint32_t /*height*/, bool /*transparent*/ = false)
     {
         return 0u;
     }
@@ -421,7 +419,6 @@ public:
     // scratch model slot for a different file) must wait for this to go false
     // first, or the eventual replay reads a freed texture/sampler.
     [[nodiscard]] virtual bool HasPendingOffscreenCaptures() const { return false; }
-#endif // _EDITOR
 
     // -----------------------------------------------------------------------
     // Story 7-9-6: GL state migration — replaces raw OpenGL calls.

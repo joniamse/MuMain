@@ -218,6 +218,8 @@ bool SEASON3B::CNewUIMainFrameWindow::Render()
     // The modern HUD (UI/Modern) draws the skill bar, menu buttons and experience bar itself.
     const bool legacyMenuAndExperience = !UI::Modern::IsEnabled();
 
+    // The modern HUD draws the potion bar (Q, W, E, R) itself.
+    if (legacyMenuAndExperience)
     {
         UI::Scaling::ScopedActiveTransform layout(leftTransform);
         RenderLeftFrame();
@@ -264,6 +266,10 @@ bool SEASON3B::CNewUIMainFrameWindow::Render()
 
 void SEASON3B::CNewUIMainFrameWindow::Render3D()
 {
+    if (UI::Modern::IsEnabled())
+    {
+        return;
+    }
     const auto transform = UI::Scaling::BottomHudLeftTransform(WindowWidth, WindowHeight);
     UI::Scaling::ScopedActiveTransform layout(transform);
     m_ItemHotKey.RenderItems();
@@ -281,6 +287,10 @@ bool SEASON3B::CNewUIMainFrameWindow::IsVisible() const
 
 void SEASON3B::CNewUIMainFrameWindow::RenderLeftRegion()
 {
+    if (UI::Modern::IsEnabled())
+    {
+        return;
+    }
     m_pNewUI3DRenderMng->RenderUI2DEffect(ITEMHOTKEYNUMBER_CAMERA_Z_ORDER, UI2DEffectCallback, this, 0, 0);
 }
 
@@ -816,6 +826,11 @@ int SEASON3B::CNewUIMainFrameWindow::GetItemHotKeyLevel(int iHotKey)
 
 void SEASON3B::CNewUIMainFrameWindow::UseHotKeyItemRButton()
 {
+    // The modern potion bar takes its own clicks.
+    if (UI::Modern::IsEnabled())
+    {
+        return;
+    }
     const auto transform = UI::Scaling::BottomHudLeftTransform(WindowWidth, WindowHeight);
     UI::Scaling::ScopedActiveTransform layout(transform, true);
     m_ItemHotKey.UseItemRButton();
@@ -861,25 +876,31 @@ SEASON3B::CNewUIItemHotKey::~CNewUIItemHotKey()
 
 bool SEASON3B::CNewUIItemHotKey::UpdateKeyEvent()
 {
-    int iIndex = -1;
-
+    int iHotKey = -1;
     if (SEASON3B::IsPress('Q') == true)
     {
-        iIndex = GetHotKeyItemIndex(HOTKEY_Q);
+        iHotKey = HOTKEY_Q;
     }
     else if (Input::KeyboardMovement::IsHotkeyPressed('W'))
     {
-        iIndex = GetHotKeyItemIndex(HOTKEY_W);
+        iHotKey = HOTKEY_W;
     }
     else if (SEASON3B::IsPress('E') == true)
     {
-        iIndex = GetHotKeyItemIndex(HOTKEY_E);
+        iHotKey = HOTKEY_E;
     }
     else if (SEASON3B::IsPress('R') == true)
     {
-        iIndex = GetHotKeyItemIndex(HOTKEY_R);
+        iHotKey = HOTKEY_R;
     }
 
+    return iHotKey == -1 || !UseItem(iHotKey);
+}
+
+// Uses the item of a hotkey, as pressing the key does. Returns true when there was one.
+bool SEASON3B::CNewUIItemHotKey::UseItem(int iHotKey)
+{
+    const int iIndex = GetHotKeyItemIndex(iHotKey);
     if (iIndex != -1)
     {
         ITEM* pItem = NULL;
@@ -901,14 +922,13 @@ bool SEASON3B::CNewUIItemHotKey::UpdateKeyEvent()
             }
         }
         else
-
         {
             SendRequestUse(iIndex, 0);
         }
-        return false;
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 int SEASON3B::CNewUIItemHotKey::GetHotKeyItemIndex(int iType, bool bItemCount)
