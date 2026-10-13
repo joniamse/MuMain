@@ -14,6 +14,10 @@ namespace UI::Modern
 // [Modern] ModernWindows, and the underlay loaded. Those windows then draw only their items.
 [[nodiscard]] bool AreWindowsModern();
 
+// The window y (pixels) of the top of the HUD's status window (bottom-left); false without the
+// HD interface. Legacy windows placed around it (the chat) use it.
+[[nodiscard]] bool GetStatusWindowTop(float& windowY);
+
 // Draws the modern look of the open legacy windows. Call inside the main scene's 2D pass,
 // right before the legacy UI, which draws the items over it.
 void RenderUnderlay();

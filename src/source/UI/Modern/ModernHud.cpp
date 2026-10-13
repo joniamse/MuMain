@@ -10,6 +10,7 @@
 #include "Core/Utilities/Log/MuLogger.h"
 #include "Data/GameConfig/GameConfig.h"
 #include "UI/Modern/BottomBarDataModel.h"
+#include "UI/Modern/ChatDataModel.h"
 #include "UI/Modern/HudDataModel.h"
 #include "UI/Modern/InventoryDataModel.h"
 #include "UI/Modern/ItemIconAtlas.h"
@@ -40,6 +41,7 @@ constexpr const char* kContextName = "hud";
 // Drawn before the legacy UI: the modern look of legacy windows, under their items.
 constexpr const char* kUnderlayContextName = "underlay";
 constexpr const char* kInventoryDocument = "Data/UI/inventory.rml";
+constexpr const char* kChatDocument = "Data/UI/chat.rml";
 constexpr const char* kHudDocument = "Data/UI/hud.rml";
 constexpr const char* kSettingsDocument = "Data/UI/settings.rml";
 constexpr const char* kVipDocument = "Data/UI/vip.rml";
@@ -63,6 +65,7 @@ struct HudState
     SettingsDataModel settingsModel;
     VipWindowDataModel vipModel;
     InventoryDataModel inventoryModel;
+    ChatDataModel chatModel;
     ::Rml::Context* context = nullptr;
     ::Rml::Context* underlayContext = nullptr;
     ::Rml::ElementDocument* hudDocument = nullptr;
@@ -97,25 +100,30 @@ bool LoadFonts()
     return anyLoaded;
 }
 
-// The underlay is optional: without it the legacy windows keep their classic look.
+// The underlay is optional: without it (or with a document missing) the legacy windows keep
+// their classic look, since they only skip their own drawing when the underlay is there.
 void CreateUnderlay(HudState& state)
 {
     state.underlayContext = ::Rml::CreateContext(kUnderlayContextName, WindowSize());
-    if (state.underlayContext == nullptr || !state.inventoryModel.Bind(*state.underlayContext))
+    if (state.underlayContext == nullptr || !state.inventoryModel.Bind(*state.underlayContext)
+        || !state.chatModel.Bind(*state.underlayContext))
     {
         mu::log::Get("rmlui")->error("modern windows disabled: the underlay context could not be created");
         state.underlayContext = nullptr;
         return;
     }
     state.inventoryModel.Refresh();
-    if (::Rml::ElementDocument* inventory = state.underlayContext->LoadDocument(kInventoryDocument))
+    state.chatModel.Refresh();
+    for (const char* path : {kInventoryDocument, kChatDocument})
     {
-        inventory->Show();
-    }
-    else
-    {
-        mu::log::Get("rmlui")->error("modern inventory disabled: {} could not be loaded", kInventoryDocument);
-        state.underlayContext = nullptr;
+        ::Rml::ElementDocument* document = state.underlayContext->LoadDocument(path);
+        if (document == nullptr)
+        {
+            mu::log::Get("rmlui")->error("modern windows disabled: {} could not be loaded", path);
+            state.underlayContext = nullptr;
+            return;
+        }
+        document->Show();
     }
 }
 
@@ -307,6 +315,22 @@ bool IsActive()
     return !State().failed && (IsEnabled() || State().settingsOpen || State().vipOpen);
 }
 
+bool GetStatusWindowTop(float& windowY)
+{
+    const HudState& state = State();
+    if (!IsEnabled() || state.hudDocument == nullptr)
+    {
+        return false;
+    }
+    ::Rml::Element* status = state.hudDocument->GetElementById("status");
+    if (status == nullptr)
+    {
+        return false;
+    }
+    windowY = status->GetAbsoluteTop();
+    return true;
+}
+
 bool AreWindowsModern()
 {
     const HudState& state = State();
@@ -323,6 +347,7 @@ void RenderUnderlay()
     HudState& state = State();
     UpdateLayout(*state.underlayContext);
     state.inventoryModel.Refresh();
+    state.chatModel.Refresh();
     state.underlayContext->Update();
 
     state.renderInterface->BeginFrame(static_cast<int>(WindowWidth), static_cast<int>(WindowHeight));
@@ -501,6 +526,10 @@ bool ProcessEvent(const SDL_Event& /*event*/)
 }
 void RenderHud() {}
 bool AreWindowsModern()
+{
+    return false;
+}
+bool GetStatusWindowTop(float& /*windowY*/)
 {
     return false;
 }

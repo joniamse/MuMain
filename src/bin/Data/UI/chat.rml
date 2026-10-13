@@ -1,0 +1,28 @@
+<rml>
+<head>
+    <title>Chat</title>
+    <link type="text/rcss" href="theme.rcss"/>
+    <link type="text/rcss" href="chat.rcss"/>
+</head>
+<!-- Drawn under the legacy chat input box, which draws the typed text and takes the clicks and
+     keys: this document only takes mouse motion (hover styles). -->
+<body data-model="chat">
+    <div id="chat" data-if="visible"
+         data-style-left="panel_left + 'px'" data-style-top="panel_top + 'px'"
+         data-style-width="panel_width + 'px'" data-style-height="panel_height + 'px'">
+        <div data-for="button : buttons" data-attr-class="'chat-button interactive ' + button.kind"
+             data-class-active="button.active"
+             data-style-left="button.left + 'px'" data-style-top="button.top + 'px'"
+             data-style-width="button.width + 'px'" data-style-height="button.height + 'px'">
+            <span class="chat-button-label">{{button.label}}</span>
+        </div>
+
+        <div class="chat-field whisper" data-class-off="whisper_off"
+             data-style-left="whisper_field.left + 'px'" data-style-top="whisper_field.top + 'px'"
+             data-style-width="whisper_field.width + 'px'" data-style-height="whisper_field.height + 'px'"></div>
+        <div class="chat-field"
+             data-style-left="chat_field.left + 'px'" data-style-top="chat_field.top + 'px'"
+             data-style-width="chat_field.width + 'px'" data-style-height="chat_field.height + 'px'"></div>
+    </div>
+</body>
+</rml>

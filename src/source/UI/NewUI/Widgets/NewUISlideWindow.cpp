@@ -5,6 +5,7 @@
 
 #include "UI/NewUI/Widgets/NewUISlideWindow.h"
 #include "UI/NewUI/NewUIManager.h"
+#include "UI/Modern/ModernHud.h"
 
 SEASON3B::CNewUISlideWindow::CNewUISlideWindow()
 {
@@ -58,7 +59,11 @@ bool SEASON3B::CNewUISlideWindow::Update()
 }
 bool SEASON3B::CNewUISlideWindow::Render()
 {
+    // The HD interface keeps the map name bar on the top line: the texts scroll just below it.
+    constexpr int kTopBelowModernMapBar = 17;
+    m_pSlideMgr->SetTop(UI::Modern::IsEnabled() ? kTopBelowModernMapBar : 0);
     m_pSlideMgr->Render();
+
 
     return true;
 }

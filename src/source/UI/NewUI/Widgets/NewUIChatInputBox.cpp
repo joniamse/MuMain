@@ -12,6 +12,13 @@
 #include "World/MapInfra/MapManager.h"
 #include "Engine/Object/ZzzInterface.h"
 #include "GameLogic/Items/ItemCategories.h"
+#include "UI/Modern/ModernHud.h"
+#include "UI/Scaling/UITransform.h"
+
+#include <algorithm>
+
+extern unsigned int WindowWidth;
+extern unsigned int WindowHeight;
 
 #ifdef _EDITOR
 #include "imgui.h"
@@ -643,8 +650,60 @@ bool SEASON3B::CNewUIChatInputBox::UpdateKeyEvent()
     return true;
 }
 
+// With the HD interface the chat sits right above the status window (bottom-left), the chat log
+// above the input box as in the classic layout.
+void SEASON3B::CNewUIChatInputBox::SyncPosition()
+{
+    constexpr int kClassicY = 480 - 51 - 47;
+    constexpr int kGapAboveStatus = 3;
+    int y = kClassicY;
+    float statusTop = 0.f;
+    if (UI::Modern::GetStatusWindowTop(statusTop))
+    {
+        const auto transform = UI::Scaling::TransformForLayout(GetLayoutMode(), static_cast<int>(WindowWidth),
+                                                               static_cast<int>(WindowHeight));
+        y = static_cast<int>((statusTop - transform.offsetY) / transform.scaleY) - CHATBOX_HEIGHT - kGapAboveStatus;
+        y = std::min(y, kClassicY);
+    }
+    if (y == m_WndPos.y)
+    {
+        return;
+    }
+    SetWndPos(m_WndPos.x, y);
+    SetButtonInfo();
+    m_pNewUIChatLogWnd->SetPosition(m_WndPos.x, y + 1);
+    m_pNewUIChatLogWnd->UpdateScrollPos();
+}
+
+void SEASON3B::CNewUIChatInputBox::GetModernLayout(ModernLayout& layout) const
+{
+    const auto rect = [](float x, float y, float width, float height) {
+        return RECT{static_cast<LONG>(x), static_cast<LONG>(y), static_cast<LONG>(x + width), static_cast<LONG>(y + height)};
+    };
+    const auto x = static_cast<float>(m_WndPos.x);
+    const auto y = static_cast<float>(m_WndPos.y);
+    layout.window = rect(x, y, CHATBOX_WIDTH, CHATBOX_HEIGHT);
+    layout.whisperField = rect(x + 2, y + 28, 61, 17);
+    layout.chatField = rect(x + 68, y + 28, CHATBOX_WIDTH - 70, 17);
+    for (int i = 0; i < INPUT_MESSAGE_TYPE_COUNT; ++i)
+    {
+        layout.types[i].rect = rect(x + BUTTON_WIDTH * i, y, BUTTON_WIDTH, BUTTON_HEIGHT);
+        layout.types[i].active = m_iInputMsgType == INPUT_CHAT_MESSAGE + i;
+    }
+    layout.blockWhisper = {rect(x + BLOCK_WHISPER_START_X, y, BUTTON_WIDTH, BUTTON_HEIGHT), m_bBlockWhisper};
+    layout.systemMessages = {rect(x + SYSTEM_ON_START_X, y, BUTTON_WIDTH, BUTTON_HEIGHT), m_bShowSystemMessages};
+    layout.chatLog = {rect(x + CHATLOG_ON_START_X, y, BUTTON_WIDTH, BUTTON_HEIGHT), m_bShowChatLog};
+    layout.frameShown = m_pNewUIChatLogWnd->IsShowFrame();
+    layout.frame = {rect(x + FRAME_ON_START_X, y, BUTTON_WIDTH, BUTTON_HEIGHT), layout.frameShown};
+    layout.size = {rect(x + FRAME_RESIZE_START_X, y, BUTTON_WIDTH, BUTTON_HEIGHT), false};
+    layout.transparency = {rect(x + TRANSPARENCY_START_X, y, BUTTON_WIDTH, BUTTON_HEIGHT), false};
+    layout.whisperOff = !m_bWhisperSend;
+}
+
 bool SEASON3B::CNewUIChatInputBox::Update()
 {
+    SyncPosition();
+
     if (m_pChatInputBox->HaveFocus() && GetRelatedWnd() != m_pChatInputBox->GetHandle())
     {
         SetRelatedWnd(m_pChatInputBox->GetHandle());
@@ -682,10 +741,15 @@ bool SEASON3B::CNewUIChatInputBox::Update()
 
 bool SEASON3B::CNewUIChatInputBox::Render()
 {
+    // The modern look (UI::Modern) draws the frame and the buttons under this window.
+    const bool modern = UI::Modern::AreWindowsModern();
     EnableAlphaTest();
 
-    RenderFrame();
-    RenderButtons();
+    if (!modern)
+    {
+        RenderFrame();
+        RenderButtons();
+    }
     RenderTooltip();
     m_pChatInputBox->Render();
     m_pWhsprIDInputBox->Render();
@@ -697,9 +761,12 @@ bool SEASON3B::CNewUIChatInputBox::Render()
         g_pRenderText->SetTextColor(255, 255, 255, 100);
         g_pRenderText->RenderText(m_pWhsprIDInputBox->GetPosition_x(), m_pWhsprIDInputBox->GetPosition_y(), szWhisperID);
 
-        EnableAlphaTest();
-        constexpr unsigned int BlockedWhisperColor = 0x33803333u;
-        RenderColorQuadARGB(m_WndPos.x + 2, m_WndPos.y + 28, 61, 17, BlockedWhisperColor);
+        if (!modern)
+        {
+            EnableAlphaTest();
+            constexpr unsigned int BlockedWhisperColor = 0x33803333u;
+            RenderColorQuadARGB(m_WndPos.x + 2, m_WndPos.y + 28, 61, 17, BlockedWhisperColor);
+        }
     }
 
     DisableAlphaBlend();

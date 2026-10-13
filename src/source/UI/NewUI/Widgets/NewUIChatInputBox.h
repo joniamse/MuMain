@@ -132,6 +132,7 @@ namespace SEASON3B
         bool RenderFrame();
         void RenderButtons();
         void RenderTooltip();
+        void SyncPosition();
 
     public:
         CNewUIChatInputBox();
@@ -174,6 +175,27 @@ namespace SEASON3B
         void ClosingProcess();
 
         void SetWhsprID(const wchar_t* strWhsprID);
+
+        // What the modern look (UI/Modern/ChatDataModel) draws under the text fields, in
+        // window-local coordinates. With it, this window draws only the texts and tooltips.
+        struct ModernLayout
+        {
+            struct Button
+            {
+                RECT rect{};
+                bool active = false;
+            };
+            RECT window{};
+            RECT whisperField{};
+            RECT chatField{};
+            // The message types (normal, party, guild, gens): the selected one is active.
+            Button types[INPUT_MESSAGE_TYPE_COUNT];
+            Button blockWhisper, systemMessages, chatLog, frame, size, transparency;
+            bool frameShown = false;
+            bool whisperOff = false;
+        };
+        void GetModernLayout(ModernLayout& layout) const;
+        static constexpr int GetMessageTypeCount() { return INPUT_MESSAGE_TYPE_COUNT; }
 
     protected:
         void GetChatText(type_string& strText);

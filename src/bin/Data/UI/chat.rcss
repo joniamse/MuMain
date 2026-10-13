@@ -1,0 +1,72 @@
+/* Modern look of the legacy chat input box: a row of channel and filter buttons above the
+   whisper-name and message fields. Boxes are placed in window pixels by the data model. */
+
+#chat {
+    position: absolute;
+    decorator: vertical-gradient(#121b29f0 #070b11f0);
+    border: 1dp #253246;
+    border-top-color: #6f9bd1aa;
+    border-radius: 5dp;
+}
+
+.chat-button {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 2dp 1dp;
+    border: 1dp #00000000;
+    border-radius: 3dp;
+}
+
+.chat-button-label {
+    font-size: 8dp;
+    font-weight: bold;
+    color: #6f819a;
+}
+
+.chat-button:hover {
+    border-color: #3d5270;
+    background-color: #ffffff0d;
+}
+
+.chat-button:hover .chat-button-label {
+    color: #c4d2e4;
+}
+
+/* The channel the message goes to. */
+.chat-button.type.active {
+    border-color: #6f9bd1;
+    decorator: vertical-gradient(#24364f #121c2a);
+}
+
+.chat-button.type.active .chat-button-label {
+    color: #eef2f7;
+}
+
+/* Filters that are on (system messages, chat log, frame). */
+.chat-button.toggle.active .chat-button-label {
+    color: #4fd8a6;
+}
+
+/* Whispers blocked. */
+.chat-button.block.active .chat-button-label {
+    color: #ff6b6b;
+}
+
+.chat-field {
+    position: absolute;
+    background-color: #03050acc;
+    border: 1dp #2b3a4f;
+    border-radius: 3dp;
+}
+
+.chat-field.whisper {
+    border-color: #6b5a2a;
+}
+
+/* Whispering off (the name is kept but not used). */
+.chat-field.whisper.off {
+    border-color: #2b3a4f;
+    background-color: #1a0a0acc;
+}

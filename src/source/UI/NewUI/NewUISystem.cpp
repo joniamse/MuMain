@@ -16,8 +16,8 @@ namespace
     constexpr int kLayoutPanelWidth = 190;
 
     constexpr int kSystemLogTop = 80;
-    // Below the modern status window (Data/UI/hud.rcss #status), which sits under the map name.
-    constexpr int kSystemLogTopBelowModernHud = 104;
+    // The modern status window is at the bottom: the log goes under the map name and the help line.
+    constexpr int kSystemLogTopBelowModernHud = 34;
 
     constexpr int PanelColumnX(int columns)
     {

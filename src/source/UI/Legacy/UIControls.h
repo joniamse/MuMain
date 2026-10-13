@@ -1386,6 +1386,12 @@ public:
 
     void Init();
     void Render();
+    // The line the help and notice texts scroll on (window-local y).
+    void SetTop(int y)
+    {
+        m_HelpSlide.SetPosition(0, y);
+        m_NoticeSlide.SetPosition(0, y);
+    }
 
     void CreateSlideText();
     void OpenSlideTextFile(const wchar_t* szFileName);
