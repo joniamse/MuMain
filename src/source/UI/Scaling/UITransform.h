@@ -113,6 +113,9 @@ namespace UI::Scaling
     float ItemPreviewScale(const Transform& active, int windowWidth, int windowHeight);
     float GetWindowContentScale();
     void SetWindowContentScale(float contentScale);
+    // The height (window pixels) the modern HUD takes at the bottom: the docked windows end above
+    // it. Negative: the classic bottom frame (the default).
+    void SetModernBottomReserve(float windowPixels);
     Transform GetActiveTransform();
     void SetActiveTransform(const Transform& transform);
 }

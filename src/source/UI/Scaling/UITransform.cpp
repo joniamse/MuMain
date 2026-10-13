@@ -33,6 +33,9 @@ constexpr int kFixedFontPointSize = 13;
 constexpr int kMaximumFixedFontPointSize = 18;
 // ponytail: one gameplay window; move scale into a window context if multi-window rendering is added.
 float g_windowContentScale = 1.0f;
+// Window pixels the modern HUD takes at the bottom (SetModernBottomReserve); negative: the
+// classic bottom frame.
+float g_modernBottomReserve = -1.0f;
 
 struct FontPointRange
 {
@@ -71,6 +74,10 @@ bool IsSameTransform(const UI::Scaling::Transform& left, const UI::Scaling::Tran
 
 int RoundedBottomHudTop(int windowWidth, int windowHeight)
 {
+    if (g_modernBottomReserve >= 0.0f)
+    {
+        return std::max(static_cast<int>(std::lround(static_cast<float>(windowHeight) - g_modernBottomReserve)), 1);
+    }
     const float hudTop =
         static_cast<float>(windowHeight) - kHudFrameHeight * UI::Scaling::BottomHudScale(windowWidth, windowHeight);
     return std::max(static_cast<int>(std::lround(hudTop)), 1);
@@ -87,7 +94,13 @@ float CappedUniformScale(int windowWidth, int windowHeight, float maximumScale)
 
 UI::Scaling::Transform DockTransform(int windowWidth, int windowHeight)
 {
-    const float scale = CappedUniformScale(windowWidth, windowHeight, kMaximumDockScale);
+    float scale = CappedUniformScale(windowWidth, windowHeight, kMaximumDockScale);
+    // The modern HUD is taller than the classic frame: the docked windows shrink to stay above it.
+    if (g_modernBottomReserve >= 0.0f)
+    {
+        const float available = static_cast<float>(RoundedBottomHudTop(windowWidth, windowHeight));
+        scale = std::max(std::min(scale, available / UI::Scaling::DockLogicalBottom), 0.5f);
+    }
     const float offsetY = static_cast<float>(RoundedBottomHudTop(windowWidth, windowHeight))
                           - UI::Scaling::DockLogicalBottom * scale;
     return {scale, scale, 0.0f, offsetY, scale};
@@ -383,6 +396,11 @@ float UI::Scaling::ContentScaleFromMetrics(float displayScale, float pixelDensit
 float UI::Scaling::GetWindowContentScale()
 {
     return g_windowContentScale;
+}
+
+void UI::Scaling::SetModernBottomReserve(float windowPixels)
+{
+    g_modernBottomReserve = windowPixels;
 }
 
 void UI::Scaling::SetWindowContentScale(float contentScale)

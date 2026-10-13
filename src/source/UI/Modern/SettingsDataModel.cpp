@@ -22,6 +22,7 @@ bool SettingsDataModel::Bind(::Rml::Context& context)
     // Textures are filtered when they load, so the value at startup is what is on screen.
     m_texturesAtStartup = GameConfig::GetInstance().GetEnhancedTextures();
     m_cursorAtStartup = GameConfig::GetInstance().GetHdCursor();
+    m_skinAtStartup = GameConfig::GetInstance().GetModernSkin();
 
     constructor.Bind("hd_interface", &m_hdInterface);
     constructor.Bind("modern_windows", &m_modernWindows);
@@ -29,6 +30,8 @@ bool SettingsDataModel::Bind(::Rml::Context& context)
     constructor.Bind("wheel_zoom", &m_wheelZoom);
     constructor.Bind("hd_cursor", &m_hdCursor);
     constructor.Bind("cursor_restart", &m_cursorRestart);
+    constructor.Bind("modern_skin", &m_modernSkin);
+    constructor.Bind("skin_restart", &m_skinRestart);
     constructor.Bind("enhanced_textures", &m_enhancedTextures);
     constructor.Bind("textures_restart", &m_texturesRestart);
     constructor.Bind("anti_aliasing", &m_antiAliasing);
@@ -60,6 +63,8 @@ void SettingsDataModel::Load()
     m_wheelZoom = config.GetWheelZoom();
     m_hdCursor = config.GetHdCursor();
     m_cursorRestart = m_hdCursor != m_cursorAtStartup;
+    m_modernSkin = config.GetModernSkin();
+    m_skinRestart = m_modernSkin != m_skinAtStartup;
     m_enhancedTextures = config.GetEnhancedTextures();
     m_texturesRestart = m_enhancedTextures != m_texturesAtStartup;
     m_antiAliasing = config.GetAntiAliasing();
@@ -87,6 +92,10 @@ void SettingsDataModel::Toggle(const ::Rml::String& setting)
     else if (setting == "windows")
     {
         config.SetModernWindows(!config.GetModernWindows());
+    }
+    else if (setting == "skin")
+    {
+        config.SetModernSkin(!config.GetModernSkin());
     }
     else if (setting == "cursor")
     {
@@ -143,6 +152,8 @@ void SettingsDataModel::Dirty()
     m_handle.DirtyVariable("wheel_zoom");
     m_handle.DirtyVariable("hd_cursor");
     m_handle.DirtyVariable("cursor_restart");
+    m_handle.DirtyVariable("modern_skin");
+    m_handle.DirtyVariable("skin_restart");
     m_handle.DirtyVariable("enhanced_textures");
     m_handle.DirtyVariable("textures_restart");
     m_handle.DirtyVariable("anti_aliasing");

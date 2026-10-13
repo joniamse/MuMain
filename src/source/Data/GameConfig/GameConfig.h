@@ -81,6 +81,8 @@ public:
     void SetWheelZoom(bool enabled);
     bool GetHdCursor() const { return m_hdCursor; }
     void SetHdCursor(bool enabled);
+    bool GetModernSkin() const { return m_modernSkin; }
+    void SetModernSkin(bool enabled);
     bool GetEnhancedTextures() const { return m_enhancedTextures; }
     void SetEnhancedTextures(bool enabled);
     bool GetAntiAliasing() const { return m_antiAliasing; }
@@ -156,6 +158,7 @@ private:
     bool m_modernWindows = true;
     bool m_wheelZoom = true;
     bool m_hdCursor = true;
+    bool m_modernSkin = true;
     bool m_enhancedTextures = true;
     bool m_antiAliasing = true;
     bool m_sharpening = true;

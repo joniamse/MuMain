@@ -15,11 +15,12 @@ namespace UI::Modern
 //   wasd_movement       [Modern] WasdMovement, applies immediately
 //   wheel_zoom          [Modern] WheelZoom, applies immediately
 //   hd_cursor           [Modern] HdCursor, read at startup; cursor_restart: differs from the startup value
+//   modern_skin         [Modern] ModernSkin, read at startup; skin_restart: differs from the startup value
 //   enhanced_textures   [Modern] EnhancedTextures, applies to textures loaded afterwards
 //   textures_restart    the texture setting differs from the one the client started with
 //   anti_aliasing, sharpening, color_enhance, bloom   [Modern] post-processing, immediate
 // Events:
-//   toggle('hd' | 'windows' | 'wasd' | 'zoom' | 'cursor' | 'textures' | 'aa' | 'sharpen' | 'color' | 'bloom'), close
+//   toggle('hd' | 'windows' | 'wasd' | 'zoom' | 'cursor' | 'skin' | 'textures' | 'aa' | 'sharpen' | 'color' | 'bloom'), close
 class SettingsDataModel
 {
 public:
@@ -41,6 +42,9 @@ private:
     bool m_hdCursor = true;
     bool m_cursorAtStartup = true;
     bool m_cursorRestart = false;
+    bool m_modernSkin = true;
+    bool m_skinAtStartup = true;
+    bool m_skinRestart = false;
     bool m_enhancedTextures = true;
     bool m_antiAliasing = true;
     bool m_sharpening = true;

@@ -35,6 +35,14 @@
                 </div>
                 <div class="switch" data-class-on="hd_cursor"><div class="knob"></div></div>
             </div>
+            <div class="setting" data-event-click="toggle('skin')">
+                <div class="setting-text">
+                    <div class="setting-name">Modern skin</div>
+                    <div class="setting-help">Modern frames and buttons for the classic windows and dialogs.</div>
+                    <div class="setting-note" data-if="skin_restart">Restart the game to apply.</div>
+                </div>
+                <div class="switch" data-class-on="modern_skin"><div class="knob"></div></div>
+            </div>
 
             <div class="section-title">Controls</div>
             <div class="setting" data-event-click="toggle('wasd')">

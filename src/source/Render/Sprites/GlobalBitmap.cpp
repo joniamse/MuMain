@@ -635,8 +635,45 @@ GLuint CGlobalBitmap::LoadImage(const std::wstring& filename, GLuint uiFilter, G
     }
     return BITMAP_UNKNOWN;
 }
-bool CGlobalBitmap::LoadImage(GLuint uiBitmapIndex, const std::wstring& filename, GLuint uiFilter, GLuint uiWrapMode)
+namespace
 {
+// [Modern] ModernSkin: an interface texture with a modern version (Data/Interface/Modern, made
+// by tools/ui_skin.py, same size and layout) loads that one instead. Read when textures load.
+std::wstring ResolveModernSkin(const std::wstring& filename)
+{
+    if (!GameConfig::GetInstance().GetModernSkin())
+    {
+        return filename;
+    }
+    std::wstring lower = filename;
+    std::transform(lower.begin(), lower.end(), lower.begin(), [](wchar_t c) { return std::towlower(c); });
+    constexpr std::wstring_view folder = L"interface\\";
+    const std::size_t at = lower.find(folder);
+    if (at == std::wstring::npos || lower.find(L"interface\\modern\\") != std::wstring::npos
+        || lower.find(L"interface\\hd\\") != std::wstring::npos)
+    {
+        return filename;
+    }
+    std::wstring candidate = filename;
+    candidate.insert(at + folder.size(), L"Modern\\");
+
+    // The packed file the loaders read: .jpg -> .OZJ, .tga -> .OZT.
+    const std::size_t dot = candidate.find_last_of(L'.');
+    if (dot == std::wstring::npos)
+    {
+        return filename;
+    }
+    const bool jpeg = 0 == _wcsicmp(candidate.c_str() + dot, L".jpg");
+    const std::wstring packed = candidate.substr(0, dot) + (jpeg ? L".OZJ" : L".OZT");
+    std::ifstream probe(NarrowPath(packed), std::ios::binary);
+    return probe ? candidate : filename;
+}
+} // namespace
+
+bool CGlobalBitmap::LoadImage(GLuint uiBitmapIndex, const std::wstring& requestedFilename, GLuint uiFilter,
+                              GLuint uiWrapMode)
+{
+    const std::wstring filename = ResolveModernSkin(requestedFilename);
     unsigned int UICLAMP = GL_CLAMP_TO_EDGE;
     unsigned int UIREPEAT = GL_REPEAT;
 

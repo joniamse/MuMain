@@ -22,6 +22,7 @@
 #include "UI/Modern/SettingsDataModel.h"
 #include "UI/Modern/SkillBarDataModel.h"
 #include "UI/Modern/VipWindowDataModel.h"
+#include "UI/Scaling/UITransform.h"
 
 #include "UI/Modern/RmlIncludes.h"
 
@@ -183,6 +184,21 @@ void SyncDocumentVisibility(HudState& state, bool hudEnabled)
     {
         setVisible(state.vipDocument, state.vipOpen);
     }
+}
+
+// The docked legacy windows end above the HUD's bars (the potion bar is the highest one).
+void UpdateBottomReserve(HudState& state, bool hudEnabled)
+{
+    constexpr float kGap = 4.0f;
+    float reserve = -1.0f;
+    if (hudEnabled && state.hudDocument != nullptr)
+    {
+        if (::Rml::Element* bar = state.hudDocument->GetElementById("potionbar"))
+        {
+            reserve = static_cast<float>(WindowHeight) - bar->GetAbsoluteTop() + kGap;
+        }
+    }
+    UI::Scaling::SetModernBottomReserve(reserve);
 }
 
 bool Initialise(HudState& state)
@@ -438,6 +454,7 @@ void RenderHud()
         state.vipModel.Tick();
     }
     state.context->Update();
+    UpdateBottomReserve(state, hudEnabled);
 
     state.renderInterface->BeginFrame(static_cast<int>(WindowWidth), static_cast<int>(WindowHeight));
     state.context->Render();

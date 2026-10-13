@@ -84,6 +84,7 @@ void GameConfig::Load()
     m_modernWindows = ReadBool(CfgSectionModern, CfgKeyModernWindows, CfgDefaultModernWindows);
     m_wheelZoom = ReadBool(CfgSectionModern, CfgKeyWheelZoom, CfgDefaultWheelZoom);
     m_hdCursor = ReadBool(CfgSectionModern, CfgKeyHdCursor, CfgDefaultHdCursor);
+    m_modernSkin = ReadBool(CfgSectionModern, CfgKeyModernSkin, CfgDefaultModernSkin);
     m_enhancedTextures = ReadBool(CfgSectionModern, CfgKeyEnhancedTextures, CfgDefaultEnhancedTextures);
     m_antiAliasing = ReadBool(CfgSectionModern, CfgKeyAntiAliasing, CfgDefaultAntiAliasing);
     m_sharpening = ReadBool(CfgSectionModern, CfgKeySharpening, CfgDefaultSharpening);
@@ -139,6 +140,7 @@ void GameConfig::Save()
     WriteBool(CfgSectionModern, CfgKeyModernWindows, m_modernWindows);
     WriteBool(CfgSectionModern, CfgKeyWheelZoom, m_wheelZoom);
     WriteBool(CfgSectionModern, CfgKeyHdCursor, m_hdCursor);
+    WriteBool(CfgSectionModern, CfgKeyModernSkin, m_modernSkin);
     WriteBool(CfgSectionModern, CfgKeyEnhancedTextures, m_enhancedTextures);
     WriteBool(CfgSectionModern, CfgKeyAntiAliasing, m_antiAliasing);
     WriteBool(CfgSectionModern, CfgKeySharpening, m_sharpening);
@@ -226,6 +228,11 @@ void GameConfig::SetWasdMovement(bool enabled)
 void GameConfig::SetModernWindows(bool enabled)
 {
     m_modernWindows = enabled;
+}
+
+void GameConfig::SetModernSkin(bool enabled)
+{
+    m_modernSkin = enabled;
 }
 
 void GameConfig::SetHdCursor(bool enabled)
