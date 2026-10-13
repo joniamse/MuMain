@@ -2872,7 +2872,7 @@ void MoveHero()
             if (GetTickCount() - s_lastStoreWarning > 3000)
             {
                 s_lastStoreWarning = GetTickCount();
-                g_pSystemLogBox->AddText(L"Con la tienda personal abierta no puedes moverte. Ciérrala o usa /offstore.", SEASON3B::TYPE_SYSTEM_MESSAGE);
+                g_pSystemLogBox->AddText(L"Con la tienda personal abierta no puedes moverte. Ciérrala para seguir.", SEASON3B::TYPE_SYSTEM_MESSAGE);
             }
         }
         return;
