@@ -52,8 +52,6 @@ namespace CfgKeys
     inline constexpr wchar_t CfgKeyVSync[] = L"VSync";
 
     // Modern
-    // Move the hero with W/A/S/D; the original W/A/S/D actions move to Shift+W/A/S/D.
-    inline constexpr wchar_t CfgKeyWasdMovement[] = L"WasdMovement";
     // Game windows (inventory...) drawn with the modern UI look; needs the HD interface.
     inline constexpr wchar_t CfgKeyModernWindows[] = L"ModernWindows";
     // The mouse wheel zooms the camera without unlocking it with F10 first.
@@ -109,8 +107,6 @@ namespace CfgDefaults
     inline constexpr bool CfgDefaultSortParticleDraws = false;
     inline constexpr bool CfgDefaultVSync = true;
 
-    // WASD changes long-standing hotkeys, so players opt in.
-    inline constexpr bool CfgDefaultWasdMovement = false;
     inline constexpr bool CfgDefaultModernWindows = true;
     inline constexpr bool CfgDefaultWheelZoom = true;
     inline constexpr bool CfgDefaultHdCursor = true;

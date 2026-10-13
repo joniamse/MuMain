@@ -2,7 +2,6 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
-#include "Input/KeyboardMovement.h"
 #include "UI/NewUI/Inventory/NewUIMyInventory.h"
 #include "UI/NewUI/NewUISystem.h"
 #include "I18N/All.h"
@@ -631,7 +630,7 @@ bool CNewUIMyInventory::UpdateKeyEvent()
         }
     }
 
-    if (CanOpenMyShopInterface() == true && Input::KeyboardMovement::IsHotkeyPressed('S'))
+    if (CanOpenMyShopInterface() == true && IsPress('S'))
     {
         if (m_bMyShopOpen)
         {

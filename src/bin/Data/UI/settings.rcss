@@ -10,14 +10,63 @@
     background-color: #00000080;
 }
 
+/* Header and footer stay put; the list of settings scrolls when the window is too short. */
 #settings {
     position: absolute;
     left: 50%;
-    top: 50%;
-    width: 380dp;
-    margin-left: -190dp;
-    margin-top: -265dp;
+    top: 6%;
+    bottom: 6%;
+    width: 400dp;
+    margin-left: -200dp;
     padding: 14dp 16dp 12dp 16dp;
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-body {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 6dp;
+}
+
+.settings-body scrollbarvertical {
+    width: 6dp;
+}
+
+.settings-body scrollbarvertical slidertrack {
+    background-color: #05080d99;
+    border-radius: 3dp;
+}
+
+.settings-body scrollbarvertical sliderbar {
+    background-color: #3d5270;
+    border-radius: 3dp;
+}
+
+.settings-body scrollbarvertical sliderbar:hover {
+    background-color: #6f9bd1;
+}
+
+.settings-header {
+    position: relative;
+}
+
+.settings-header .close {
+    position: absolute;
+    right: 0;
+    top: -4dp;
+    width: 22dp;
+    height: 22dp;
+    line-height: 22dp;
+    text-align: center;
+    font-size: 16dp;
+    color: #8fa3bd;
+    border-radius: 3dp;
+}
+
+.settings-header .close:hover {
+    color: #ff8080;
+    background-color: #ff4d4d22;
 }
 
 .settings-header {

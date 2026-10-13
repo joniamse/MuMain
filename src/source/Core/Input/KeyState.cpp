@@ -12,6 +12,7 @@ namespace Core::Input
         bool g_leftMouseButtonCaptured = false;
         bool g_rightMouseButtonCaptured = false;
         bool g_middleMouseButtonCaptured = false;
+        int g_suppressedKey = 0;
 
         // Whether the button is still held on the modern UI; a capture ends with the release even if
         // the UI missed it.
@@ -89,6 +90,11 @@ namespace Core::Input
         }
     }
 
+    void SuppressKeyUntilRelease(int virtualKey)
+    {
+        g_suppressedKey = virtualKey;
+    }
+
     bool IsKeyDown(int virtualKey)
     {
         // A scripted press (control socket) counts as down for the frame it
@@ -126,6 +132,15 @@ namespace Core::Input
         if (sc == SDL_SCANCODE_UNKNOWN) return false;
 
         const bool* state = SDL_GetKeyboardState(nullptr);
-        return state != nullptr && state[sc];
+        const bool down = state != nullptr && state[sc];
+        if (virtualKey == g_suppressedKey)
+        {
+            if (!down)
+            {
+                g_suppressedKey = 0;
+            }
+            return false;
+        }
+        return down;
     }
 }

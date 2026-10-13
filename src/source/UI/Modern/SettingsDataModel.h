@@ -12,7 +12,6 @@ namespace UI::Modern
 // RML names:
 //   hd_interface        [UI] ModernHud, applies immediately
 //   modern_windows      [Modern] ModernWindows, applies immediately (with the HD interface)
-//   wasd_movement       [Modern] WasdMovement, applies immediately
 //   wheel_zoom          [Modern] WheelZoom, applies immediately
 //   hd_cursor           [Modern] HdCursor, read at startup; cursor_restart: differs from the startup value
 //   modern_skin         [Modern] ModernSkin, read at startup; skin_restart: differs from the startup value
@@ -20,7 +19,7 @@ namespace UI::Modern
 //   textures_restart    the texture setting differs from the one the client started with
 //   anti_aliasing, sharpening, color_enhance, bloom   [Modern] post-processing, immediate
 // Events:
-//   toggle('hd' | 'windows' | 'wasd' | 'zoom' | 'cursor' | 'skin' | 'textures' | 'aa' | 'sharpen' | 'color' | 'bloom'), close
+//   toggle('hd' | 'windows' | 'zoom' | 'cursor' | 'skin' | 'textures' | 'aa' | 'sharpen' | 'color' | 'bloom'), close
 class SettingsDataModel
 {
 public:
@@ -37,7 +36,6 @@ private:
     ::Rml::DataModelHandle m_handle;
     bool m_hdInterface = true;
     bool m_modernWindows = true;
-    bool m_wasdMovement = false;
     bool m_wheelZoom = true;
     bool m_hdCursor = true;
     bool m_cursorAtStartup = true;

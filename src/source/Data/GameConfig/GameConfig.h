@@ -73,8 +73,6 @@ public:
     void SetModernHud(bool enabled);
 
     // Modern settings ([Modern] section)
-    bool GetWasdMovement() const { return m_wasdMovement; }
-    void SetWasdMovement(bool enabled);
     bool GetModernWindows() const { return m_modernWindows; }
     void SetModernWindows(bool enabled);
     bool GetWheelZoom() const { return m_wheelZoom; }
@@ -154,7 +152,6 @@ private:
     std::wstring m_uiLocale;
     std::wstring m_fontSelection;
     bool m_modernHud = true;
-    bool m_wasdMovement = false;
     bool m_modernWindows = true;
     bool m_wheelZoom = true;
     bool m_hdCursor = true;

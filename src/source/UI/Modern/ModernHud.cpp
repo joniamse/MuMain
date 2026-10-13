@@ -497,6 +497,14 @@ bool ProcessEvent(const SDL_Event& event)
         return false;
     case SDL_EVENT_KEY_DOWN:
     case SDL_EVENT_KEY_UP:
+        // Esc closes the modern window on top (settings, VIP), not the game's menu.
+        if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_ESCAPE && !event.key.repeat
+            && (state.settingsOpen || state.vipOpen))
+        {
+            (state.settingsOpen ? state.settingsOpen : state.vipOpen) = false;
+            Core::Input::SuppressKeyUntilRelease(VK_ESCAPE);
+            return true;
+        }
         return ProcessKey(context, event);
     case SDL_EVENT_TEXT_INPUT:
         return ProcessText(context, event);

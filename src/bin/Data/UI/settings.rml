@@ -8,10 +8,12 @@
     <div id="backdrop" class="interactive" data-model="settings">
         <div id="settings" class="panel interactive">
             <div class="settings-header">
+                <div class="close" data-event-click="close">×</div>
                 <div class="text-title">Modern settings</div>
                 <div class="text-muted">Optional improvements. Switch any of them off to play classic MU.</div>
             </div>
 
+            <div class="settings-body">
             <div class="section-title">Interface</div>
             <div class="setting" data-event-click="toggle('hd')">
                 <div class="setting-text">
@@ -45,13 +47,6 @@
             </div>
 
             <div class="section-title">Controls</div>
-            <div class="setting" data-event-click="toggle('wasd')">
-                <div class="setting-text">
-                    <div class="setting-name">WASD movement</div>
-                    <div class="setting-help">Walk with W, A, S and D. The W potion, master tree (A), commands (D) and personal shop (S) move to Shift + key.</div>
-                </div>
-                <div class="switch" data-class-on="wasd_movement"><div class="knob"></div></div>
-            </div>
             <div class="setting" data-event-click="toggle('zoom')">
                 <div class="setting-text">
                     <div class="setting-name">Mouse wheel zoom</div>
@@ -98,6 +93,8 @@
                     <div class="setting-help">Wings, excellent items, fire and spells glow.</div>
                 </div>
                 <div class="switch" data-class-on="bloom"><div class="knob"></div></div>
+            </div>
+
             </div>
 
             <div class="settings-footer">

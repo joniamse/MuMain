@@ -3,7 +3,6 @@
 
 #include "stdafx.h"
 #include "Core/Input/KeyState.h"
-#include "Input/KeyboardMovement.h"
 #include "Core/Platform/Imm.h"
 #include "UI/Legacy/UIManager.h"
 #include "UI/Legacy/TextSearch.h"
@@ -3036,12 +3035,6 @@ void MoveHero()
     }
 
     CheckGate();
-
-    // Optional WASD movement (Modern settings); while it drives the hero, ground clicks wait.
-    if (Input::KeyboardMovement::Update(c, o))
-    {
-        return;
-    }
 
     if (!MouseOnWindow && false == g_pNewUISystem->CheckMouseUse())
     {

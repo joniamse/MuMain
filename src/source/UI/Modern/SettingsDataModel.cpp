@@ -26,7 +26,6 @@ bool SettingsDataModel::Bind(::Rml::Context& context)
 
     constructor.Bind("hd_interface", &m_hdInterface);
     constructor.Bind("modern_windows", &m_modernWindows);
-    constructor.Bind("wasd_movement", &m_wasdMovement);
     constructor.Bind("wheel_zoom", &m_wheelZoom);
     constructor.Bind("hd_cursor", &m_hdCursor);
     constructor.Bind("cursor_restart", &m_cursorRestart);
@@ -59,7 +58,6 @@ void SettingsDataModel::Load()
     const GameConfig& config = GameConfig::GetInstance();
     m_hdInterface = config.GetModernHud();
     m_modernWindows = config.GetModernWindows();
-    m_wasdMovement = config.GetWasdMovement();
     m_wheelZoom = config.GetWheelZoom();
     m_hdCursor = config.GetHdCursor();
     m_cursorRestart = m_hdCursor != m_cursorAtStartup;
@@ -105,10 +103,6 @@ void SettingsDataModel::Toggle(const ::Rml::String& setting)
     {
         config.SetWheelZoom(!config.GetWheelZoom());
     }
-    else if (setting == "wasd")
-    {
-        config.SetWasdMovement(!config.GetWasdMovement());
-    }
     else if (setting == "textures")
     {
         config.SetEnhancedTextures(!config.GetEnhancedTextures());
@@ -148,7 +142,6 @@ void SettingsDataModel::Dirty()
     }
     m_handle.DirtyVariable("hd_interface");
     m_handle.DirtyVariable("modern_windows");
-    m_handle.DirtyVariable("wasd_movement");
     m_handle.DirtyVariable("wheel_zoom");
     m_handle.DirtyVariable("hd_cursor");
     m_handle.DirtyVariable("cursor_restart");
