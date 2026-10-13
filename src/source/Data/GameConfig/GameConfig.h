@@ -77,6 +77,14 @@ public:
     void SetWasdMovement(bool enabled);
     bool GetEnhancedTextures() const { return m_enhancedTextures; }
     void SetEnhancedTextures(bool enabled);
+    bool GetAntiAliasing() const { return m_antiAliasing; }
+    void SetAntiAliasing(bool enabled);
+    bool GetSharpening() const { return m_sharpening; }
+    void SetSharpening(bool enabled);
+    bool GetColorEnhance() const { return m_colorEnhance; }
+    void SetColorEnhance(bool enabled);
+    bool GetBloom() const { return m_bloom; }
+    void SetBloom(bool enabled);
 
     // Chat commands - the favourites and the named templates of the command
     // window. They belong to the installation, not to a character.
@@ -140,6 +148,10 @@ private:
     bool m_modernHud = true;
     bool m_wasdMovement = false;
     bool m_enhancedTextures = true;
+    bool m_antiAliasing = true;
+    bool m_sharpening = true;
+    bool m_colorEnhance = true;
+    bool m_bloom = true;
 
     int m_zoom;
     bool m_sortParticleDraws;

@@ -126,6 +126,21 @@ struct SkinningParameters
     bool lightEnabled = false;
 };
 
+// Screen-space effects applied to the 3D world before the 2D UI is drawn on top
+// ([Modern] settings). All off = the frame is rendered exactly as before.
+struct PostProcessSettings
+{
+    bool antiAliasing = false; // FXAA
+    bool sharpening = false;
+    bool colorEnhance = false; // vibrance, contrast, vignette
+    bool bloom = false;
+
+    [[nodiscard]] bool AnyEnabled() const
+    {
+        return antiAliasing || sharpening || colorEnhance || bloom;
+    }
+};
+
 struct RendererStats
 {
     std::uint32_t requestedDrawCalls = 0;
@@ -243,6 +258,12 @@ public:
     // Per-frame lifecycle. Called from the MuMain.cpp game loop.
     virtual void BeginFrame() {}
     virtual void EndFrame() {}
+
+    // Post-processing: which effects run, and where the 3D world ends in this frame's
+    // draw order. Draws recorded before MarkWorldRenderEnd() are post-processed; later
+    // ones (the UI) are drawn on top unchanged. Frames without the mark are not processed.
+    virtual void SetPostProcessSettings(const PostProcessSettings& /*settings*/) {}
+    virtual void MarkWorldRenderEnd() {}
     virtual void SetStatsEnabled(bool /*enabled*/) {}
     [[nodiscard]] virtual RendererStats GetFrameStats() const
     {

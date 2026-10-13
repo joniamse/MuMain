@@ -82,6 +82,10 @@ void GameConfig::Load()
     m_modernHud = ReadBool(CfgSectionUI, CfgKeyModernHud, CfgDefaultModernHud);
     m_wasdMovement = ReadBool(CfgSectionModern, CfgKeyWasdMovement, CfgDefaultWasdMovement);
     m_enhancedTextures = ReadBool(CfgSectionModern, CfgKeyEnhancedTextures, CfgDefaultEnhancedTextures);
+    m_antiAliasing = ReadBool(CfgSectionModern, CfgKeyAntiAliasing, CfgDefaultAntiAliasing);
+    m_sharpening = ReadBool(CfgSectionModern, CfgKeySharpening, CfgDefaultSharpening);
+    m_colorEnhance = ReadBool(CfgSectionModern, CfgKeyColorEnhance, CfgDefaultColorEnhance);
+    m_bloom = ReadBool(CfgSectionModern, CfgKeyBloom, CfgDefaultBloom);
 
     m_zoom = ReadInt(CfgSectionCamera, CfgKeyZoom, CfgDefaultZoom);
     m_sortParticleDraws = ReadBool(CfgSectionRender, CfgKeySortParticleDraws, CfgDefaultSortParticleDraws);
@@ -130,6 +134,10 @@ void GameConfig::Save()
     WriteBool(CfgSectionUI, CfgKeyModernHud, m_modernHud);
     WriteBool(CfgSectionModern, CfgKeyWasdMovement, m_wasdMovement);
     WriteBool(CfgSectionModern, CfgKeyEnhancedTextures, m_enhancedTextures);
+    WriteBool(CfgSectionModern, CfgKeyAntiAliasing, m_antiAliasing);
+    WriteBool(CfgSectionModern, CfgKeySharpening, m_sharpening);
+    WriteBool(CfgSectionModern, CfgKeyColorEnhance, m_colorEnhance);
+    WriteBool(CfgSectionModern, CfgKeyBloom, m_bloom);
 
     WriteInt(CfgSectionCamera, CfgKeyZoom, m_zoom);
     WriteBool(CfgSectionRender, CfgKeyVSync, m_vsyncEnabled);
@@ -212,6 +220,26 @@ void GameConfig::SetWasdMovement(bool enabled)
 void GameConfig::SetEnhancedTextures(bool enabled)
 {
     m_enhancedTextures = enabled;
+}
+
+void GameConfig::SetAntiAliasing(bool enabled)
+{
+    m_antiAliasing = enabled;
+}
+
+void GameConfig::SetSharpening(bool enabled)
+{
+    m_sharpening = enabled;
+}
+
+void GameConfig::SetColorEnhance(bool enabled)
+{
+    m_colorEnhance = enabled;
+}
+
+void GameConfig::SetBloom(bool enabled)
+{
+    m_bloom = enabled;
 }
 
 void GameConfig::SetRememberMe(bool remember)

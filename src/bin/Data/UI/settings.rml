@@ -40,6 +40,36 @@
                 <div class="switch" data-class-on="enhanced_textures"><div class="knob"></div></div>
             </div>
 
+            <div class="section-title">Post-processing <span class="text-muted">(world only, the interface stays sharp)</span></div>
+            <div class="setting" data-event-click="toggle('aa')">
+                <div class="setting-text">
+                    <div class="setting-name">Anti-aliasing (FXAA)</div>
+                    <div class="setting-help">Smooths jagged edges of models and scenery.</div>
+                </div>
+                <div class="switch" data-class-on="anti_aliasing"><div class="knob"></div></div>
+            </div>
+            <div class="setting" data-event-click="toggle('sharpen')">
+                <div class="setting-text">
+                    <div class="setting-name">Sharpening</div>
+                    <div class="setting-help">Brings back fine detail in textures.</div>
+                </div>
+                <div class="switch" data-class-on="sharpening"><div class="knob"></div></div>
+            </div>
+            <div class="setting" data-event-click="toggle('color')">
+                <div class="setting-text">
+                    <div class="setting-name">Color enhancement</div>
+                    <div class="setting-help">Richer colours, a touch more contrast and a soft vignette.</div>
+                </div>
+                <div class="switch" data-class-on="color_enhance"><div class="knob"></div></div>
+            </div>
+            <div class="setting" data-event-click="toggle('bloom')">
+                <div class="setting-text">
+                    <div class="setting-name">Bloom</div>
+                    <div class="setting-help">Wings, excellent items, fire and spells glow.</div>
+                </div>
+                <div class="switch" data-class-on="bloom"><div class="knob"></div></div>
+            </div>
+
             <div class="settings-footer">
                 <div class="button" data-event-click="close">Close</div>
             </div>

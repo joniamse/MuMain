@@ -20,6 +20,8 @@
 #include "UI/Legacy/UIMng.h"
 #include "UI/NewUI/NewUISystem.h"
 #include "UI/Modern/ModernHud.h"
+#include "Data/GameConfig/GameConfig.h"
+#include "Render/Renderer/MuRenderer.h"
 #include "GameLogic/Social/PartyManager.h"
 #include "GameLogic/Events/Cinematic/CDirection.h"
 #include "GameLogic/Pets/w_PetProcess.h"
@@ -604,10 +606,27 @@ static void RenderGameWorld(BYTE& byWaterMap, int width, int height)
 }
 
 /**
+ * @brief Ends the 3D world of this frame: what was drawn so far gets the post-processing
+ * effects enabled in the Modern settings; the UI drawn afterwards stays crisp.
+ */
+static void EndWorldRendering()
+{
+    const GameConfig& config = GameConfig::GetInstance();
+    mu::PostProcessSettings settings;
+    settings.antiAliasing = config.GetAntiAliasing();
+    settings.sharpening = config.GetSharpening();
+    settings.colorEnhance = config.GetColorEnhance();
+    settings.bloom = config.GetBloom();
+    mu::GetRenderer().SetPostProcessSettings(settings);
+    mu::GetRenderer().MarkWorldRenderEnd();
+}
+
+/**
  * @brief Renders UI elements and overlays for the main scene.
  */
 static void RenderMainSceneUI()
 {
+    EndWorldRendering();
     Input::Selection::SelectObjects();
     BeginBitmap();
     RenderObjectDescription();

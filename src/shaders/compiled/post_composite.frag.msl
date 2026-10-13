@@ -1,0 +1,157 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct FSInput
+{
+    float4 pos;
+    float2 uv;
+};
+
+struct PostUniforms
+{
+    float4 texel;
+    float4 params;
+    uint4 flags;
+};
+
+struct main0_out
+{
+    float4 _entryPointOutput [[color(0)]];
+};
+
+struct main0_in
+{
+    float2 input_uv [[user(locn0)]];
+};
+
+static inline __attribute__((always_inline))
+float3 Scene(thread const float2& uv, texture2d<float> sceneTex, sampler sceneSampler)
+{
+    return sceneTex.sample(sceneSampler, uv).xyz;
+}
+
+static inline __attribute__((always_inline))
+float Luma(thread const float3& color)
+{
+    return dot(color, float3(0.2989999949932098388671875, 0.58700001239776611328125, 0.114000000059604644775390625));
+}
+
+static inline __attribute__((always_inline))
+float3 Fxaa(thread const float2& uv, thread const float2& pixel, texture2d<float> sceneTex, sampler sceneSampler)
+{
+    float2 param = uv + (float2(-1.0) * pixel);
+    float3 rgbNW = Scene(param, sceneTex, sceneSampler);
+    float2 param_1 = uv + (float2(1.0, -1.0) * pixel);
+    float3 rgbNE = Scene(param_1, sceneTex, sceneSampler);
+    float2 param_2 = uv + (float2(-1.0, 1.0) * pixel);
+    float3 rgbSW = Scene(param_2, sceneTex, sceneSampler);
+    float2 param_3 = uv + (float2(1.0) * pixel);
+    float3 rgbSE = Scene(param_3, sceneTex, sceneSampler);
+    float2 param_4 = uv;
+    float3 rgbM = Scene(param_4, sceneTex, sceneSampler);
+    float3 param_5 = rgbNW;
+    float lumaNW = Luma(param_5);
+    float3 param_6 = rgbNE;
+    float lumaNE = Luma(param_6);
+    float3 param_7 = rgbSW;
+    float lumaSW = Luma(param_7);
+    float3 param_8 = rgbSE;
+    float lumaSE = Luma(param_8);
+    float3 param_9 = rgbM;
+    float lumaM = Luma(param_9);
+    float lumaMin = fast::min(lumaM, fast::min(fast::min(lumaNW, lumaNE), fast::min(lumaSW, lumaSE)));
+    float lumaMax = fast::max(lumaM, fast::max(fast::max(lumaNW, lumaNE), fast::max(lumaSW, lumaSE)));
+    float2 dir;
+    dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));
+    dir.y = (lumaNW + lumaSW) - (lumaNE + lumaSE);
+    float dirReduce = fast::max((((lumaNW + lumaNE) + lumaSW) + lumaSE) * 0.03125, 0.0078125);
+    float rcpDirMin = 1.0 / (fast::min(abs(dir.x), abs(dir.y)) + dirReduce);
+    dir = fast::clamp(dir * rcpDirMin, float2(-8.0), float2(8.0)) * pixel;
+    float2 param_10 = uv + (dir * (-0.16666667163372039794921875));
+    float2 param_11 = uv + (dir * 0.16666667163372039794921875);
+    float3 rgbA = (Scene(param_10, sceneTex, sceneSampler) + Scene(param_11, sceneTex, sceneSampler)) * 0.5;
+    float2 param_12 = uv + (dir * (-0.5));
+    float2 param_13 = uv + (dir * 0.5);
+    float3 rgbB = (rgbA * 0.5) + ((Scene(param_12, sceneTex, sceneSampler) + Scene(param_13, sceneTex, sceneSampler)) * 0.25);
+    float3 param_14 = rgbB;
+    float lumaB = Luma(param_14);
+    return select(rgbB, rgbA, bool3((lumaB < lumaMin) || (lumaB > lumaMax)));
+}
+
+static inline __attribute__((always_inline))
+float3 Sharpen(thread const float3& center, thread const float2& uv, thread const float2& pixel, thread const float& amount, texture2d<float> sceneTex, sampler sceneSampler)
+{
+    float2 param = uv + float2(pixel.x, 0.0);
+    float2 param_1 = uv - float2(pixel.x, 0.0);
+    float2 param_2 = uv + float2(0.0, pixel.y);
+    float2 param_3 = uv - float2(0.0, pixel.y);
+    float3 neighbours = ((Scene(param, sceneTex, sceneSampler) + Scene(param_1, sceneTex, sceneSampler)) + Scene(param_2, sceneTex, sceneSampler)) + Scene(param_3, sceneTex, sceneSampler);
+    return center + (((center * 4.0) - neighbours) * (amount * 0.25));
+}
+
+static inline __attribute__((always_inline))
+float3 Enhance(thread float3& color, thread const float& vibrance)
+{
+    float maxChannel = fast::max(color.x, fast::max(color.y, color.z));
+    float minChannel = fast::min(color.x, fast::min(color.y, color.z));
+    float saturation = maxChannel - minChannel;
+    float3 param = color;
+    float luma = Luma(param);
+    color = mix(float3(luma), color, float3(1.0 + (vibrance * (1.0 - saturation))));
+    return ((color - float3(0.5)) * 1.059999942779541015625) + float3(0.5);
+}
+
+static inline __attribute__((always_inline))
+float Vignette(thread const float2& uv, thread const float& strength)
+{
+    float _distance = length(uv - float2(0.5)) * 1.41421353816986083984375;
+    return 1.0 - (strength * smoothstep(0.550000011920928955078125, 1.0, _distance));
+}
+
+static inline __attribute__((always_inline))
+float4 _main(thread const FSInput& _input, texture2d<float> sceneTex, sampler sceneSampler, constant PostUniforms& _371, texture2d<float> bloomTex, sampler bloomSampler)
+{
+    float2 pixel = _371.texel.xy;
+    float2 param = _input.uv;
+    float2 param_1 = pixel;
+    float2 param_2 = _input.uv;
+    float3 color = select(Scene(param_2, sceneTex, sceneSampler), Fxaa(param, param_1, sceneTex, sceneSampler), bool3(_371.flags.x != 0u));
+    if (_371.flags.y != 0u)
+    {
+        float3 param_3 = color;
+        float2 param_4 = _input.uv;
+        float2 param_5 = pixel;
+        float param_6 = _371.params.x;
+        color = Sharpen(param_3, param_4, param_5, param_6, sceneTex, sceneSampler);
+    }
+    if (_371.flags.w != 0u)
+    {
+        color += (bloomTex.sample(bloomSampler, _input.uv).xyz * _371.params.y);
+    }
+    if (_371.flags.z != 0u)
+    {
+        float3 param_7 = color;
+        float param_8 = _371.params.z;
+        float3 _444 = Enhance(param_7, param_8);
+        float2 param_9 = _input.uv;
+        float param_10 = _371.params.w;
+        color = _444 * Vignette(param_9, param_10);
+    }
+    return float4(fast::clamp(color, float3(0.0), float3(1.0)), 1.0);
+}
+
+fragment main0_out main0(main0_in in [[stage_in]], constant PostUniforms& _371 [[buffer(0)]], texture2d<float> sceneTex [[texture(0)]], texture2d<float> bloomTex [[texture(1)]], sampler sceneSampler [[sampler(0)]], sampler bloomSampler [[sampler(1)]], float4 gl_FragCoord [[position]])
+{
+    main0_out out = {};
+    FSInput _input;
+    _input.pos = gl_FragCoord;
+    _input.uv = in.input_uv;
+    FSInput param = _input;
+    out._entryPointOutput = _main(param, sceneTex, sceneSampler, _371, bloomTex, bloomSampler);
+    return out;
+}
+

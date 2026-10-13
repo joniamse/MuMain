@@ -1,0 +1,56 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct FSInput
+{
+    float4 pos;
+    float2 uv;
+};
+
+struct PostUniforms
+{
+    float4 texel;
+    float4 params;
+    uint4 flags;
+};
+
+struct main0_out
+{
+    float4 _entryPointOutput [[color(0)]];
+};
+
+struct main0_in
+{
+    float2 input_uv [[user(locn0)]];
+};
+
+static inline __attribute__((always_inline))
+float4 _main(thread const FSInput& _input, constant PostUniforms& _21, texture2d<float> sceneTex, sampler sceneSampler)
+{
+    float2 offset = _21.texel.xy;
+    float3 color = sceneTex.sample(sceneSampler, (_input.uv + float2(-offset.x, -offset.y))).xyz;
+    color += sceneTex.sample(sceneSampler, (_input.uv + float2(offset.x, -offset.y))).xyz;
+    color += sceneTex.sample(sceneSampler, (_input.uv + float2(-offset.x, offset.y))).xyz;
+    color += sceneTex.sample(sceneSampler, (_input.uv + float2(offset.x, offset.y))).xyz;
+    color *= 0.25;
+    float luma = dot(color, float3(0.2989999949932098388671875, 0.58700001239776611328125, 0.114000000059604644775390625));
+    float threshold = _21.params.x;
+    float weight = fast::clamp((luma - threshold) / fast::max(1.0 - threshold, 9.9999997473787516355514526367188e-05), 0.0, 1.0);
+    return float4(color * weight, 1.0);
+}
+
+fragment main0_out main0(main0_in in [[stage_in]], constant PostUniforms& _21 [[buffer(0)]], texture2d<float> sceneTex [[texture(0)]], sampler sceneSampler [[sampler(0)]], float4 gl_FragCoord [[position]])
+{
+    main0_out out = {};
+    FSInput _input;
+    _input.pos = gl_FragCoord;
+    _input.uv = in.input_uv;
+    FSInput param = _input;
+    out._entryPointOutput = _main(param, _21, sceneTex, sceneSampler);
+    return out;
+}
+

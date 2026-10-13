@@ -1,0 +1,96 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+#pragma clang diagnostic ignored "-Wmissing-braces"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+template<typename T, size_t Num>
+struct spvUnsafeArray
+{
+    T elements[Num ? Num : 1];
+    
+    thread T& operator [] (size_t pos) thread
+    {
+        return elements[pos];
+    }
+    constexpr const thread T& operator [] (size_t pos) const thread
+    {
+        return elements[pos];
+    }
+    
+    device T& operator [] (size_t pos) device
+    {
+        return elements[pos];
+    }
+    constexpr const device T& operator [] (size_t pos) const device
+    {
+        return elements[pos];
+    }
+    
+    constexpr const constant T& operator [] (size_t pos) const constant
+    {
+        return elements[pos];
+    }
+    
+    threadgroup T& operator [] (size_t pos) threadgroup
+    {
+        return elements[pos];
+    }
+    constexpr const threadgroup T& operator [] (size_t pos) const threadgroup
+    {
+        return elements[pos];
+    }
+};
+
+struct FSInput
+{
+    float4 pos;
+    float2 uv;
+};
+
+struct PostUniforms
+{
+    float4 texel;
+    float4 params;
+    uint4 flags;
+};
+
+constant spvUnsafeArray<float, 3> _69 = spvUnsafeArray<float, 3>({ 0.0, 1.384615421295166015625, 3.23076915740966796875 });
+constant spvUnsafeArray<float, 3> _82 = spvUnsafeArray<float, 3>({ 0.2270270287990570068359375, 0.3162162303924560546875, 0.0702702701091766357421875 });
+
+struct main0_out
+{
+    float4 _entryPointOutput [[color(0)]];
+};
+
+struct main0_in
+{
+    float2 input_uv [[user(locn0)]];
+};
+
+static inline __attribute__((always_inline))
+float4 _main(thread const FSInput& _input, constant PostUniforms& _21, texture2d<float> sourceTex, sampler sourceSampler)
+{
+    float2 stepUv = _21.params.xy;
+    float3 color = sourceTex.sample(sourceSampler, _input.uv).xyz * 0.2270270287990570068359375;
+    for (int i = 1; i < 3; i++)
+    {
+        color += (sourceTex.sample(sourceSampler, (_input.uv + (stepUv * _69[i]))).xyz * _82[i]);
+        color += (sourceTex.sample(sourceSampler, (_input.uv - (stepUv * _69[i]))).xyz * _82[i]);
+    }
+    return float4(color, 1.0);
+}
+
+fragment main0_out main0(main0_in in [[stage_in]], constant PostUniforms& _21 [[buffer(0)]], texture2d<float> sourceTex [[texture(0)]], sampler sourceSampler [[sampler(0)]], float4 gl_FragCoord [[position]])
+{
+    main0_out out = {};
+    FSInput _input;
+    _input.pos = gl_FragCoord;
+    _input.uv = in.input_uv;
+    FSInput param = _input;
+    out._entryPointOutput = _main(param, _21, sourceTex, sourceSampler);
+    return out;
+}
+

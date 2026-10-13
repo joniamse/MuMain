@@ -36,6 +36,7 @@
 #include "MuRenderer.h"
 #include "QuadTopology.h"
 #include "SdlGpuPixelFormat.h"
+#include "SdlGpuPostProcess.h"
 #include "SdlGpuReplayState.h"
 #include "SdlGpuValidation.h"
 #include "Core/Utilities/FrameProfiler.h"
@@ -299,6 +300,10 @@ static void FailPendingFrameReadback()
     return true;
 }
 
+// Reopens drawing on the swapchain after post-processing wrote the world there: colour and
+// depth are kept, so the UI that follows draws on top as it would without post-processing.
+static SDL_GPURenderPass* BeginUiPassOverPostProcess();
+
 static void BlitTextureToSwapchain(SDL_GPUCommandBuffer* commandBuffer, SDL_GPUTexture* sourceTexture)
 {
     SDL_GPUBlitInfo blit{};
@@ -537,6 +542,7 @@ enum class RenderCmdType : uint8_t
 {
     SetViewport,
     SetScissor, // pixel-level rect clip — Vulkan/Metal/D3D12 viewport alone doesn't clip
+    PostProcessBoundary, // end of the 3D world: post-process it, then continue with the UI
 #ifdef _EDITOR
     EditorOverlay,
 #endif
@@ -848,11 +854,35 @@ static SDL_GPUShader* s_fragShaderCol = nullptr;     // basic_colored.frag
 static SDL_GPUShader* s_vertShaderShadow = nullptr;  // shadow_volume.vert
 static SDL_GPUShader* s_vertShaderSkinned = nullptr; // skinned_textured.vert
 
+// Post-processing ([Modern] settings): full-screen passes run between the 3D world and the UI.
+static Render::SdlGpuPostProcess::Shaders s_postShaders;
+static Render::SdlGpuPostProcess s_postProcess;
+static mu::PostProcessSettings s_postSettings;
+// Set when this frame recorded MarkWorldRenderEnd(); only such frames are post-processed.
+static bool s_worldEndMarked = false;
+
 // Story 7.9.7 (AC-3): Depth buffer texture for correct 3D depth testing.
 // Created in Init() at swapchain dimensions, recreated on window resize.
 static SDL_GPUTexture* s_depthTexture = nullptr;
 static Uint32 s_depthW = 0u;
 static Uint32 s_depthH = 0u;
+
+static SDL_GPURenderPass* BeginUiPassOverPostProcess()
+{
+    SDL_GPUColorTargetInfo colorTarget{};
+    colorTarget.texture = s_swapchainTexture;
+    colorTarget.load_op = SDL_GPU_LOADOP_LOAD;
+    colorTarget.store_op = SDL_GPU_STOREOP_STORE;
+
+    SDL_GPUDepthStencilTargetInfo depthTarget{};
+    depthTarget.texture = s_depthTexture;
+    depthTarget.load_op = SDL_GPU_LOADOP_LOAD;
+    depthTarget.store_op = SDL_GPU_STOREOP_STORE;
+    depthTarget.stencil_load_op = SDL_GPU_LOADOP_DONT_CARE;
+    depthTarget.stencil_store_op = SDL_GPU_STOREOP_DONT_CARE;
+
+    return SDL_BeginGPURenderPass(s_cmdBuf, &colorTarget, 1, s_depthTexture ? &depthTarget : nullptr);
+}
 static SDL_FColor s_clearColor{0.0f, 0.0f, 0.0f, 1.0f};
 
 #ifdef _EDITOR
@@ -1271,6 +1301,8 @@ public:
             return false;
         }
 
+        s_postProcess.Create(s_device, SDL_GetGPUSwapchainTextureFormat(s_device, s_window), s_postShaders);
+
         // Shaders are no longer needed after pipelines are created.
         ReleaseShaders();
 
@@ -1462,6 +1494,7 @@ public:
         DestroyQuadIndexBuffer();
         DestroyVertexBuffers();
         DestroyBoneBuffers();
+        s_postProcess.Destroy();
         DestroyPipelines();
         ReleaseShaders();
 
@@ -1514,6 +1547,7 @@ public:
         s_vtxOffset = 0u;
         s_renderCmds.clear();
         s_previousDrawCommands.fill(kNoDrawCommand);
+        s_worldEndMarked = false;
         s_stripIdxScratch.clear();
         s_boneRowScratch.clear();
         s_lastBonePalette = nullptr;
@@ -1817,8 +1851,15 @@ public:
             s_pendingFrameCaptureTextureId = 0u;
         }
 
+        // Post-processing draws the world into its own target; captures keep the plain path.
+        const bool postProcessFrame = !s_frameReadbackTexture && !reconnectCaptureTexture && s_worldEndMarked &&
+                                      s_postSettings.AnyEnabled() && s_postProcess.IsReady();
+        SDL_GPUTexture* const postSceneTexture =
+            postProcessFrame ? s_postProcess.SceneTarget(s_swapW, s_swapH) : nullptr;
+        bool postProcessApplied = false;
         SDL_GPUTexture* const frameColorTexture = s_frameReadbackTexture    ? s_frameReadbackTexture
                                                   : reconnectCaptureTexture ? reconnectCaptureTexture
+                                                  : postSceneTexture        ? postSceneTexture
                                                                             : s_swapchainTexture;
         bool renderPassCompleted = false;
         if (IsFrameTimingEnabled())
@@ -1860,6 +1901,10 @@ public:
             Render::SdlGpuReplayState replayState;
             for (const auto& cmd : s_renderCmds)
             {
+                if (!s_renderPass)
+                {
+                    break; // the UI pass after post-processing could not be opened
+                }
                 if (s_texturesInvalidated && IsUnsafeInvalidatedDrawCommand(cmd.type))
                 {
                     continue;
@@ -1890,6 +1935,30 @@ public:
                     break;
                 }
 
+                case RenderCmdType::PostProcessBoundary:
+                {
+                    if (!postSceneTexture || postProcessApplied)
+                    {
+                        break;
+                    }
+                    SDL_EndGPURenderPass(s_renderPass);
+                    s_postProcess.Apply(s_cmdBuf, s_swapchainTexture, s_postSettings);
+                    postProcessApplied = true;
+                    s_renderPass = BeginUiPassOverPostProcess();
+                    if (!s_renderPass)
+                    {
+                        mu::log::Get("render")->warn("SDL_gpu -- UI pass after post-processing failed: {}",
+                                                     SDL_GetError());
+                        break;
+                    }
+                    replayState.Invalidate();
+                    if (replayState.SelectViewport(s_currentViewport))
+                        SDL_SetGPUViewport(s_renderPass, &s_currentViewport);
+                    if (replayState.SelectScissor(s_currentScissor))
+                        SDL_SetGPUScissor(s_renderPass, &s_currentScissor);
+                    break;
+                }
+
 #ifdef _EDITOR
                 case RenderCmdType::EditorOverlay:
                 {
@@ -1915,7 +1984,10 @@ public:
                 } // switch
             } // for
 
-            SDL_EndGPURenderPass(s_renderPass);
+            if (s_renderPass)
+            {
+                SDL_EndGPURenderPass(s_renderPass);
+            }
             s_renderPass = nullptr;
             renderPassCompleted = true;
         }
@@ -1935,7 +2007,7 @@ public:
             SDL_BlitGPUTexture(s_cmdBuf, &blit);
         }
 
-        if (frameColorTexture != s_swapchainTexture)
+        if (frameColorTexture != s_swapchainTexture && !postProcessApplied)
         {
             BlitTextureToSwapchain(s_cmdBuf, frameColorTexture);
         }
@@ -2391,6 +2463,25 @@ public:
     [[nodiscard]] int GetCachedWindowHeight() override
     {
         return s_cachedWinH;
+    }
+
+    void SetPostProcessSettings(const PostProcessSettings& settings) override
+    {
+        s_postSettings = settings;
+    }
+
+    void MarkWorldRenderEnd() override
+    {
+        if (!s_frameActive || s_worldEndMarked)
+        {
+            return;
+        }
+        RenderCmd cmd{};
+        cmd.type = RenderCmdType::PostProcessBoundary;
+        s_renderCmds.push_back(cmd);
+        // Draws after the mark must not merge into commands recorded before it.
+        s_previousDrawCommands.fill(kNoDrawCommand);
+        s_worldEndMarked = true;
     }
 
     // Story 7.9.8 (AC-6): Submit text atlas triangles as deferred draw commands.
@@ -3686,6 +3777,15 @@ private:
             return false;
         }
 
+        // Post-processing — non-fatal: without it the world is drawn straight to the screen.
+        s_postShaders.fullscreenVertex =
+            createShader("fullscreen", "vert", SDL_GPU_SHADERSTAGE_VERTEX, 0, 0, 0, /*fatal=*/false);
+        s_postShaders.bloomExtract =
+            createShader("post_bloom_extract", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 1, /*fatal=*/false);
+        s_postShaders.blur = createShader("post_blur", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 1, 0, 1, /*fatal=*/false);
+        s_postShaders.composite =
+            createShader("post_composite", "frag", SDL_GPU_SHADERSTAGE_FRAGMENT, 2, 0, 1, /*fatal=*/false);
+
         mu::log::Get("render")->info("SDL_gpu -- shaders loaded for driver: {}", driverName ? driverName : "unknown");
         return true;
     }
@@ -3725,6 +3825,15 @@ private:
         {
             SDL_ReleaseGPUShader(s_device, s_vertShaderSkinned);
             s_vertShaderSkinned = nullptr;
+        }
+        for (SDL_GPUShader** shader : {&s_postShaders.fullscreenVertex, &s_postShaders.bloomExtract,
+                                       &s_postShaders.blur, &s_postShaders.composite})
+        {
+            if (*shader)
+            {
+                SDL_ReleaseGPUShader(s_device, *shader);
+                *shader = nullptr;
+            }
         }
     }
 

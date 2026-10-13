@@ -14,8 +14,9 @@ namespace UI::Modern
 //   wasd_movement       [Modern] WasdMovement, applies immediately
 //   enhanced_textures   [Modern] EnhancedTextures, applies to textures loaded afterwards
 //   textures_restart    the texture setting differs from the one the client started with
+//   anti_aliasing, sharpening, color_enhance, bloom   [Modern] post-processing, immediate
 // Events:
-//   toggle('hd' | 'wasd' | 'textures'), close
+//   toggle('hd' | 'wasd' | 'textures' | 'aa' | 'sharpen' | 'color' | 'bloom'), close
 class SettingsDataModel
 {
 public:
@@ -33,6 +34,10 @@ private:
     bool m_hdInterface = true;
     bool m_wasdMovement = false;
     bool m_enhancedTextures = true;
+    bool m_antiAliasing = true;
+    bool m_sharpening = true;
+    bool m_colorEnhance = true;
+    bool m_bloom = true;
     bool m_texturesAtStartup = true;
     bool m_texturesRestart = false;
     bool m_closeRequested = false;

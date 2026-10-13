@@ -15,6 +15,10 @@ set(MU_SHADER_STAGE_NAMES
     basic_colored.frag
     skinned_textured.vert
     shadow_volume.vert
+    fullscreen.vert
+    post_bloom_extract.frag
+    post_blur.frag
+    post_composite.frag
 )
 set(MU_SHADER_BLOB_FORMATS spv msl dxil)
 set(MU_SHADER_BLOB_NAMES)

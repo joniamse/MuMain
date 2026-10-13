@@ -16,7 +16,7 @@
     top: 50%;
     width: 380dp;
     margin-left: -190dp;
-    margin-top: -170dp;
+    margin-top: -265dp;
     padding: 14dp 16dp 12dp 16dp;
 }
 
@@ -29,6 +29,10 @@
 .settings-header .text-title {
     font-size: 16dp;
     margin-bottom: 2dp;
+}
+
+.section-title .text-muted {
+    font-weight: normal;
 }
 
 .section-title {

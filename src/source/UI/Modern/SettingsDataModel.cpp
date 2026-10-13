@@ -26,6 +26,10 @@ bool SettingsDataModel::Bind(::Rml::Context& context)
     constructor.Bind("wasd_movement", &m_wasdMovement);
     constructor.Bind("enhanced_textures", &m_enhancedTextures);
     constructor.Bind("textures_restart", &m_texturesRestart);
+    constructor.Bind("anti_aliasing", &m_antiAliasing);
+    constructor.Bind("sharpening", &m_sharpening);
+    constructor.Bind("color_enhance", &m_colorEnhance);
+    constructor.Bind("bloom", &m_bloom);
     constructor.BindEventCallback(
         "toggle", [this](::Rml::DataModelHandle, ::Rml::Event&, const ::Rml::VariantList& arguments) {
             if (!arguments.empty())
@@ -49,6 +53,10 @@ void SettingsDataModel::Load()
     m_wasdMovement = config.GetWasdMovement();
     m_enhancedTextures = config.GetEnhancedTextures();
     m_texturesRestart = m_enhancedTextures != m_texturesAtStartup;
+    m_antiAliasing = config.GetAntiAliasing();
+    m_sharpening = config.GetSharpening();
+    m_colorEnhance = config.GetColorEnhance();
+    m_bloom = config.GetBloom();
     Dirty();
 }
 
@@ -75,6 +83,22 @@ void SettingsDataModel::Toggle(const ::Rml::String& setting)
     {
         config.SetEnhancedTextures(!config.GetEnhancedTextures());
     }
+    else if (setting == "aa")
+    {
+        config.SetAntiAliasing(!config.GetAntiAliasing());
+    }
+    else if (setting == "sharpen")
+    {
+        config.SetSharpening(!config.GetSharpening());
+    }
+    else if (setting == "color")
+    {
+        config.SetColorEnhance(!config.GetColorEnhance());
+    }
+    else if (setting == "bloom")
+    {
+        config.SetBloom(!config.GetBloom());
+    }
     else
     {
         mu::log::Get("rmlui")->warn("unknown modern setting '{}'", setting);
@@ -96,6 +120,10 @@ void SettingsDataModel::Dirty()
     m_handle.DirtyVariable("wasd_movement");
     m_handle.DirtyVariable("enhanced_textures");
     m_handle.DirtyVariable("textures_restart");
+    m_handle.DirtyVariable("anti_aliasing");
+    m_handle.DirtyVariable("sharpening");
+    m_handle.DirtyVariable("color_enhance");
+    m_handle.DirtyVariable("bloom");
 }
 } // namespace UI::Modern
 

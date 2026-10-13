@@ -1,0 +1,40 @@
+#pragma clang diagnostic ignored "-Wmissing-prototypes"
+
+#include <metal_stdlib>
+#include <simd/simd.h>
+
+using namespace metal;
+
+struct VSOutput
+{
+    float4 pos;
+    float2 uv;
+};
+
+struct main0_out
+{
+    float2 _entryPointOutput_uv [[user(locn0)]];
+    float4 gl_Position [[position]];
+};
+
+static inline __attribute__((always_inline))
+VSOutput _main(thread const uint& vertexId)
+{
+    float2 uv = float2(float((vertexId << uint(1)) & 2u), float(vertexId & 2u));
+    VSOutput _output;
+    _output.uv = uv;
+    _output.pos = float4((uv.x * 2.0) - 1.0, 1.0 - (uv.y * 2.0), 0.0, 1.0);
+    return _output;
+}
+
+vertex main0_out main0(uint gl_VertexIndex [[vertex_id]])
+{
+    main0_out out = {};
+    uint vertexId = gl_VertexIndex;
+    uint param = vertexId;
+    VSOutput flattenTemp = _main(param);
+    out.gl_Position = flattenTemp.pos;
+    out._entryPointOutput_uv = flattenTemp.uv;
+    return out;
+}
+
