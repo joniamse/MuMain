@@ -3,6 +3,7 @@
 #ifdef MU_RMLUI
 
 #include "UI/Modern/RmlIncludes.h"
+#include "UI/Modern/WindowView.h"
 
 #include <vector>
 
@@ -25,23 +26,7 @@ namespace UI::Modern
 class InventoryDataModel
 {
 public:
-    struct Box
-    {
-        float left = 0;
-        float top = 0;
-        float width = 0;
-        float height = 0;
-        ::Rml::String kind;
-        ::Rml::String label;
-        ::Rml::String tip;
-        // Slots: "" | "worn" | "worn-more" | "broken".
-        ::Rml::String warning;
-        bool filled = false;
-        bool active = false;
-        bool locked = false;
-
-        bool operator==(const Box&) const = default;
-    };
+    using Box = WindowView::Box;
 
     struct View
     {

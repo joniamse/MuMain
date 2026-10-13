@@ -2,7 +2,7 @@
 
 #ifdef MU_RMLUI
 
-#include "UI/Modern/InventoryDataModel.h"
+#include "UI/Modern/WindowView.h"
 #include "UI/Modern/RmlIncludes.h"
 
 #include <vector>
@@ -21,7 +21,7 @@ namespace UI::Modern
 class ChatDataModel
 {
 public:
-    using Box = InventoryDataModel::Box;
+    using Box = WindowView::Box;
 
     struct View
     {

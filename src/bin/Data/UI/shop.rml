@@ -1,0 +1,86 @@
+<rml>
+<head>
+    <title>Shops</title>
+    <link type="text/rcss" href="theme.rcss"/>
+    <link type="text/rcss" href="inventory.rcss"/>
+    <link type="text/rcss" href="shop.rcss"/>
+</head>
+<!-- Drawn under the legacy personal shop windows, which draw the items, the title text and the
+     tooltips and take the clicks: this document only takes mouse motion. -->
+<body data-model="shop">
+    <!-- The player's own shop. -->
+    <div class="shop" data-if="mine.visible" data-alias-s="mine"
+         data-style-left="s.panel_left + 'px'" data-style-top="s.panel_top + 'px'"
+         data-style-width="s.panel_width + 'px'" data-style-height="s.panel_height + 'px'">
+        <div class="inv-header">
+            <div class="inv-title">TIENDA PERSONAL</div>
+            <div class="inv-options">
+                <span class="shop-state" data-class-on="s.open">{{s.open ? 'ABIERTA' : 'CERRADA'}}</span>
+            </div>
+        </div>
+        <div class="shop-field"
+             data-style-left="s.title_field.left + 'px'" data-style-top="s.title_field.top + 'px'"
+             data-style-width="s.title_field.width + 'px'" data-style-height="s.title_field.height + 'px'">
+            <span class="shop-field-label">Nombre</span>
+        </div>
+        <div class="inv-grid shop-grid"
+             data-style-left="s.grid.left + 'px'" data-style-top="s.grid.top + 'px'"
+             data-style-width="s.grid.width + 'px'" data-style-height="s.grid.height + 'px'">
+            <div class="cell" data-for="cell : s.cells"></div>
+            <div data-for="item : s.items" data-attr-class="'item ' + item.kind"
+                 data-style-left="item.left + 'px'" data-style-top="item.top + 'px'"
+                 data-style-width="item.width + 'px'" data-style-height="item.height + 'px'"></div>
+        </div>
+        <div class="shop-card mine">
+            <div class="shop-card-title">Cómo funciona</div>
+            <div class="shop-tip">Arrastra items desde el inventario y ponles precio.</div>
+            <div class="shop-tip">Los precios quedan fijos al abrir la tienda.</div>
+            <div class="shop-tip">Lo vendido no se puede devolver.</div>
+            <div class="shop-tip">Solo se comercia con zen.</div>
+            <div class="shop-tip accent">Con VIP, si sales del juego en una ciudad la tienda queda abierta offline (/tienda).</div>
+        </div>
+        <div data-for="button : s.buttons" data-attr-class="'inv-button interactive ' + button.kind"
+             data-class-locked="button.locked"
+             data-style-left="button.left + 'px'" data-style-top="button.top + 'px'"
+             data-style-width="button.width + 'px'" data-style-height="button.height + 'px'">
+            <span class="inv-button-label">{{button.label}}</span>
+            <div class="tooltip">{{button.tip}}</div>
+        </div>
+    </div>
+
+    <!-- The shop of another player. -->
+    <div class="shop" data-if="other.visible" data-alias-s="other"
+         data-style-left="s.panel_left + 'px'" data-style-top="s.panel_top + 'px'"
+         data-style-width="s.panel_width + 'px'" data-style-height="s.panel_height + 'px'">
+        <div class="inv-header">
+            <div class="inv-title">TIENDA</div>
+            <div class="inv-options">
+                <span class="shop-state on">EN VENTA</span>
+            </div>
+        </div>
+        <div class="shop-field seller"
+             data-style-left="s.title_field.left + 'px'" data-style-top="s.title_field.top + 'px'"
+             data-style-width="s.title_field.width + 'px'" data-style-height="s.title_field.height + 'px'"></div>
+        <div class="inv-grid shop-grid"
+             data-style-left="s.grid.left + 'px'" data-style-top="s.grid.top + 'px'"
+             data-style-width="s.grid.width + 'px'" data-style-height="s.grid.height + 'px'">
+            <div class="cell" data-for="cell : s.cells"></div>
+            <div data-for="item : s.items" data-attr-class="'item ' + item.kind"
+                 data-style-left="item.left + 'px'" data-style-top="item.top + 'px'"
+                 data-style-width="item.width + 'px'" data-style-height="item.height + 'px'"></div>
+        </div>
+        <div class="shop-card other">
+            <div class="shop-card-title">Antes de comprar</div>
+            <div class="shop-tip">Pasa el mouse sobre un item para ver su precio.</div>
+            <div class="shop-tip">Revisa bien el precio: lo comprado no se puede devolver.</div>
+            <div class="shop-tip">Solo se comercia con zen.</div>
+        </div>
+        <div data-for="button : s.buttons" data-attr-class="'inv-button interactive ' + button.kind"
+             data-style-left="button.left + 'px'" data-style-top="button.top + 'px'"
+             data-style-width="button.width + 'px'" data-style-height="button.height + 'px'">
+            <span class="inv-button-label">{{button.label}}</span>
+            <div class="tooltip">{{button.tip}}</div>
+        </div>
+    </div>
+</body>
+</rml>

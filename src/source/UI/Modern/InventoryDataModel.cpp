@@ -8,12 +8,8 @@
 #include "UI/Modern/RmlFormat.h"
 #include "UI/NewUI/Inventory/NewUIMyInventory.h"
 #include "UI/NewUI/NewUISystem.h"
-#include "UI/Scaling/UITransform.h"
 
 #include <array>
-
-extern unsigned int WindowWidth;
-extern unsigned int WindowHeight;
 
 namespace UI::Modern
 {
@@ -34,19 +30,6 @@ constexpr std::array<const char*, MAX_EQUIPMENT_INDEX> kSlotLabels = {
     "Anillo",  // EQUIPMENT_RING_RIGHT
     "Anillo",  // EQUIPMENT_RING_LEFT
 };
-
-const char* ItemKind(const ITEM& item)
-{
-    if (item.AncientDiscriminator > 0)
-    {
-        return "ancient";
-    }
-    if (item.ExcellentFlags > 0)
-    {
-        return "excellent";
-    }
-    return item.Level >= 7 ? "high" : "normal";
-}
 
 // The classic warning tints of equipped items, as style classes.
 const char* WarningKind(unsigned int color)
@@ -74,25 +57,7 @@ const char* ZenTier(DWORD zen)
     return zen >= 100000 ? "mid" : "low";
 }
 
-// Window-local rectangles of the inventory to pixels relative to its panel.
-struct Mapper
-{
-    UI::Scaling::Transform transform;
-    float originX;
-    float originY;
-
-    InventoryDataModel::Box Map(const RECT& rect) const
-    {
-        InventoryDataModel::Box box;
-        box.left = UI::Scaling::PositionX(transform, static_cast<float>(rect.left)) - originX;
-        box.top = UI::Scaling::PositionY(transform, static_cast<float>(rect.top)) - originY;
-        box.width = (rect.right - rect.left) * transform.scaleX;
-        box.height = (rect.bottom - rect.top) * transform.scaleY;
-        return box;
-    }
-};
-
-void AddButton(std::vector<InventoryDataModel::Box>& buttons, const Mapper& mapper,
+void AddButton(std::vector<InventoryDataModel::Box>& buttons, const WindowView::Mapper& mapper,
                const SEASON3B::CNewUIMyInventory::ModernLayout::Box& source, const char* kind, const char* label,
                const char* tip, bool active = false, bool locked = false)
 {
@@ -118,21 +83,7 @@ bool InventoryDataModel::Bind(::Rml::Context& context)
         return false;
     }
 
-    if (auto box = constructor.RegisterStruct<Box>())
-    {
-        box.RegisterMember("left", &Box::left);
-        box.RegisterMember("top", &Box::top);
-        box.RegisterMember("width", &Box::width);
-        box.RegisterMember("height", &Box::height);
-        box.RegisterMember("kind", &Box::kind);
-        box.RegisterMember("label", &Box::label);
-        box.RegisterMember("tip", &Box::tip);
-        box.RegisterMember("warning", &Box::warning);
-        box.RegisterMember("filled", &Box::filled);
-        box.RegisterMember("active", &Box::active);
-        box.RegisterMember("locked", &Box::locked);
-    }
-    constructor.RegisterArray<std::vector<Box>>();
+    WindowView::RegisterBox(constructor);
     constructor.RegisterArray<std::vector<int>>();
 
     constructor.Bind("visible", &m_view.visible);
@@ -167,15 +118,11 @@ void InventoryDataModel::Refresh()
     view.visible = grid != nullptr && CharacterMachine != nullptr && g_pNewUISystem->IsVisible(SEASON3B::INTERFACE_INVENTORY);
     if (view.visible)
     {
-        const auto transform = UI::Scaling::TransformForLayout(inventory->GetLayoutMode(), static_cast<int>(WindowWidth),
-                                                               static_cast<int>(WindowHeight));
-        const POINT& pos = inventory->GetPos();
-        const Mapper mapper{transform, UI::Scaling::PositionX(transform, static_cast<float>(pos.x)),
-                            UI::Scaling::PositionY(transform, static_cast<float>(pos.y))};
-        view.panelLeft = mapper.originX;
-        view.panelTop = mapper.originY;
-        view.panelWidth = SEASON3B::CNewUIMyInventory::GetWidth() * transform.scaleX;
-        view.panelHeight = SEASON3B::CNewUIMyInventory::GetHeight() * transform.scaleY;
+        const WindowView::Mapper mapper(*inventory, inventory->GetPos());
+        view.panelLeft = mapper.OriginX();
+        view.panelTop = mapper.OriginY();
+        view.panelWidth = SEASON3B::CNewUIMyInventory::GetWidth() * mapper.ScaleX();
+        view.panelHeight = SEASON3B::CNewUIMyInventory::GetHeight() * mapper.ScaleY();
 
         const DWORD zen = CharacterMachine->Gold;
         Format::Grouped(zen, view.zen);
@@ -185,32 +132,7 @@ void InventoryDataModel::Refresh()
         inventory->GetModernLayout(layout);
         view.setActive = layout.setOptionActive;
         view.socketActive = layout.socketOptionActive;
-
-        // The grid and the items in it.
-        const POINT& gridPos = grid->GetPos();
-        const int columns = grid->GetNumberOfColumn();
-        const int rows = grid->GetNumberOfRow();
-        constexpr int square = SEASON3B::INVENTORY_SQUARE_WIDTH;
-        view.grid = mapper.Map(RECT{gridPos.x, gridPos.y, gridPos.x + columns * square, gridPos.y + rows * square});
-        view.cells.assign(static_cast<std::size_t>(columns * rows), 0);
-        const float cellX = square * transform.scaleX;
-        const float cellY = square * transform.scaleY;
-        for (std::size_t i = 0; i < grid->GetNumberOfItems(); ++i)
-        {
-            const ITEM* item = grid->GetItem(static_cast<int>(i));
-            if (item == nullptr || item->Type < 0)
-            {
-                continue;
-            }
-            const ITEM_ATTRIBUTE& attribute = ItemAttribute[item->Type];
-            Box box;
-            box.left = item->x * cellX;
-            box.top = item->y * cellY;
-            box.width = std::max<int>(1, attribute.Width) * cellX;
-            box.height = std::max<int>(1, attribute.Height) * cellY;
-            box.kind = ItemKind(*item);
-            view.items.push_back(std::move(box));
-        }
+        WindowView::DescribeGrid(*grid, mapper, view.grid, view.cells, view.items);
 
         for (int i = 0; i < MAX_EQUIPMENT_INDEX; ++i)
         {
@@ -221,7 +143,7 @@ void InventoryDataModel::Refresh()
             Box box = mapper.Map(layout.equipment[i].rect);
             const ITEM& item = CharacterMachine->Equipment[i];
             box.filled = item.Type >= 0;
-            box.kind = box.filled ? ItemKind(item) : "empty";
+            box.kind = box.filled ? WindowView::ItemKind(item) : "empty";
             box.warning = WarningKind(layout.equipmentWarning[i]);
             box.label = kSlotLabels[static_cast<std::size_t>(i)];
             view.slots.push_back(std::move(box));

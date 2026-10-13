@@ -18,6 +18,7 @@
 #include "UI/Modern/RmlInput.h"
 #include "UI/Modern/RmlRenderInterface.h"
 #include "UI/Modern/RmlSystemInterface.h"
+#include "UI/Modern/ShopDataModel.h"
 #include "UI/Modern/SettingsDataModel.h"
 #include "UI/Modern/SkillBarDataModel.h"
 #include "UI/Modern/VipWindowDataModel.h"
@@ -42,6 +43,7 @@ constexpr const char* kContextName = "hud";
 constexpr const char* kUnderlayContextName = "underlay";
 constexpr const char* kInventoryDocument = "Data/UI/inventory.rml";
 constexpr const char* kChatDocument = "Data/UI/chat.rml";
+constexpr const char* kShopDocument = "Data/UI/shop.rml";
 constexpr const char* kHudDocument = "Data/UI/hud.rml";
 constexpr const char* kSettingsDocument = "Data/UI/settings.rml";
 constexpr const char* kVipDocument = "Data/UI/vip.rml";
@@ -66,6 +68,7 @@ struct HudState
     VipWindowDataModel vipModel;
     InventoryDataModel inventoryModel;
     ChatDataModel chatModel;
+    ShopDataModel shopModel;
     ::Rml::Context* context = nullptr;
     ::Rml::Context* underlayContext = nullptr;
     ::Rml::ElementDocument* hudDocument = nullptr;
@@ -106,7 +109,7 @@ void CreateUnderlay(HudState& state)
 {
     state.underlayContext = ::Rml::CreateContext(kUnderlayContextName, WindowSize());
     if (state.underlayContext == nullptr || !state.inventoryModel.Bind(*state.underlayContext)
-        || !state.chatModel.Bind(*state.underlayContext))
+        || !state.chatModel.Bind(*state.underlayContext) || !state.shopModel.Bind(*state.underlayContext))
     {
         mu::log::Get("rmlui")->error("modern windows disabled: the underlay context could not be created");
         state.underlayContext = nullptr;
@@ -114,7 +117,8 @@ void CreateUnderlay(HudState& state)
     }
     state.inventoryModel.Refresh();
     state.chatModel.Refresh();
-    for (const char* path : {kInventoryDocument, kChatDocument})
+    state.shopModel.Refresh();
+    for (const char* path : {kInventoryDocument, kChatDocument, kShopDocument})
     {
         ::Rml::ElementDocument* document = state.underlayContext->LoadDocument(path);
         if (document == nullptr)
@@ -348,6 +352,7 @@ void RenderUnderlay()
     UpdateLayout(*state.underlayContext);
     state.inventoryModel.Refresh();
     state.chatModel.Refresh();
+    state.shopModel.Refresh();
     state.underlayContext->Update();
 
     state.renderInterface->BeginFrame(static_cast<int>(WindowWidth), static_cast<int>(WindowHeight));

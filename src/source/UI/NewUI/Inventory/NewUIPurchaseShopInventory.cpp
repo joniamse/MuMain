@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "UI/NewUI/Inventory/NewUIPurchaseShopInventory.h"
 #include "UI/NewUI/NewUISystem.h"
+#include "UI/Modern/ModernHud.h"
 #include "UI/NewUI/Dialogs/NewUICustomMessageBox.h"
 #include "I18N/All.h"
 
@@ -153,6 +154,7 @@ void SEASON3B::CNewUIPurchaseShopInventory::UnloadImages()
 
 bool SEASON3B::CNewUIPurchaseShopInventory::UpdateMouseEvent()
 {
+    SyncLayout();
     // Top-right corner close "X" (shared frame): hides + swallows the click.
     if (g_pNewUISystem->HandleFrameCornerClose(m_Pos, SEASON3B::INTERFACE_PURCHASESHOP_INVENTORY))
     {
@@ -241,10 +243,33 @@ void SEASON3B::CNewUIPurchaseShopInventory::RenderFrame()
     RenderImage(IMAGE_MYSHOPINVENTORY_EDIT, m_Pos.x + 12, m_Pos.y + 49, 169.f, 26.f);
 }
 
+// The shop's title; the modern look draws its field and keeps this text.
+void SEASON3B::CNewUIPurchaseShopInventory::RenderTitle()
+{
+    RenderText(m_TitleText.c_str(), m_Pos.x, m_Pos.y + 58, 190, 0, RGBA(0, 255, 0, 255), 0x00000000, RT3_SORT_CENTER, g_hFontBold);
+}
+
+void SEASON3B::CNewUIPurchaseShopInventory::SyncLayout()
+{
+    const bool modern = UI::Modern::AreWindowsModern();
+    if (modern == m_bModernLayout || m_Button == nullptr)
+    {
+        return;
+    }
+    m_bModernLayout = modern;
+    if (modern)
+    {
+        m_Button->ChangeButtonInfo(m_Pos.x + 166, m_Pos.y + 7, 17, 17);
+    }
+    else
+    {
+        m_Button->ChangeButtonInfo(m_Pos.x + 13, m_Pos.y + 391, 36, 29);
+    }
+}
+
 void SEASON3B::CNewUIPurchaseShopInventory::RenderTextInfo()
 {
     RenderText(I18N::Game::PersonalStore, m_Pos.x, m_Pos.y + 15, 190, 0, 0xFF49B0FF, 0x00000000, RT3_SORT_CENTER);
-    RenderText(m_TitleText.c_str(), m_Pos.x, m_Pos.y + 58, 190, 0, RGBA(0, 255, 0, 255), 0x00000000, RT3_SORT_CENTER, g_hFontBold);
     wchar_t Text[100];
 
     memset(&Text, 0, sizeof(wchar_t) * 100);
@@ -282,18 +307,28 @@ void SEASON3B::CNewUIPurchaseShopInventory::RenderTextInfo()
 
 bool SEASON3B::CNewUIPurchaseShopInventory::Render()
 {
+    SyncLayout();
+    // The modern look (UI::Modern) draws the frame, texts and button under this window.
+    const bool modern = m_bModernLayout;
     EnableAlphaTest();
 
-    RenderFrame();
-
-    RenderTextInfo();
+    if (!modern)
+    {
+        RenderFrame();
+        RenderTextInfo();
+    }
+    RenderTitle();
 
     if (m_pNewInventoryCtrl)
     {
+        m_pNewInventoryCtrl->SetModernLook(modern);
         m_pNewInventoryCtrl->Render();
     }
 
-    m_Button->Render();
+    if (!modern)
+    {
+        m_Button->Render();
+    }
 
     DisableAlphaBlend();
 

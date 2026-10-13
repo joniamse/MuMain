@@ -149,6 +149,8 @@ bool VipWindowDataModel::Bind(::Rml::Context& context)
     constructor.Bind("offstore_title", &m_offStoreTitle);
     constructor.Bind("offstore_left", &m_offStoreLeft);
     constructor.Bind("offstore_sales", &m_offStoreSales);
+    constructor.RegisterArray<std::vector<::Rml::String>>();
+    constructor.Bind("offstore_notes", &m_offStoreNotes);
     constructor.Bind("levels", &m_levels);
     constructor.Bind("packages", &m_packages);
 
@@ -206,6 +208,10 @@ bool VipWindowDataModel::HandleNotice(std::wstring_view text)
     else if (kind == L"P")
     {
         ReadPackage(fields);
+    }
+    else if (kind == L"O")
+    {
+        m_offStoreNotes.push_back(Text(fields, 1));
     }
     else if (kind == L"T")
     {
@@ -302,6 +308,7 @@ void VipWindowDataModel::Begin()
     m_notice.clear();
     m_hasNotice = false;
     m_hasOffStore = false;
+    m_offStoreNotes.clear();
 }
 
 // S|balance|level|scope|expiresUnix|character|vault|recharge

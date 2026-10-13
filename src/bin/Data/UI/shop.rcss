@@ -1,0 +1,115 @@
+/* Modern look of the personal shop windows. Shares the inventory's panel, header, grid, item and
+   button styles (inventory.rcss); the boxes are placed by the data model. */
+
+.shop {
+    position: absolute;
+    decorator: vertical-gradient(#121b29f5 #06090ef5);
+    border: 1dp #253246;
+    border-radius: 6dp;
+}
+
+.shop-state {
+    padding: 0 6dp;
+    font-size: 7dp;
+    font-weight: bold;
+    letter-spacing: 1dp;
+    color: #8fa3bd;
+    border: 1dp #2b3a4f;
+    border-radius: 3dp;
+}
+
+.shop-state.on {
+    color: #4fd8a6;
+    border-color: #4fd8a688;
+    background-color: #4fd8a61a;
+}
+
+/* The title field: the legacy window draws the text (and the edit cursor) over it. */
+.shop-field {
+    position: absolute;
+    background-color: #03050acc;
+    border: 1dp #2b3a4f;
+    border-radius: 4dp;
+}
+
+.shop-field-label {
+    position: absolute;
+    left: 6dp;
+    top: 50%;
+    margin-top: -5dp;
+    font-size: 8dp;
+    font-weight: bold;
+    color: #6f819a;
+}
+
+.shop-field.seller {
+    border-color: #4fd8a666;
+}
+
+/* 8 x 4 squares. */
+.shop-grid .cell {
+    height: 25%;
+}
+
+.shop-card {
+    position: absolute;
+    left: 6.3%;
+    width: 87.4%;
+    top: 43%;
+    padding: 6dp 8dp;
+    background-color: #05080dcc;
+    border: 1dp #1c2736;
+    border-radius: 4dp;
+}
+
+.shop-card.mine {
+    height: 44%;
+}
+
+.shop-card.other {
+    height: 50%;
+}
+
+.shop-card-title {
+    margin-bottom: 4dp;
+    font-size: 9dp;
+    font-weight: bold;
+    letter-spacing: 1dp;
+    color: #c9a44c;
+}
+
+.shop-tip {
+    margin-top: 3dp;
+    padding-left: 7dp;
+    font-size: 9dp;
+    line-height: 12dp;
+    color: #b9c8dc;
+    border-left: 2dp #2b3a4f;
+}
+
+.shop-tip.accent {
+    color: #4fd8a6;
+    border-left-color: #4fd8a6;
+}
+
+.inv-button.open,
+.inv-button.close {
+    font-size: 9dp;
+}
+
+.inv-button.open .inv-button-label {
+    color: #4fd8a6;
+}
+
+.inv-button.close .inv-button-label {
+    color: #ff8f8f;
+}
+
+.inv-button.locked {
+    border-color: #1a2433;
+    decorator: vertical-gradient(#111823 #0a0f16);
+}
+
+.inv-button.locked .inv-button-label {
+    color: #3e4d62;
+}

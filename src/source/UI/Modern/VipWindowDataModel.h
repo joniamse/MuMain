@@ -113,6 +113,8 @@ private:
     ::Rml::String m_offStoreTitle;
     ::Rml::String m_offStoreLeft;
     ::Rml::String m_offStoreSales;
+    // Without an open offline store: the shop open right now, the last closed store (O lines).
+    std::vector<::Rml::String> m_offStoreNotes;
     std::int64_t m_offStoreExpiresUnix = 0;
 
     std::int64_t m_expiresUnix = 0;

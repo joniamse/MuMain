@@ -42,6 +42,12 @@
                 <span class="offstore-left">quedan {{offstore_left}}</span>
                 <span class="text-muted">{{offstore_sales}}</span>
             </div>
+            <div class="offstore notes" data-if="!has_offstore && offstore_notes.size > 0">
+                <span class="offstore-label">Tienda</span>
+                <div class="offstore-notes">
+                    <div data-for="note : offstore_notes">{{note}}</div>
+                </div>
+            </div>
 
             <div class="notice" data-if="has_notice">{{notice}}</div>
 

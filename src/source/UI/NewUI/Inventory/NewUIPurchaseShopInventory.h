@@ -56,6 +56,9 @@ namespace SEASON3B
         CNewUIInventoryCtrl* GetInventoryCtrl() const;
         const int GetShopCharacterIndex();
         const std::wstring& GetTitleText();
+        const POINT& GetPos() const { return m_Pos; }
+        static constexpr float GetWidth() { return INVENTORY_WIDTH; }
+        static constexpr float GetHeight() { return INVENTORY_HEIGHT; }
         const int GetSourceIndex();
         int GetPointedItemIndex();
 
@@ -81,6 +84,9 @@ namespace SEASON3B
     private:
         void RenderFrame();
         void RenderTextInfo();
+        void RenderTitle();
+        // The close button is placed for the modern look (UI/Modern/ShopDataModel) or the classic one.
+        void SyncLayout();
 
     private:
         CNewUIManager* m_pNewUIMng;
@@ -90,6 +96,7 @@ namespace SEASON3B
        std::wstring		m_TitleText;
         CNewUIButton* m_Button;
         int						m_SourceIndex;
+        bool					m_bModernLayout = false;
     };
 
     inline

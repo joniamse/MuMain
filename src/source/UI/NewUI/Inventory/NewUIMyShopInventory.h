@@ -81,6 +81,16 @@ namespace SEASON3B
         {
             return m_Button[MYSHOPINVENTORY_CLOSE];
         }
+        CNewUIButton& GetExitButton()
+        {
+            return m_Button[MYSHOPINVENTORY_EXIT];
+        }
+        const POINT& GetPos() const
+        {
+            return m_Pos;
+        }
+        static constexpr float GetWidth() { return INVENTORY_WIDTH; }
+        static constexpr float GetHeight() { return INVENTORY_HEIGHT; }
         RECT GetTitleRect()
         {
             return {m_EditBox->GetPosition_x(), m_EditBox->GetPosition_y(),
@@ -124,8 +134,12 @@ namespace SEASON3B
     private:
         void RenderFrame();
         void RenderTextInfo();
+        // The buttons are placed for the modern look (UI/Modern/ShopDataModel) or the classic one.
+        void SyncLayout();
+        void ApplyLayout(bool modern);
 
     private:
+        bool				m_bModernLayout = false;
         int					m_TargetIndex;
         int					m_SourceIndex;
         bool				m_EnablePersonalShop;

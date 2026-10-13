@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "UI/NewUI/Inventory/NewUIMyShopInventory.h"
+#include "UI/Modern/ModernHud.h"
 #include "Audio/DSPlaySound.h"
 #include "UI/NewUI/NewUISystem.h"
 #include "UI/NewUI/Dialogs/NewUICustomMessageBox.h"
@@ -148,12 +149,7 @@ void SEASON3B::CNewUIMyShopInventory::SetPos(int x, int y)
     {
         m_pNewInventoryCtrl->SetPos(m_Pos.x + 16, m_Pos.y + 90);
     }
-    if (m_Button)
-    {
-        m_Button[MYSHOPINVENTORY_EXIT].SetPos(m_Pos.x + 13, m_Pos.y + 391);
-        m_Button[MYSHOPINVENTORY_OPEN].SetPos(m_Pos.x + 53, m_Pos.y + 391);
-        m_Button[MYSHOPINVENTORY_CLOSE].SetPos(m_Pos.x + 93, m_Pos.y + 391);
-    }
+    ApplyLayout(m_bModernLayout);
 }
 
 void SEASON3B::CNewUIMyShopInventory::GetTitle(wchar_t* titletext)
@@ -381,6 +377,7 @@ bool SEASON3B::CNewUIMyShopInventory::MyShopInventoryProcess()
 
 bool SEASON3B::CNewUIMyShopInventory::UpdateMouseEvent()
 {
+    SyncLayout();
     if (m_pNewInventoryCtrl && false == m_pNewInventoryCtrl->UpdateMouseEvent())
     {
         return false;
@@ -554,13 +551,49 @@ void SEASON3B::CNewUIMyShopInventory::RenderTextInfo()
     RenderText(Text, m_Pos.x + 30, m_Pos.y + 332, 0, 0, RGBA(255, 45, 47, 255), 0x00000000, RT3_SORT_LEFT, g_hFontBold);
 }
 
+void SEASON3B::CNewUIMyShopInventory::SyncLayout()
+{
+    const bool modern = UI::Modern::AreWindowsModern();
+    if (modern != m_bModernLayout)
+    {
+        ApplyLayout(modern);
+    }
+}
+
+void SEASON3B::CNewUIMyShopInventory::ApplyLayout(bool modern)
+{
+    m_bModernLayout = modern;
+    if (m_Button == nullptr)
+    {
+        return;
+    }
+    // Modern: close in the title bar, Open / Close as a footer row.
+    if (modern)
+    {
+        m_Button[MYSHOPINVENTORY_EXIT].ChangeButtonInfo(m_Pos.x + 166, m_Pos.y + 7, 17, 17);
+        m_Button[MYSHOPINVENTORY_OPEN].ChangeButtonInfo(m_Pos.x + 12, m_Pos.y + 398, 82, 22);
+        m_Button[MYSHOPINVENTORY_CLOSE].ChangeButtonInfo(m_Pos.x + 96, m_Pos.y + 398, 82, 22);
+    }
+    else
+    {
+        m_Button[MYSHOPINVENTORY_EXIT].ChangeButtonInfo(m_Pos.x + 13, m_Pos.y + 391, 36, 29);
+        m_Button[MYSHOPINVENTORY_OPEN].ChangeButtonInfo(m_Pos.x + 53, m_Pos.y + 391, 36, 29);
+        m_Button[MYSHOPINVENTORY_CLOSE].ChangeButtonInfo(m_Pos.x + 93, m_Pos.y + 391, 36, 29);
+    }
+}
+
 bool SEASON3B::CNewUIMyShopInventory::Render()
 {
+    SyncLayout();
+    // The modern look (UI::Modern) draws the frame, texts and buttons under this window.
+    const bool modern = m_bModernLayout;
     EnableAlphaTest();
 
-    RenderFrame();
-
-    RenderTextInfo();
+    if (!modern)
+    {
+        RenderFrame();
+        RenderTextInfo();
+    }
 
     if (m_EditBox)
     {
@@ -569,12 +602,16 @@ bool SEASON3B::CNewUIMyShopInventory::Render()
 
     if (m_pNewInventoryCtrl)
     {
+        m_pNewInventoryCtrl->SetModernLook(modern);
         m_pNewInventoryCtrl->Render();
     }
 
-    for (int i = 0; i < MYSHOPINVENTORY_MAXBUTTONCOUNT; ++i)
+    if (!modern)
     {
-        m_Button[i].Render();
+        for (int i = 0; i < MYSHOPINVENTORY_MAXBUTTONCOUNT; ++i)
+        {
+            m_Button[i].Render();
+        }
     }
 
     DisableAlphaBlend();

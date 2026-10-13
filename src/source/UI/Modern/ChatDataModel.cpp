@@ -6,12 +6,8 @@
 
 #include "UI/NewUI/NewUISystem.h"
 #include "UI/NewUI/Widgets/NewUIChatInputBox.h"
-#include "UI/Scaling/UITransform.h"
 
 #include <array>
-
-extern unsigned int WindowWidth;
-extern unsigned int WindowHeight;
 
 namespace UI::Modern
 {
@@ -19,22 +15,6 @@ namespace
 {
 constexpr std::array kTypeLabels = {"Todos", "Grupo", "Guild", "Gens"};
 
-struct Mapper
-{
-    UI::Scaling::Transform transform;
-    float originX;
-    float originY;
-
-    ChatDataModel::Box Map(const RECT& rect) const
-    {
-        ChatDataModel::Box box;
-        box.left = UI::Scaling::PositionX(transform, static_cast<float>(rect.left)) - originX;
-        box.top = UI::Scaling::PositionY(transform, static_cast<float>(rect.top)) - originY;
-        box.width = (rect.right - rect.left) * transform.scaleX;
-        box.height = (rect.bottom - rect.top) * transform.scaleY;
-        return box;
-    }
-};
 } // namespace
 
 bool ChatDataModel::Bind(::Rml::Context& context)
@@ -45,17 +25,7 @@ bool ChatDataModel::Bind(::Rml::Context& context)
         return false;
     }
 
-    if (auto box = constructor.RegisterStruct<Box>())
-    {
-        box.RegisterMember("left", &Box::left);
-        box.RegisterMember("top", &Box::top);
-        box.RegisterMember("width", &Box::width);
-        box.RegisterMember("height", &Box::height);
-        box.RegisterMember("kind", &Box::kind);
-        box.RegisterMember("label", &Box::label);
-        box.RegisterMember("active", &Box::active);
-    }
-    constructor.RegisterArray<std::vector<Box>>();
+    WindowView::RegisterBox(constructor);
 
     constructor.Bind("visible", &m_view.visible);
     constructor.Bind("panel_left", &m_view.panelLeft);
@@ -85,13 +55,10 @@ void ChatDataModel::Refresh()
     {
         SEASON3B::CNewUIChatInputBox::ModernLayout layout;
         input->GetModernLayout(layout);
-        const auto transform = UI::Scaling::TransformForLayout(input->GetLayoutMode(), static_cast<int>(WindowWidth),
-                                                               static_cast<int>(WindowHeight));
-        const Mapper mapper{transform, UI::Scaling::PositionX(transform, static_cast<float>(layout.window.left)),
-                            UI::Scaling::PositionY(transform, static_cast<float>(layout.window.top))};
+        const WindowView::Mapper mapper(*input, POINT{layout.window.left, layout.window.top});
         const Box window = mapper.Map(layout.window);
-        view.panelLeft = mapper.originX;
-        view.panelTop = mapper.originY;
+        view.panelLeft = mapper.OriginX();
+        view.panelTop = mapper.OriginY();
         view.panelWidth = window.width;
         view.panelHeight = window.height;
         view.whisperOff = layout.whisperOff;

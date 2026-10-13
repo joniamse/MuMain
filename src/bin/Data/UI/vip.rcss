@@ -339,3 +339,16 @@
     border-color: #9cc2ee;
     decorator: vertical-gradient(#2c4566 #16212f);
 }
+
+/* No offline store open: what happens to the shop open now, and the last closed store. */
+.offstore.notes {
+    align-items: flex-start;
+    border-color: #2b3a4f;
+    background-color: #0b1018cc;
+}
+
+.offstore-notes {
+    flex: 1;
+    font-size: 10dp;
+    color: #c4d2e4;
+}
