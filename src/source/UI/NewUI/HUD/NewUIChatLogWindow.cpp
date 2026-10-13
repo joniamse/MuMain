@@ -7,6 +7,11 @@
 #include "Audio/DSPlaySound.h"
 #include "UI/Legacy/UIControls.h"
 #include "Engine/Object/ZzzInterface.h"
+#include "UI/Modern/ModernHud.h"
+
+#include <SDL3/SDL_timer.h>
+
+#include <algorithm>
 
 using namespace SEASON3B;
 
@@ -1088,12 +1093,54 @@ void SEASON3B::CNewUISystemLogWindow::Init()
 }
 
 
+namespace
+{
+// With the HD interface, system messages stay this long, the last part of it fading out.
+constexpr std::uint64_t kSystemMessageLifetimeMs = 10000;
+constexpr std::uint64_t kSystemMessageFadeMs = 1000;
+}
+
+void SEASON3B::CNewUISystemLogWindow::RemoveExpiredMessages()
+{
+    if (!UI::Modern::IsEnabled())
+    {
+        return;
+    }
+    const std::uint64_t now = SDL_GetTicks();
+    bool removed = false;
+    while (!m_vecAddedAt.empty() && now - m_vecAddedAt.front() >= kSystemMessageLifetimeMs)
+    {
+        RemoveFrontLine();
+        removed = true;
+    }
+    if (removed)
+    {
+        m_iCurrentRenderEndLine = static_cast<int>(m_vecAllMsgs.size()) - 1;
+    }
+}
+
+float SEASON3B::CNewUISystemLogWindow::GetMessageAlpha(int line) const
+{
+    if (!UI::Modern::IsEnabled() || line < 0 || line >= static_cast<int>(m_vecAddedAt.size()))
+    {
+        return 1.f;
+    }
+    const std::uint64_t age = SDL_GetTicks() - m_vecAddedAt[static_cast<std::size_t>(line)];
+    const std::uint64_t fadeStart = kSystemMessageLifetimeMs - kSystemMessageFadeMs;
+    if (age <= fadeStart)
+    {
+        return 1.f;
+    }
+    return std::max(0.f, 1.f - static_cast<float>(age - fadeStart) / kSystemMessageFadeMs);
+}
+
 bool SEASON3B::CNewUISystemLogWindow::RenderMessages()
 {
     if (!m_bShowMessages)
     {
         return true;
     }
+    RemoveExpiredMessages();
 
     int fRenderPosX = m_WndPos.x + FONT_LEADING;
     int fRenderPosY = m_WndPos.y - m_WndSize.cy;
@@ -1122,15 +1169,17 @@ bool SEASON3B::CNewUISystemLogWindow::RenderMessages()
         if (i < 0 && i >= static_cast<int>(m_vecAllMsgs.size())) break;
 
         auto const message = m_vecAllMsgs[i];
-        const auto backgroundAlpha = static_cast<BYTE>(255.f * m_fBackAlpha);
+        const float alpha = GetMessageAlpha(i);
+        const auto backgroundAlpha = static_cast<BYTE>(255.f * m_fBackAlpha * alpha);
+        const auto textAlpha = static_cast<BYTE>(255.f * alpha);
         g_pRenderText->SetBgColor(0, 0, 0, backgroundAlpha);
         if (message->GetType() == TYPE_SYSTEM_MESSAGE)
         {
-            g_pRenderText->SetTextColor(100, 150, 255, 255);
+            g_pRenderText->SetTextColor(100, 150, 255, textAlpha);
         }
         else
         {
-            g_pRenderText->SetTextColor(255, 30, 0, 255);
+            g_pRenderText->SetTextColor(255, 30, 0, textAlpha);
         }
 
         g_pRenderText->RenderText(fRenderPosX, fRenderPosY + rowHeight * i, message->GetText().c_str());
@@ -1201,6 +1250,7 @@ void SEASON3B::CNewUISystemLogWindow::AddText(const type_string& strText, MESSAG
     }
 
     pvecMsgs->push_back(pMsgText);
+    m_vecAddedAt.push_back(SDL_GetTicks());
 
     m_iCurrentRenderEndLine = pvecMsgs->size() - 1;
 }
@@ -1212,6 +1262,10 @@ void SEASON3B::CNewUISystemLogWindow::RemoveFrontLine()
     {
         delete (*vi);
         vi = m_vecAllMsgs.erase(vi);
+    }
+    if (!m_vecAddedAt.empty())
+    {
+        m_vecAddedAt.erase(m_vecAddedAt.begin());
     }
 }
 
@@ -1255,6 +1309,7 @@ void SEASON3B::CNewUISystemLogWindow::ClearAll()
     for (; vi_msg != m_vecAllMsgs.end(); vi_msg++)
         delete (*vi_msg);
     m_vecAllMsgs.clear();
+    m_vecAddedAt.clear();
 
     m_iCurrentRenderEndLine = -1;
 }

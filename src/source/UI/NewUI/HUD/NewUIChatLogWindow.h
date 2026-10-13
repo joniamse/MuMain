@@ -8,6 +8,7 @@
 #include "UI/NewUI/Widgets/NewUIChatInputBox.h"
 
 #pragma warning(disable : 4786)
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -231,6 +232,9 @@ namespace SEASON3B
         CNewUIManager* m_pNewUIMng;
 
         type_vector_msgs	m_vecAllMsgs;
+        // When each message of m_vecAllMsgs was added (SDL ticks, ms): with the HD interface
+        // a message fades out and goes away after a while.
+        std::vector<std::uint64_t> m_vecAddedAt;
 
         POINT	m_WndPos;
         SIZE	m_WndSize;
@@ -243,6 +247,8 @@ namespace SEASON3B
         void Init();
 
         bool RenderMessages();
+        void RemoveExpiredMessages();
+        float GetMessageAlpha(int line) const;
 
         void RemoveFrontLine();
         int GetCurrentRenderEndLine() const;

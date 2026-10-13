@@ -1,9 +1,9 @@
-/* Status window: top-left, below the legacy map name bar. Shared styles live in theme.rcss. */
+/* Status window: bottom-left, level with the skill bar. Shared styles live in theme.rcss. */
 
 #status {
     position: absolute;
     left: 6dp;
-    top: 34dp;
+    bottom: 14dp;
     width: 230dp;
     padding: 7dp 8dp 8dp 8dp;
 }
@@ -70,14 +70,14 @@
 
 /* ---- Skill bar: bottom-centre, above the experience bar ---------------------------------- */
 
-/* ---- Potion bar: left of the skill bar ------------------------------------------------- */
+/* ---- Potion bar: centred above the skill bar ------------------------------------------- */
 
 #potionbar {
     position: absolute;
     left: 50%;
-    bottom: 14dp;
-    /* The skill bar is 452dp wide and centred: this sits 8dp to its left. */
-    margin-left: -397dp;
+    /* The skill bar row is 54dp high (14dp from the bottom); the bar is 169dp wide. */
+    bottom: 70dp;
+    margin-left: -85dp;
     display: flex;
     padding: 4dp;
 }
