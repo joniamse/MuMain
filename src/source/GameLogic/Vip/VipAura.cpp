@@ -94,13 +94,21 @@ std::unordered_map<std::wstring, int>& Levels()
     return levels;
 }
 
+// How bright the aura being drawn is, per level (kIntensity): every light of it is scaled by this.
+float g_intensity = 1.f;
+constexpr std::array<float, 5> kIntensity = {0.f, 0.85f, 0.8f, 0.7f, 0.55f};
+
 struct Color
 {
     float red;
     float green;
     float blue;
 
-    void To(float factor, vec3_t light) const { Vector(red * factor, green * factor, blue * factor, light); }
+    void To(float factor, vec3_t light) const
+    {
+        const float f = factor * g_intensity;
+        Vector(red * f, green * f, blue * f, light);
+    }
 };
 
 constexpr Color kSilver{0.70f, 0.78f, 0.95f};
@@ -200,6 +208,7 @@ void Embers(OBJECT* object, float time, int count, const Textures& textures, flo
         position[2] = object->Position[2] + 5.f + cycle * 230.f;
         const float glow = std::sinf(cycle * kPi) * (0.7f + 0.3f * std::sinf(time * 0.02f + static_cast<float>(i)));
         Vector(glow, glow * (0.75f - 0.45f * cycle), glow * 0.25f * (1.f - cycle), light);
+        VectorScale(light, g_intensity, light);
         CreateSprite(static_cast<int>(texture), position, 0.09f + Hash(4, i, seed) * 0.06f, light, object);
     }
 }
@@ -251,6 +260,7 @@ void Flames(OBJECT* object, float time, int count, const Color& tint, const Text
         // Fire colours, drawn towards the aura's tint: bright at the start, fading as it rises.
         const float heat = std::sinf(cycle * kPi);
         Vector(heat * (0.6f + 0.4f * tint.red), heat * (0.35f + 0.3f * tint.green), heat * (0.15f + 0.45f * tint.blue), light);
+        VectorScale(light, g_intensity, light);
         CreateSprite(static_cast<int>(texture), position, 0.45f + 0.25f * (1.f - cycle), light, object,
                      std::sinf(time * 0.004f + static_cast<float>(i)) * 12.f);
     }
@@ -271,6 +281,7 @@ void Ash(OBJECT* object, float time, int count, const Textures& textures, float 
         position[2] = object->Position[2] + 30.f + cycle * 280.f;
         const float grey = 0.35f * std::sinf(cycle * kPi);
         Vector(grey, grey * 0.95f, grey * 0.9f, light);
+        VectorScale(light, g_intensity, light);
         CreateSprite(static_cast<int>(texture), position, 0.06f + Hash(10, i, seed) * 0.04f, light, object);
     }
 }
@@ -405,6 +416,7 @@ void Render(CHARACTER* character, OBJECT* object)
     const float time = static_cast<float>(WorldTime);
     // Each character's own rhythm for the random-looking parts.
     const float seed = static_cast<float>((character->Key & 0x7FFF) % 97);
+    g_intensity = kIntensity[static_cast<std::size_t>(found->second)];
     EnableAlphaBlend();
     switch (found->second)
     {
