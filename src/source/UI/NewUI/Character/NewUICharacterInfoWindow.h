@@ -8,6 +8,8 @@
 #include "UI/NewUI/Inventory/NewUIMyInventory.h"
 #include "UI/NewUI/Widgets/NewUIButton.h"
 
+class IUIRenderText; // UI/Legacy/UIControls.h
+
 namespace SEASON3B
 {
     class CNewUICharacterInfoWindow : public CNewUIObj
@@ -84,10 +86,27 @@ namespace SEASON3B
         // button for anyone but a Dark Lord.
         CNewUIButton* GetShownStatButton(int stat);
 
-    private:
+        // Runs this window's text output (name, level, stats and their derived values)
+        // into `target` instead of the screen. Positions are relative to GetPos(); the
+        // HEIGHT_* rows above mark where each stat block starts. Used by the modern UI.
+        void CaptureTexts(IUIRenderText& target);
+        POINT GetPos() const
+        {
+            return m_Pos;
+        }
+
         // The "+" buttons shown: strength, agility, vitality, energy, and
         // command for a Dark Lord.
         int StatButtonCount() const;
+
+        // Actions behind the window's buttons, shared with the modern character window.
+        void IncreaseStat(int stat); // STAT_STRENGTH ..; needs level-up points
+        void ToggleQuestWindow();
+        void TogglePetWindow();
+        [[nodiscard]] bool CanOpenMasterLevelWindow() const;
+        void ToggleMasterLevelWindow();
+
+    private:
         void LoadImages();
         void UnloadImages();
         void ResetEquipmentLevel();

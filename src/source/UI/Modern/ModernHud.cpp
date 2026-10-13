@@ -2,6 +2,8 @@
 
 #include "UI/Modern/ModernHud.h"
 
+#include <string_view>
+
 #ifdef MU_RMLUI
 
 #include "Core/Utilities/Log/MuLogger.h"
@@ -13,6 +15,7 @@
 #include "UI/Modern/RmlSystemInterface.h"
 #include "UI/Modern/SettingsDataModel.h"
 #include "UI/Modern/SkillBarDataModel.h"
+#include "UI/Modern/VipWindowDataModel.h"
 
 #include "UI/Modern/RmlIncludes.h"
 
@@ -32,6 +35,7 @@ namespace
 constexpr const char* kContextName = "hud";
 constexpr const char* kHudDocument = "Data/UI/hud.rml";
 constexpr const char* kSettingsDocument = "Data/UI/settings.rml";
+constexpr const char* kVipDocument = "Data/UI/vip.rml";
 // Documents are authored in dp at this window height; larger windows scale up.
 constexpr float kReferenceWindowHeight = 720.0f;
 constexpr std::array kFontFaces = {
@@ -49,10 +53,13 @@ struct HudState
     BottomBarDataModel barModel;
     SkillBarDataModel skillModel;
     SettingsDataModel settingsModel;
+    VipWindowDataModel vipModel;
     ::Rml::Context* context = nullptr;
     ::Rml::ElementDocument* hudDocument = nullptr;
     ::Rml::ElementDocument* settingsDocument = nullptr;
+    ::Rml::ElementDocument* vipDocument = nullptr;
     bool settingsOpen = false;
+    bool vipOpen = false;
     // Buttons whose press went to the UI; their release must not reach the game either.
     std::array<bool, kMouseButtonCount> capturedButtons{};
     bool initialised = false;
@@ -84,7 +91,8 @@ bool CreateHud(HudState& state)
 {
     state.context = ::Rml::CreateContext(kContextName, WindowSize());
     if (!state.context || !state.dataModel.Bind(*state.context) || !state.barModel.Bind(*state.context) ||
-        !state.skillModel.Bind(*state.context) || !state.settingsModel.Bind(*state.context))
+        !state.skillModel.Bind(*state.context) || !state.settingsModel.Bind(*state.context) ||
+        !state.vipModel.Bind(*state.context))
     {
         return false;
     }
@@ -95,6 +103,12 @@ bool CreateHud(HudState& state)
 
     state.hudDocument = state.context->LoadDocument(kHudDocument);
     state.settingsDocument = state.context->LoadDocument(kSettingsDocument);
+    // The VIP window is optional: without it (missing or broken document) the rest still works.
+    state.vipDocument = state.context->LoadDocument(kVipDocument);
+    if (state.vipDocument == nullptr)
+    {
+        mu::log::Get("rmlui")->error("VIP window disabled: {} could not be loaded", kVipDocument);
+    }
     return state.hudDocument != nullptr && state.settingsDocument != nullptr;
 }
 
@@ -106,6 +120,10 @@ void SyncDocumentVisibility(HudState& state, bool hudEnabled)
     {
         state.settingsOpen = false;
     }
+    if (state.vipModel.ConsumeCloseRequest())
+    {
+        state.vipOpen = false;
+    }
     const auto setVisible = [](::Rml::ElementDocument* document, bool visible) {
         if (document->IsVisible() != visible)
         {
@@ -114,6 +132,10 @@ void SyncDocumentVisibility(HudState& state, bool hudEnabled)
     };
     setVisible(state.hudDocument, hudEnabled);
     setVisible(state.settingsDocument, state.settingsOpen);
+    if (state.vipDocument != nullptr)
+    {
+        setVisible(state.vipDocument, state.vipOpen);
+    }
 }
 
 bool Initialise(HudState& state)
@@ -231,10 +253,10 @@ bool IsEnabled()
     return !State().failed && GameConfig::GetInstance().GetModernHud();
 }
 
-// Something of the modern UI is on screen: the HUD, or the settings window.
+// Something of the modern UI is on screen: the HUD, or one of its windows.
 bool IsActive()
 {
-    return !State().failed && (IsEnabled() || State().settingsOpen);
+    return !State().failed && (IsEnabled() || State().settingsOpen || State().vipOpen);
 }
 
 void OpenSettings()
@@ -250,6 +272,34 @@ void OpenSettings()
 bool IsSettingsOpen()
 {
     return State().settingsOpen;
+}
+
+void OpenVip()
+{
+    State().vipModel.Request();
+}
+
+bool IsVipOpen()
+{
+    return State().vipOpen;
+}
+
+bool HandleServerNotice(const wchar_t* text)
+{
+    if (text == nullptr)
+    {
+        return false;
+    }
+    HudState& state = State();
+    if (!state.vipModel.HandleNotice(text))
+    {
+        return false;
+    }
+    if (state.vipModel.ConsumeOpenRequest() && !state.failed)
+    {
+        state.vipOpen = true;
+    }
+    return true;
 }
 
 void RenderHud()
@@ -278,6 +328,10 @@ void RenderHud()
         state.dataModel.Refresh();
         state.barModel.Refresh();
         state.skillModel.Refresh();
+    }
+    if (state.vipOpen)
+    {
+        state.vipModel.Tick();
     }
     state.context->Update();
 
@@ -345,6 +399,16 @@ void OpenSettings() {}
 bool IsSettingsOpen()
 {
     return false;
+}
+void OpenVip() {}
+bool IsVipOpen()
+{
+    return false;
+}
+// Without the modern UI the VIP data is still kept out of the chat.
+bool HandleServerNotice(const wchar_t* text)
+{
+    return text != nullptr && std::wstring_view(text).starts_with(L"#MUVIP|");
 }
 bool ProcessEvent(const SDL_Event& /*event*/)
 {

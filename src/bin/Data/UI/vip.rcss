@@ -1,0 +1,316 @@
+/* VIP window (data model "vip"). Shared styles live in theme.rcss.
+ * Tiers: 0 free, 1 Plata, 2 Oro, 3 Platino, 4 Diamante. */
+
+#backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #00000099;
+}
+
+#vip {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 640dp;
+    margin-left: -320dp;
+    margin-top: -250dp;
+    padding: 12dp 16dp 12dp 16dp;
+}
+
+/* ---- Header ------------------------------------------------------------------------------ */
+
+.vip-header {
+    display: flex;
+    align-items: center;
+    padding-bottom: 8dp;
+    border-bottom: 1dp #2b3a4f;
+}
+
+.vip-title {
+    flex: 1;
+}
+
+.vip-title .text-title {
+    font-size: 17dp;
+}
+
+.badge {
+    display: inline-block;
+    margin-left: 8dp;
+    padding: 2dp 8dp;
+    font-size: 10dp;
+    font-weight: bold;
+    border-radius: 9dp;
+    border: 1dp #2b3a4f;
+    color: #0b1018;
+}
+
+.close {
+    width: 22dp;
+    height: 22dp;
+    line-height: 20dp;
+    text-align: center;
+    font-size: 18dp;
+    color: #8fa3bd;
+    border-radius: 3dp;
+}
+
+.close:hover {
+    color: #ffffff;
+    background-color: #9e101999;
+}
+
+/* Tier colours: badge background and level card title. */
+.badge.tier-0 { background-color: #3a4657; color: #d5dde8; }
+.badge.tier-1 { decorator: vertical-gradient(#f2f5f8 #9aa6b4); }
+.badge.tier-2 { decorator: vertical-gradient(#ffe27a #c98a12); }
+.badge.tier-3 { decorator: vertical-gradient(#e6fffb #5fc7b8); }
+.badge.tier-4 { decorator: vertical-gradient(#b8f0ff #7b6cff); color: #ffffff; font-effect: outline(1dp #2a1f66); }
+
+.level-name.tier-1 { color: #dfe6ee; }
+.level-name.tier-2 { color: #ffd24a; }
+.level-name.tier-3 { color: #8ff5e3; }
+.level-name.tier-4 { color: #a9c4ff; }
+
+/* ---- Status ------------------------------------------------------------------------------ */
+
+.status {
+    display: flex;
+    margin-top: 10dp;
+}
+
+.stat {
+    flex: 1;
+    margin-right: 6dp;
+    padding: 6dp 8dp;
+    border-radius: 3dp;
+    background-color: #121a26cc;
+    border: 1dp #2b3a4f;
+}
+
+.stat:last-child {
+    margin-right: 0;
+}
+
+.stat-label {
+    font-size: 9dp;
+    color: #8fa3bd;
+}
+
+.stat-value {
+    margin-top: 1dp;
+    font-size: 13dp;
+    font-weight: bold;
+    color: #eef2f7;
+}
+
+.stat-value.gold {
+    color: #ffd24a;
+}
+
+.stat-help {
+    font-size: 9dp;
+    color: #8fa3bd;
+}
+
+.unit {
+    font-size: 9dp;
+    font-weight: normal;
+    color: #8fa3bd;
+}
+
+.notice {
+    margin-top: 8dp;
+    padding: 5dp 8dp;
+    font-size: 11dp;
+    color: #eef2f7;
+    background-color: #24364fcc;
+    border: 1dp #6f9bd1;
+    border-radius: 3dp;
+}
+
+.section-title {
+    margin-top: 10dp;
+    margin-bottom: 4dp;
+    font-size: 11dp;
+    font-weight: bold;
+    color: #6f9bd1;
+}
+
+.section-title .text-muted {
+    margin-left: 4dp;
+    font-weight: normal;
+}
+
+/* ---- Levels ------------------------------------------------------------------------------ */
+
+.levels {
+    display: flex;
+}
+
+.level-card {
+    flex: 1;
+    margin-right: 6dp;
+    padding: 7dp 8dp 8dp 8dp;
+    border-radius: 3dp;
+    background-color: #121a26cc;
+    border: 1dp #2b3a4f;
+}
+
+.level-card:last-child {
+    margin-right: 0;
+}
+
+.level-card.current {
+    border-color: #ffd24a;
+    background-color: #2a2412cc;
+}
+
+.level-name {
+    font-size: 14dp;
+    font-weight: bold;
+    font-effect: outline(1dp #000000cc);
+}
+
+.level-cost {
+    font-size: 12dp;
+    font-weight: bold;
+    color: #ffd24a;
+}
+
+.level-scope {
+    margin-bottom: 4dp;
+    font-size: 9dp;
+    color: #8fa3bd;
+}
+
+.benefit {
+    display: flex;
+    font-size: 10dp;
+    line-height: 14dp;
+    color: #b9c8db;
+}
+
+.benefit span {
+    flex: 1;
+}
+
+.benefit .value {
+    flex: 0 0 auto;
+    font-weight: bold;
+    color: #eef2f7;
+}
+
+.button.buy {
+    display: block;
+    margin-top: 7dp;
+    padding: 4dp 0;
+    text-align: center;
+}
+
+.button.buy.pending {
+    border-color: #ffd24a;
+    color: #0b1018;
+    decorator: vertical-gradient(#ffe27a #c98a12);
+}
+
+.button.buy.poor {
+    color: #8fa3bd;
+}
+
+/* ---- Packages ---------------------------------------------------------------------------- */
+
+.packages {
+    display: flex;
+}
+
+.package {
+    flex: 1;
+    margin-right: 5dp;
+    padding: 6dp 4dp;
+    text-align: center;
+    border-radius: 3dp;
+    border: 1dp #2b3a4f;
+    decorator: vertical-gradient(#1a2433 #0d131c);
+}
+
+.package:last-child {
+    margin-right: 0;
+}
+
+.package:hover {
+    border-color: #ffd24a;
+    decorator: vertical-gradient(#2a2412 #14110a);
+}
+
+.packages.disabled .package {
+    opacity: 0.45;
+}
+
+.package-name {
+    font-size: 10dp;
+    font-weight: bold;
+    color: #eef2f7;
+}
+
+.package-total {
+    margin-top: 2dp;
+    font-size: 15dp;
+    font-weight: bold;
+    color: #ffd24a;
+    font-effect: outline(1dp #000000cc);
+}
+
+.package-split {
+    font-size: 8dp;
+    color: #8fa3bd;
+}
+
+.bonus {
+    color: #4fd8a6;
+}
+
+.package-price {
+    margin-top: 3dp;
+    font-size: 10dp;
+    color: #b9c8db;
+}
+
+/* ---- Footer ------------------------------------------------------------------------------ */
+
+.vip-footer {
+    display: flex;
+    align-items: center;
+    margin-top: 12dp;
+}
+
+.vip-footer .text-muted {
+    flex: 1;
+}
+
+.vip-footer .loading {
+    color: #ffd24a;
+}
+
+.vip-footer .button {
+    margin-left: 6dp;
+}
+
+.button {
+    display: inline-block;
+    padding: 5dp 16dp;
+    font-size: 12dp;
+    font-weight: bold;
+    color: #eef2f7;
+    border: 1dp #6f9bd1;
+    border-radius: 3dp;
+    decorator: vertical-gradient(#24364f #121b28);
+}
+
+.button:hover {
+    border-color: #9cc2ee;
+    decorator: vertical-gradient(#2c4566 #16212f);
+}

@@ -923,8 +923,23 @@ class CUIRenderText
     CUIRenderText();
 
     std::unique_ptr<IUIRenderText> m_pRenderText;
+    // While set, every call goes here instead of the screen (see SetCaptureTarget).
+    IUIRenderText* m_pCaptureTarget = nullptr;
+
+    IUIRenderText* ActiveTarget() const
+    {
+        return m_pCaptureTarget ? m_pCaptureTarget : m_pRenderText.get();
+    }
 
 public:
+    // Redirects colour/font/text calls to `target` until called again with nullptr. Lets the
+    // modern UI reuse legacy text-producing code (e.g. the character window's stat lines)
+    // without drawing it. Single-threaded: only use around a synchronous call.
+    void SetCaptureTarget(IUIRenderText* target)
+    {
+        m_pCaptureTarget = target;
+    }
+
     virtual ~CUIRenderText();
 
     static CUIRenderText* GetInstance();

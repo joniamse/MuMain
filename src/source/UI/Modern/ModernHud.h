@@ -15,6 +15,15 @@ namespace UI::Modern
 void OpenSettings();
 [[nodiscard]] bool IsSettingsOpen();
 
+// Asks the server for the VIP data; the VIP window (Data/UI/vip.rml) opens when it arrives.
+// Works with the classic interface too.
+void OpenVip();
+[[nodiscard]] bool IsVipOpen();
+
+// Takes a server notice. Returns true when it carried data for the modern UI (VIP window,
+// prefix "#MUVIP|"), which must not be shown in the chat.
+[[nodiscard]] bool HandleServerNotice(const wchar_t* text);
+
 // Lazily initialises RmlUi on the first call, then refreshes and draws the HUD.
 // Call inside the main scene's 2D pass, after the legacy UI.
 void RenderHud();

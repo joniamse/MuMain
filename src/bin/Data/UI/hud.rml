@@ -113,6 +113,10 @@
                 <span class="dock-key">U</span>
                 <div class="tooltip">Menu</div>
             </div>
+            <div class="dock-btn vip interactive" data-event-click="menu('vip')">
+                <span class="dock-label">VIP</span>
+                <div class="tooltip">VIP y fichas</div>
+            </div>
             <div class="dock-btn interactive" data-event-click="menu('settings')">
                 <img src="img/icon-settings.png"/>
                 <div class="tooltip">Modern settings</div>

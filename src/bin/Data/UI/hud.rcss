@@ -295,6 +295,21 @@
     image-color: #ffd24a;
 }
 
+/* The VIP window: a golden text badge instead of an icon. */
+.dock-label {
+    display: block;
+    margin-top: 10dp;
+    text-align: center;
+    font-size: 10dp;
+    font-weight: bold;
+    color: #ffd24a;
+    font-effect: outline(1dp #000000);
+}
+
+.dock-btn.vip:hover .dock-label {
+    color: #ffe9a3;
+}
+
 .dock-key {
     position: absolute;
     right: 2dp;

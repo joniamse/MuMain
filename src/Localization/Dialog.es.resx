@@ -12,60 +12,64 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Text_0" xml:space="preserve">
+    <value>¿Sí, viajero? ¿Qué necesitas?</value>
+    <comment>legacy_id=0</comment>
+  </data>
   <data name="Text_1" xml:space="preserve">
-    <value>¡Hola! Soy Pasi, el Mágico. Ja ja ja Hmmm... El movimiento de las estrellas parece estar mal. Tu futuro... Hmm... Tampoco puedo ver tu futuro... ¿Por qué será?</value>
+    <value>Ah... un viajero. Soy Pasi, el Hechicero. Las estrellas sangran esta noche y su danza está torcida. Busco tu destino entre ellas... y solo encuentro sombras. ¿Qué oscuridad cargas, forastero?</value>
     <comment>legacy_id=1</comment>
   </data>
   <data name="Text_2" xml:space="preserve">
-    <value>¡Hola! Mi nombre es Baz y soy el guardián de la bóveda. Puedo ayudarte adonde quiera que vayas. No dudes en dejar tus pertenencias conmigo.</value>
+    <value>Soy Baz, guardián de la bóveda. Muchos cayeron en el camino y sus tesoros acabaron en manos de saqueadores. Deja aquí tus pertenencias: bajo mi custodia, ni el ladrón más hábil las tocará.</value>
     <comment>legacy_id=2</comment>
   </data>
   <data name="Text_3" xml:space="preserve">
-    <value>Muchos aventureros me han dicho que el sonido del arpa aligera y elimina su fatiga. ¿Puedo ayudarte?</value>
+    <value>Los que vuelven de las tierras malditas dicen que solo el lamento de esta arpa acalla sus pesadillas. Descansa un momento, viajero. ¿En qué puedo servirte?</value>
     <comment>legacy_id=3</comment>
   </data>
   <data name="Text_4" xml:space="preserve">
-    <value>¡Hola! Mi nombre es Baz y soy el guardián de la bóveda. Puedo ayudarte adonde quiera que vayas. No dudes en dejar tus pertenencias conmigo.</value>
+    <value>Soy Baz, guardián de la bóveda. Muchos cayeron en el camino y sus tesoros acabaron en manos de saqueadores. Deja aquí tus pertenencias: bajo mi custodia, ni el ladrón más hábil las tocará.</value>
     <comment>legacy_id=4</comment>
   </data>
   <data name="Text_5" xml:space="preserve">
-    <value>¿Trajiste suficiente dinero? Sin él, no puedo combinar los elementos porque necesito dinero para continuar con mi investigación. ¿Comprendes? ¿Quieres saber cuánto dinero necesitas?</value>
+    <value>¿Traes suficiente Zen? Sin él, la Máquina del Caos no despierta: el caos exige su tributo y mis experimentos no se pagan solos. ¿Quieres saber cuánto te costará tentar a la suerte?</value>
     <comment>legacy_id=5</comment>
   </data>
   <data name="Text_6" xml:space="preserve">
-    <value>¡Bienvenido a MU! Presiona F1 si necesitas ayuda mientras viajas por el continente de MU.</value>
+    <value>Bienvenido a MU, viajero. Estas tierras devoran a los descuidados. Pulsa F1 si necesitas consejo durante tu viaje por el continente.</value>
     <comment>legacy_id=6</comment>
   </data>
   <data name="Text_7" xml:space="preserve">
-    <value>¿Es tu primera visita a Lorencia? Ve hacia la salida al sudeste frente a la fuente e intenta cazar Dragones Escurridizos o Arañas. Los Esqueletos en el noroeste son demasiado peligrosos.</value>
+    <value>¿Primera vez en Lorencia? Toma la salida del sudeste, frente a la fuente, y templa tu acero con Dragones Escurridizos y Arañas. Al noroeste acechan los Esqueletos: no vayas allí si aprecias tu vida.</value>
     <comment>legacy_id=7</comment>
   </data>
   <data name="Text_8" xml:space="preserve">
-    <value>Bienvenidos a Noria. Si es tu primera visita, atraviesa la guardia de la bóveda y ve hacia la salida sur. Intenta cazar monstruos de bajo nivel, como Escorpiones o Duendes.</value>
+    <value>Bienvenido a Noria, el último refugio de los elfos. Si es tu primera visita, pasa junto a la guardiana de la bóveda y toma la salida sur. Allí te esperan Escorpiones y Duendes, presas dignas de un aprendiz.</value>
     <comment>legacy_id=8</comment>
   </data>
   <data name="Text_9" xml:space="preserve">
-    <value>Si necesitas una guía detallada del continente MU, visita http://muonline.webzen.net</value>
+    <value>Si buscas saber más del continente de MU, escribe /help para ver los comandos o pregunta a los guardias de cada ciudad.</value>
     <comment>legacy_id=9</comment>
   </data>
   <data name="Text_50" xml:space="preserve">
-    <value>Se dice que han visto el 'Rollo del Emperador', donde se menciona a Muren, el primer emperador de MU, cerca de la Torre Perdida, Atlans y el Calabozo.</value>
+    <value>Dicen que el 'Rollo del Emperador', donde se narra la gesta de Muren, primer emperador de MU, fue visto cerca de la Torre Perdida, Atlans y el Calabozo... lugares donde los muertos no descansan.</value>
     <comment>legacy_id=50</comment>
   </data>
   <data name="Answer_50_Slot_0" xml:space="preserve">
-    <value>No sabía que existía algo así...</value>
+    <value>No sabía que algo así existía...</value>
     <comment>legacy_id=1500</comment>
   </data>
   <data name="Text_51" xml:space="preserve">
-    <value>Tu ofrenda a Dios no es suficiente. Te contaré sobre el oráculo si haces una ofrenda de 1.000.000 de Zen.</value>
+    <value>Tu ofrenda a los dioses es insuficiente. Trae 1.000.000 de Zen y te revelaré lo que dice el oráculo.</value>
     <comment>legacy_id=51</comment>
   </data>
   <data name="Answer_51_Slot_0" xml:space="preserve">
-    <value>Regresaré con 1.000.000 de Zen.</value>
+    <value>Volveré con 1.000.000 de Zen.</value>
     <comment>legacy_id=1510</comment>
   </data>
   <data name="Text_52" xml:space="preserve">
-    <value>Se dice que han visto el 'Rollo del Emperador', donde se menciona a Muren, el primer emperador de MU, cerca de la Torre Perdida, Atlans y el Calabozo.</value>
+    <value>Dicen que el 'Rollo del Emperador', donde se narra la gesta de Muren, primer emperador de MU, fue visto cerca de la Torre Perdida, Atlans y el Calabozo... lugares donde los muertos no descansan.</value>
     <comment>legacy_id=52</comment>
   </data>
   <data name="Answer_52_Slot_0" xml:space="preserve">
@@ -73,7 +77,7 @@
     <comment>legacy_id=1520</comment>
   </data>
   <data name="Text_53" xml:space="preserve">
-    <value>El 'Rollo del Emperador' contiene una fuerza poderosa. Quien lo lea será bendecido con esa fuerza poderosa.</value>
+    <value>El 'Rollo del Emperador' guarda un poder antiguo. Quien lo lea será tocado por esa fuerza... si su espíritu es capaz de soportarla.</value>
     <comment>legacy_id=53</comment>
   </data>
   <data name="Answer_53_Slot_0" xml:space="preserve">
@@ -85,11 +89,11 @@
     <comment>legacy_id=1531</comment>
   </data>
   <data name="Answer_53_Slot_2" xml:space="preserve">
-    <value>No me importa.</value>
+    <value>No me interesa.</value>
     <comment>legacy_id=1532</comment>
   </data>
   <data name="Text_54" xml:space="preserve">
-    <value>Ve a buscar el 'Rollo del Emperador'. Leerlo te otorgará un gran poder.</value>
+    <value>Ve en busca del 'Rollo del Emperador'. Sus palabras despertarán un poder que duerme en ti.</value>
     <comment>legacy_id=54</comment>
   </data>
   <data name="Answer_54_Slot_0" xml:space="preserve">
@@ -97,15 +101,15 @@
     <comment>legacy_id=1540</comment>
   </data>
   <data name="Text_55" xml:space="preserve">
-    <value>¡Has encontrado el 'Rollo del Emperador'! Verás, la conmemoración de la unificación del Imperio de MU por parte del primer emperador Muren se registró con este poder mágico. Aquél que posea el 'Rollo del Emperador' recibirá este gran poder.</value>
+    <value>¡Has encontrado el 'Rollo del Emperador'! En él quedó sellada, con magia antigua, la memoria de la unificación del Imperio de MU bajo Muren. Quien posea el rollo heredará parte de ese gran poder.</value>
     <comment>legacy_id=55</comment>
   </data>
   <data name="Answer_55_Slot_0" xml:space="preserve">
-    <value>Cuéntame sobre el registro.</value>
+    <value>Háblame de ese registro.</value>
     <comment>legacy_id=1550</comment>
   </data>
   <data name="Text_56" xml:space="preserve">
-    <value>Un registro histórico del primer emperador Muren contiene la conmemoración de la paz mediante el triunfo de Muren sobre todos los señores de la guerra; este triunfo unificó a todo el continente en el Imperio de MU.</value>
+    <value>El registro cuenta cómo Muren derrotó a todos los señores de la guerra y forjó una paz de hierro, uniendo el continente entero bajo el Imperio de MU.</value>
     <comment>legacy_id=56</comment>
   </data>
   <data name="Answer_56_Slot_0" xml:space="preserve">
@@ -113,11 +117,11 @@
     <comment>legacy_id=1560</comment>
   </data>
   <data name="Text_57" xml:space="preserve">
-    <value>Muren fue uno de los tres héroes que pusieron un fin al caos que sufrió el pueblo por la invasión de Sekneum.</value>
+    <value>Muren fue uno de los tres héroes que pusieron fin al caos que desató la invasión de Sekneum, cuando la sangre del pueblo tiñó la tierra.</value>
     <comment>legacy_id=57</comment>
   </data>
   <data name="Answer_57_Slot_0" xml:space="preserve">
-    <value>Cuéntame la historia anterior.</value>
+    <value>Cuéntame lo anterior.</value>
     <comment>legacy_id=1570</comment>
   </data>
   <data name="Answer_57_Slot_1" xml:space="preserve">
@@ -125,11 +129,11 @@
     <comment>legacy_id=1571</comment>
   </data>
   <data name="Text_58" xml:space="preserve">
-    <value>Se pueden encontrar los artefactos mágicos, se las conoce como la 'Espada Quebrada', la 'Lágrima de Elfa', y el 'Alma de Mago'. Los caballeros oscuros ofrecieron la 'Espada Quebrada' como un símbolo de su valentía, lealtad y deseo de prosperidad.</value>
+    <value>Tres reliquias sellaron aquella paz: la 'Espada Quebrada', la 'Lágrima de Elfa' y el 'Alma de Mago'. Los caballeros oscuros ofrendaron la 'Espada Quebrada' como símbolo de su valor, su lealtad y su anhelo de prosperidad.</value>
     <comment>legacy_id=58</comment>
   </data>
   <data name="Answer_58_Slot_0" xml:space="preserve">
-    <value>Cuéntame la historia anterior.</value>
+    <value>Cuéntame lo anterior.</value>
     <comment>legacy_id=1580</comment>
   </data>
   <data name="Answer_58_Slot_1" xml:space="preserve">
@@ -137,23 +141,23 @@
     <comment>legacy_id=1581</comment>
   </data>
   <data name="Text_59" xml:space="preserve">
-    <value>Los magos oscuros ofrecieron el 'Alma de Mago' como símbolo de su promesa de utilizar su poder en pos de la paz y la libertad del imperio. Año 10 de Mu, extracto del registro de la conmemoración de la paz...</value>
+    <value>Los magos oscuros ofrendaron el 'Alma de Mago' y juraron usar su poder solo por la paz y la libertad del imperio. Año 10 de MU, fragmento del registro de la paz...</value>
     <comment>legacy_id=59</comment>
   </data>
   <data name="Answer_59_Slot_0" xml:space="preserve">
-    <value>Cuéntame la historia anterior.</value>
+    <value>Cuéntame lo anterior.</value>
     <comment>legacy_id=1590</comment>
   </data>
   <data name="Answer_59_Slot_1" xml:space="preserve">
-    <value>Eso es lo que pasó...</value>
+    <value>Así fue como ocurrió...</value>
     <comment>legacy_id=1591</comment>
   </data>
   <data name="Text_60" xml:space="preserve">
-    <value>Si has leído el 'Rollo del Emperador', busca la 'Espada Quebrada' que los caballeros oscuros utilizaron en la conmemoración de la paz. Por lo que escuché, algunos caballeros oscuros la encontraron en Atlans, la Torre Perdida y Tarkan.</value>
+    <value>Si has leído el 'Rollo del Emperador', busca la 'Espada Quebrada' que los caballeros oscuros alzaron en la ceremonia de la paz. Dicen que algunos la vieron en Atlans, la Torre Perdida y Tarkan.</value>
     <comment>legacy_id=60</comment>
   </data>
   <data name="Answer_60_Slot_0" xml:space="preserve">
-    <value>Lo encontraré.</value>
+    <value>La encontraré.</value>
     <comment>legacy_id=1600</comment>
   </data>
   <data name="Answer_60_Slot_1" xml:space="preserve">
@@ -161,7 +165,7 @@
     <comment>legacy_id=1601</comment>
   </data>
   <data name="Text_61" xml:space="preserve">
-    <value>El peligro acecha detrás de cada esquina en esos lugares, y la 'Espada Quebrada' no es fácil de ubicar. ¡Pero si la encuentras, te conferirá nuevos poderes! Regresa cuando hayas encontrado la 'Espada Quebrada'.</value>
+    <value>La muerte acecha en cada rincón de esos lugares, y la 'Espada Quebrada' no se deja encontrar con facilidad. Pero si la hallas, te otorgará un nuevo poder. Vuelve cuando la tengas en tus manos.</value>
     <comment>legacy_id=61</comment>
   </data>
   <data name="Answer_61_Slot_0" xml:space="preserve">
@@ -169,7 +173,7 @@
     <comment>legacy_id=1610</comment>
   </data>
   <data name="Text_62" xml:space="preserve">
-    <value>Valiente caballero oscuro, ¡has encontrado la 'Espada Quebrada'! Después de la unificación del Continente de Mu, Muren, el primer emperador, quebró su espada 'Apocalipsis' como símbolo de su deseo de que nunca más estallara una guerra.</value>
+    <value>Valiente caballero oscuro, ¡has encontrado la 'Espada Quebrada'! Tras unificar el continente, Muren quebró su espada 'Apocalipsis' para que jamás volviera a estallar una guerra.</value>
     <comment>legacy_id=62</comment>
   </data>
   <data name="Answer_62_Slot_0" xml:space="preserve">
@@ -177,15 +181,15 @@
     <comment>legacy_id=1620</comment>
   </data>
   <data name="Text_63" xml:space="preserve">
-    <value>Después de la Guerra, los caballeros oscuros que deseaban convertirse en caballeros de la hoja comenzaron a buscar la antigua 'Espada Quebrada' a fin de demostrar su valentía.</value>
+    <value>Después de la guerra, los caballeros oscuros que aspiraban a ser caballeros de la hoja empezaron a buscar la antigua 'Espada Quebrada' para demostrar su valor.</value>
     <comment>legacy_id=63</comment>
   </data>
   <data name="Answer_63_Slot_0" xml:space="preserve">
-    <value>¡Eso es lo que ocurrió!</value>
+    <value>¡Así fue como ocurrió!</value>
     <comment>legacy_id=1630</comment>
   </data>
   <data name="Text_64" xml:space="preserve">
-    <value>Has leído el 'Rollo del Emperador', ¿verdad? Entonces debes estar al tanto de los 3 tesoros registrados en el 'Rollo del Emperador'. Ve a buscar el cristal 'Lágrima de Elfa', creado por los antiguos elfos con la fuerza del espíritu.</value>
+    <value>Has leído el 'Rollo del Emperador', ¿verdad? Entonces conoces los tres tesoros que guarda. Busca el cristal 'Lágrima de Elfa', que los antiguos elfos forjaron con la fuerza de los espíritus.</value>
     <comment>legacy_id=64</comment>
   </data>
   <data name="Answer_64_Slot_0" xml:space="preserve">
@@ -193,7 +197,7 @@
     <comment>legacy_id=1640</comment>
   </data>
   <data name="Text_65" xml:space="preserve">
-    <value>Ese lugar es muy peligroso y la 'Lágrima de Elfa' es muy difícil de encontrar. Pero si encuentras la 'Lágrima de Elfa', te conferirá un nuevo poder. Ahora, ve a buscar la 'Lágrima de Elfa' y regresa aquí.</value>
+    <value>Esos lugares son traicioneros y la 'Lágrima de Elfa' es esquiva. Pero si la encuentras, despertará en ti un nuevo poder. Ve en su busca y regresa a mí.</value>
     <comment>legacy_id=65</comment>
   </data>
   <data name="Answer_65_Slot_0" xml:space="preserve">
@@ -201,7 +205,7 @@
     <comment>legacy_id=1650</comment>
   </data>
   <data name="Text_66" xml:space="preserve">
-    <value>¡Has encontrado la 'Lágrima de Elfa'! Después de la Guerra, Lunedil, la reina elfa, creó la piedra de lágrima al conjurar la magia sobre la piedra espiritual para que los elfos pudieran invocar el poder de la diosa y fortalecer su poder.</value>
+    <value>¡Has encontrado la 'Lágrima de Elfa'! Tras la guerra, Lunedil, la reina elfa, conjuró su magia sobre una piedra espiritual para que los elfos pudieran invocar el poder de la diosa y fortalecer el suyo.</value>
     <comment>legacy_id=66</comment>
   </data>
   <data name="Answer_66_Slot_0" xml:space="preserve">
@@ -209,7 +213,7 @@
     <comment>legacy_id=1660</comment>
   </data>
   <data name="Text_67" xml:space="preserve">
-    <value>Has leído el 'Rollo del Emperador', ¿verdad? Entonces debes estar al tanto de los 3 tesoros registrados en el 'Rollo del Emperador'. Ve a buscar el cristal 'Lágrima de Elfa', creado por los antiguos elfos con la fuerza del espíritu.</value>
+    <value>Has leído el 'Rollo del Emperador', ¿verdad? Entonces conoces los tres tesoros que guarda. Busca el cristal 'Lágrima de Elfa', que los antiguos elfos forjaron con la fuerza de los espíritus.</value>
     <comment>legacy_id=67</comment>
   </data>
   <data name="Answer_67_Slot_0" xml:space="preserve">
@@ -217,15 +221,15 @@
     <comment>legacy_id=1670</comment>
   </data>
   <data name="Text_68" xml:space="preserve">
-    <value>Con tu poder, estoy seguro de que encontrarás el 'Alma de Mago'. Ahora ve a buscar el 'Alma de Mago' y vuelve cuando la hayas encontrado.</value>
+    <value>Con tu poder, sé que encontrarás el 'Alma de Mago'. Ve en su busca y vuelve cuando la tengas.</value>
     <comment>legacy_id=68</comment>
   </data>
   <data name="Answer_68_Slot_0" xml:space="preserve">
-    <value>Voy a encontrar el 'Alma de Mago'.</value>
+    <value>Encontraré el 'Alma de Mago'.</value>
     <comment>legacy_id=1680</comment>
   </data>
   <data name="Text_69" xml:space="preserve">
-    <value>¡Sabía que encontrarías el 'Alma de Mago'! Etramu, el mago más grande de Arka, preocupado porque los débiles caballeros oscuros pudieran flaquear ante el ataque de Kundun, creó una piedrá mágica que protege el alma.</value>
+    <value>¡Sabía que encontrarías el 'Alma de Mago'! Etramu, el mayor mago de Arka, temiendo que los caballeros oscuros flaquearan ante el asedio de Kundun, creó una piedra mágica que protege el alma.</value>
     <comment>legacy_id=69</comment>
   </data>
   <data name="Answer_69_Slot_0" xml:space="preserve">
@@ -233,47 +237,47 @@
     <comment>legacy_id=1690</comment>
   </data>
   <data name="Text_70" xml:space="preserve">
-    <value>Con esta piedra mágica, un mago oscuro se convierte en un amo del alma.</value>
+    <value>Con esta piedra mágica, un mago oscuro se convierte en Amo del Alma.</value>
     <comment>legacy_id=70</comment>
   </data>
   <data name="Answer_70_Slot_0" xml:space="preserve">
-    <value>¡Ahora soy un amo del alma!</value>
+    <value>¡Ahora soy un Amo del Alma!</value>
     <comment>legacy_id=1700</comment>
   </data>
   <data name="Text_71" xml:space="preserve">
-    <value>Tu ofrenda a Dios no es suficiente. Te contaré sobre el oráculo si haces una ofrenda de 2.000.000 de Zen.</value>
+    <value>Tu ofrenda a los dioses es insuficiente. Trae 2.000.000 de Zen y te revelaré lo que dice el oráculo.</value>
     <comment>legacy_id=71</comment>
   </data>
   <data name="Answer_71_Slot_0" xml:space="preserve">
-    <value>Regresaré con 2.000.000 de Zen.</value>
+    <value>Volveré con 2.000.000 de Zen.</value>
     <comment>legacy_id=1710</comment>
   </data>
   <data name="Text_72" xml:space="preserve">
-    <value>Por tu sólida determinación y fortaleza se te ha conferido un nuevo poder. Que la gracia de Lugard te acompañe siempre.</value>
+    <value>Tu firme voluntad y tu fortaleza te han hecho digno de un nuevo poder. Que la gracia de Lugard te guarde en la oscuridad.</value>
     <comment>legacy_id=72</comment>
   </data>
   <data name="Answer_72_Slot_0" xml:space="preserve">
-    <value>Que la gracia de Dios esté contigo...</value>
+    <value>Que la gracia de los dioses te acompañe...</value>
     <comment>legacy_id=1720</comment>
   </data>
   <data name="Text_73" xml:space="preserve">
-    <value>Ya posees un gran poder. No tengo un oráculo para ti.</value>
+    <value>Ya posees un gran poder. El oráculo no tiene nada más que decirte.</value>
     <comment>legacy_id=73</comment>
   </data>
   <data name="Answer_73_Slot_0" xml:space="preserve">
-    <value>Volveré luego.</value>
+    <value>Volveré más tarde.</value>
     <comment>legacy_id=1730</comment>
   </data>
   <data name="Text_74" xml:space="preserve">
-    <value>Regresa cuando te hayas vuelto más fuerte.</value>
+    <value>Vuelve cuando seas más fuerte. Tal como estás, el camino te devoraría.</value>
     <comment>legacy_id=74</comment>
   </data>
   <data name="Answer_74_Slot_0" xml:space="preserve">
-    <value>Regresaré cuando sea más fuerte.</value>
+    <value>Volveré cuando sea más fuerte.</value>
     <comment>legacy_id=1740</comment>
   </data>
   <data name="Text_75" xml:space="preserve">
-    <value>Si te has convertido en un guerrero fuerte, serás capaz de encontrarlo.</value>
+    <value>Si te has vuelto un guerrero fuerte, serás capaz de encontrarlo.</value>
     <comment>legacy_id=75</comment>
   </data>
   <data name="Answer_75_Slot_0" xml:space="preserve">
@@ -281,7 +285,7 @@
     <comment>legacy_id=1750</comment>
   </data>
   <data name="Text_76" xml:space="preserve">
-    <value>Desde entonces, nació la tradición por la cual los caballeros oscuros que desean convertirse en caballeros de la hoja quiebran sus espadas como símbolo de su juramento, para no volver a blandirlas injustamente.</value>
+    <value>Desde entonces nació la tradición: los caballeros oscuros que desean ser caballeros de la hoja quiebran su espada como juramento de no volver a blandirla con injusticia.</value>
     <comment>legacy_id=76</comment>
   </data>
   <data name="Answer_76_Slot_0" xml:space="preserve">
@@ -289,39 +293,39 @@
     <comment>legacy_id=1760</comment>
   </data>
   <data name="Text_77" xml:space="preserve">
-    <value>Algunos de los intrépidos elfos comentaron haberlas visto en la Torre Perdida, Atlans y Tarkan.</value>
+    <value>Algunos elfos intrépidos dicen haberlas visto en la Torre Perdida, Atlans y Tarkan.</value>
     <comment>legacy_id=77</comment>
   </data>
   <data name="Answer_77_Slot_0" xml:space="preserve">
-    <value>¡Iré a buscarlas!.</value>
+    <value>¡Iré a buscarlas!</value>
     <comment>legacy_id=1770</comment>
   </data>
   <data name="Answer_77_Slot_1" xml:space="preserve">
-    <value>No tengo deseos de ir a un lugar así.</value>
+    <value>No deseo ir a un lugar así.</value>
     <comment>legacy_id=1771</comment>
   </data>
   <data name="Text_78" xml:space="preserve">
-    <value>Esta es la 'Lágrima de Elfa', y la elfa que encuentre esta piedra se convertirá en una musa elfa y será capaz de conjurar el poder de las Diosas de los elfos.</value>
+    <value>Esta es la 'Lágrima de Elfa'. La elfa que la posea se convertirá en Musa Elfa y podrá invocar el poder de las diosas de su pueblo.</value>
     <comment>legacy_id=78</comment>
   </data>
   <data name="Answer_78_Slot_0" xml:space="preserve">
-    <value>¡Me he convertido en una musa elfa!</value>
+    <value>¡Me he convertido en Musa Elfa!</value>
     <comment>legacy_id=1780</comment>
   </data>
   <data name="Text_79" xml:space="preserve">
-    <value>Ya que has encontrado tanto el 'Rollo del Emperador' como la 'Espada Quebrada', de ahora en adelante serás llamado caballero de la hoja.</value>
+    <value>Ya que has encontrado el 'Rollo del Emperador' y la 'Espada Quebrada', desde hoy serás llamado Caballero de la Hoja.</value>
     <comment>legacy_id=79</comment>
   </data>
   <data name="Answer_79_Slot_0" xml:space="preserve">
-    <value>¡Me he convertido en un Caballero de la hoja!</value>
+    <value>¡Me he convertido en Caballero de la Hoja!</value>
     <comment>legacy_id=1790</comment>
   </data>
   <data name="Text_80" xml:space="preserve">
-    <value>Una vez que se unió el imperio, el pueblo juró lealtad al emperador. Estos son algunos de los tesoros ofrecidos como símbolo de su lealtad.</value>
+    <value>Unido el imperio, el pueblo juró lealtad al emperador. Estos son algunos de los tesoros que ofrendó como prueba de esa lealtad.</value>
     <comment>legacy_id=80</comment>
   </data>
   <data name="Answer_80_Slot_0" xml:space="preserve">
-    <value>Cuéntame la historia anterior.</value>
+    <value>Cuéntame lo anterior.</value>
     <comment>legacy_id=1800</comment>
   </data>
   <data name="Answer_80_Slot_1" xml:space="preserve">
@@ -329,11 +333,11 @@
     <comment>legacy_id=1801</comment>
   </data>
   <data name="Text_81" xml:space="preserve">
-    <value>Los elfos ofrecieron la 'Lágrima de Elfa' como símbolo de su promesa para fortalecer el poder de elfos y humanos.</value>
+    <value>Los elfos ofrendaron la 'Lágrima de Elfa' como promesa de fortalecer el poder de elfos y humanos.</value>
     <comment>legacy_id=81</comment>
   </data>
   <data name="Answer_81_Slot_0" xml:space="preserve">
-    <value>Cuéntame la historia anterior.</value>
+    <value>Cuéntame lo anterior.</value>
     <comment>legacy_id=1810</comment>
   </data>
   <data name="Answer_81_Slot_1" xml:space="preserve">
@@ -341,7 +345,7 @@
     <comment>legacy_id=1811</comment>
   </data>
   <data name="Text_82" xml:space="preserve">
-    <value>Ve a buscar el 'Alma de Mago'. Según los antiguos magos oscuros, la última vez se la vió cerca de la Torre Perdida, Atlans y Tarkan.</value>
+    <value>Ve en busca del 'Alma de Mago'. Según los antiguos magos oscuros, fue vista por última vez cerca de la Torre Perdida, Atlans y Tarkan.</value>
     <comment>legacy_id=82</comment>
   </data>
   <data name="Answer_82_Slot_0" xml:space="preserve">
@@ -349,31 +353,31 @@
     <comment>legacy_id=1820</comment>
   </data>
   <data name="Answer_82_Slot_1" xml:space="preserve">
-    <value>Volveré luego.</value>
+    <value>Volveré más tarde.</value>
     <comment>legacy_id=1821</comment>
   </data>
   <data name="Text_90" xml:space="preserve">
-    <value>Has terminado de leer el 'Decreto del Emperador'. ¿Pero conoces el contrato confidencial entre Muren y Semeden, la invocadora principal? Le prometieron una cosa a Muren a cambio de transferir a Elbe bajo el imperio.</value>
+    <value>Has terminado de leer el 'Decreto del Emperador'. ¿Pero conoces el pacto secreto entre Muren y Semeden, la gran invocadora? Ella le prometió algo a cambio de entregar Elbe al imperio.</value>
     <comment>legacy_id=90</comment>
   </data>
   <data name="Answer_90_Slot_0" xml:space="preserve">
-    <value>Continuar escuchando.</value>
+    <value>Seguir escuchando.</value>
     <comment>legacy_id=1900</comment>
   </data>
   <data name="Text_91" xml:space="preserve">
-    <value>El Continente de MU tenía el portal a una dimensión en el inframundo supervisado por los invocadores. Y?Semeden otorgó el Abismo del Ojo como símbolo de su promesa. Por favor, ve y trae el Abismo del Ojo.</value>
+    <value>El continente de MU guardaba un portal hacia el inframundo, vigilado por los invocadores. Semeden entregó el Abismo del Ojo como prenda de su promesa. Ve y tráeme el Abismo del Ojo.</value>
     <comment>legacy_id=91</comment>
   </data>
   <data name="Answer_91_Slot_0" xml:space="preserve">
-    <value>Acepta la petición</value>
+    <value>Aceptar la petición</value>
     <comment>legacy_id=1910</comment>
   </data>
   <data name="Answer_91_Slot_1" xml:space="preserve">
-    <value>Rechaza la petición</value>
+    <value>Rechazar la petición</value>
     <comment>legacy_id=1911</comment>
   </data>
   <data name="Text_92" xml:space="preserve">
-    <value>Escuché que encontraron el Abismo del Ojo cerca de Atlance, la Torre Perdida y Tarkan. Regresa con el Abismo del Ojo tan pronto como lo encuentres.</value>
+    <value>Dicen que hallaron el Abismo del Ojo cerca de Atlans, la Torre Perdida y Tarkan. Regresa con él en cuanto lo encuentres.</value>
     <comment>legacy_id=92</comment>
   </data>
   <data name="Answer_92_Slot_0" xml:space="preserve">
@@ -381,19 +385,19 @@
     <comment>legacy_id=1920</comment>
   </data>
   <data name="Text_93" xml:space="preserve">
-    <value>Has encontrado el Abismo del Ojo. Se dice que este objeto está compuesto por un elemento inexistente en el mundo real. Es contagioso del mundo anterior al actual, al cual la memoria vuelve junto con el.</value>
+    <value>Has encontrado el Abismo del Ojo. Dicen que está hecho de una materia que no existe en este mundo: un vestigio del mundo anterior, que despierta recuerdos olvidados en quien lo sostiene.</value>
     <comment>legacy_id=93</comment>
   </data>
   <data name="Answer_93_Slot_0" xml:space="preserve">
-    <value>Continuar escuchando.</value>
+    <value>Seguir escuchando.</value>
     <comment>legacy_id=1930</comment>
   </data>
   <data name="Text_94" xml:space="preserve">
-    <value>El Abismo del Ojo guarda un significado especial para mí, ya que controlo y me comunico a través de las dimensiones de este mundo. Si recuperas el Abismo del Ojo, te nombraré Invocadora de Sangre para Semeden, la supervisora de tu dimensión.</value>
+    <value>El Abismo del Ojo tiene un significado especial para mí, pues vigilo y hablo a través de las dimensiones. Si lo recuperas, te nombraré Invocadora de Sangre ante Semeden, guardiana de tu dimensión.</value>
     <comment>legacy_id=94</comment>
   </data>
   <data name="Answer_94_Slot_0" xml:space="preserve">
-    <value>Imposición como Invocadora de Sangre</value>
+    <value>Ser nombrada Invocadora de Sangre</value>
     <comment>legacy_id=1940</comment>
   </data>
   <data name="Text_100" xml:space="preserve">
@@ -421,7 +425,7 @@
     <comment>legacy_id=2020</comment>
   </data>
   <data name="Text_103" xml:space="preserve">
-    <value>Aquél que posea el 'Anillo de Gloria' obtiene la bendición de Muren. Se dice que lo encontraron en los desiertos al otro lado del mar.</value>
+    <value>Aquel que posea el 'Anillo de Gloria' obtiene la bendición de Muren. Se dice que lo encontraron en los desiertos al otro lado del mar.</value>
     <comment>legacy_id=103</comment>
   </data>
   <data name="Answer_103_Slot_0" xml:space="preserve">
@@ -517,7 +521,7 @@
     <comment>legacy_id=2150</comment>
   </data>
   <data name="Text_116" xml:space="preserve">
-    <value>Para obtener el poder completo, necesitas prepararte con el 'Rollo del Emperador', el cual registra los hechos históricos del Emperador Muren. Visita a 'Sebina' en Devias. </value>
+    <value>Para obtener el poder completo, necesitas prepararte con el 'Rollo del Emperador', el cual registra los hechos históricos del Emperador Muren. Visita a 'Sebina' en Devias.</value>
     <comment>legacy_id=116</comment>
   </data>
   <data name="Answer_116_Slot_0" xml:space="preserve">

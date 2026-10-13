@@ -45,6 +45,12 @@ void OnMenuEvent(::Rml::DataModelHandle, ::Rml::Event&, const ::Rml::VariantList
         OpenSettings();
         return;
     }
+    if (name == "vip")
+    {
+        PlayBuffer(SOUND_CLICK01);
+        OpenVip();
+        return;
+    }
     for (const auto& [actionName, action] : kMenuActions)
     {
         if (actionName == name)

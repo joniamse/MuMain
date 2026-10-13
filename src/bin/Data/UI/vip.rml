@@ -1,0 +1,79 @@
+<rml>
+<head>
+    <title>VIP</title>
+    <link type="text/rcss" href="theme.rcss"/>
+    <link type="text/rcss" href="vip.rcss"/>
+</head>
+<body>
+    <div id="backdrop" class="interactive" data-model="vip">
+        <div id="vip" class="panel interactive">
+            <div class="vip-header">
+                <div class="vip-title">
+                    <span class="text-title">Membresía VIP</span>
+                    <span class="badge" data-attr-class="'badge ' + tier">{{level_name}}</span>
+                </div>
+                <div class="close" data-event-click="close">×</div>
+            </div>
+
+            <div class="status">
+                <div class="stat">
+                    <div class="stat-label">Saldo</div>
+                    <div class="stat-value gold">{{balance}} <span class="unit">fichas</span></div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Alcance</div>
+                    <div class="stat-value">{{scope_text}}</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Tiempo restante</div>
+                    <div class="stat-value">{{time_left}}</div>
+                    <div class="stat-help" data-if="expires_text != ''">vence {{expires_text}}</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Personaje</div>
+                    <div class="stat-value">{{character}}</div>
+                    <div class="stat-help">baúl activo: {{active_vault}}</div>
+                </div>
+            </div>
+
+            <div class="notice" data-if="has_notice">{{notice}}</div>
+
+            <div class="section-title">Membresías <span class="text-muted">30 días · Plata, Oro y Platino aplican al personaje actual; Diamante a toda la cuenta</span></div>
+            <div class="levels">
+                <div class="level-card" data-for="lv : levels" data-class-current="lv.current">
+                    <div data-attr-class="'level-name ' + lv.tier">{{lv.name}}</div>
+                    <div class="level-cost">{{lv.cost}} <span class="unit">fichas</span></div>
+                    <div class="level-scope">{{lv.scope_text}}</div>
+                    <div class="benefit"><span>Experiencia</span><span class="value">{{lv.exp}}</span></div>
+                    <div class="benefit"><span>Drop</span><span class="value">{{lv.drop}}</span></div>
+                    <div class="benefit"><span>Chaos Machine</span><span class="value">{{lv.chaos}}</span></div>
+                    <div class="benefit"><span>Baúles</span><span class="value">{{lv.vaults}}</span></div>
+                    <div class="benefit"><span>Tienda offline</span><span class="value">{{lv.offstore}}</span></div>
+                    <div class="benefit"><span>MU Helper</span><span class="value">{{lv.helper}}</span></div>
+                    <div class="benefit"><span>Entradas BC/DS</span><span class="value">{{lv.entries}}/día</span></div>
+                    <div class="button buy" data-event-click="buy(lv.level)"
+                         data-class-pending="lv.pending" data-class-poor="!lv.affordable">{{lv.action}}</div>
+                </div>
+            </div>
+
+            <div class="section-title">Recargar fichas <span class="text-muted" data-if="recharge_enabled">simulación de prueba: acredita sin pago real</span><span class="text-muted" data-if="!recharge_enabled">no disponible en este servidor</span></div>
+            <div class="packages" data-class-disabled="!recharge_enabled">
+                <div class="package" data-for="pk : packages" data-event-click="recharge(pk.id)">
+                    <div class="package-name">{{pk.name}}</div>
+                    <div class="package-total">{{pk.total}}</div>
+                    <div class="package-split" data-if="pk.has_bonus">{{pk.base}} + <span class="bonus">{{pk.bonus}} bonus</span></div>
+                    <div class="package-split" data-if="!pk.has_bonus">sin bonus</div>
+                    <div class="package-price">{{pk.price}}</div>
+                </div>
+            </div>
+
+            <div class="vip-footer">
+                <span class="text-muted loading" data-if="loading">Consultando al servidor…</span>
+                <span class="text-muted" data-if="!loading">Comandos: /vip · /fichas · /baul · /offstore · /entradas</span>
+                <div class="button" data-event-click="refresh">Actualizar</div>
+                <div class="button" data-event-click="close">Cerrar</div>
+            </div>
+        </div>
+    </div>
+</body>
+</rml>

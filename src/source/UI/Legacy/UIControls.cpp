@@ -2545,54 +2545,55 @@ void CUIRenderText::Release()
 
 DWORD CUIRenderText::GetTextColor() const
 {
-    if (m_pRenderText)
-        return m_pRenderText->GetTextColor();
+    if (IUIRenderText* target = ActiveTarget())
+        return target->GetTextColor();
     return 0;
 }
 DWORD CUIRenderText::GetBgColor() const
 {
-    if (m_pRenderText)
-        return m_pRenderText->GetBgColor();
+    if (IUIRenderText* target = ActiveTarget())
+        return target->GetBgColor();
     return 0;
 }
 
 void CUIRenderText::SetTextColor(BYTE byRed, BYTE byGreen, BYTE byBlue, BYTE byAlpha)
 {
-    if (m_pRenderText)
-        m_pRenderText->SetTextColor(byRed, byGreen, byBlue, byAlpha);
+    if (IUIRenderText* target = ActiveTarget())
+        target->SetTextColor(byRed, byGreen, byBlue, byAlpha);
 }
 void CUIRenderText::SetTextColor(DWORD dwColor)
 {
-    if (m_pRenderText)
-        m_pRenderText->SetTextColor(dwColor);
+    if (IUIRenderText* target = ActiveTarget())
+        target->SetTextColor(dwColor);
 }
 void CUIRenderText::SetBgColor(BYTE byRed, BYTE byGreen, BYTE byBlue, BYTE byAlpha)
 {
-    if (m_pRenderText)
-        m_pRenderText->SetBgColor(byRed, byGreen, byBlue, byAlpha);
+    if (IUIRenderText* target = ActiveTarget())
+        target->SetBgColor(byRed, byGreen, byBlue, byAlpha);
 }
 void CUIRenderText::SetBgColor(DWORD dwColor)
 {
-    if (m_pRenderText)
-        m_pRenderText->SetBgColor(dwColor);
+    if (IUIRenderText* target = ActiveTarget())
+        target->SetBgColor(dwColor);
 }
 
 void CUIRenderText::SetFont(HFONT hFont)
 {
-    if (m_pRenderText)
-        m_pRenderText->SetFont(hFont);
+    if (IUIRenderText* target = ActiveTarget())
+        target->SetFont(hFont);
 }
 
 SIZE CUIRenderText::MeasureText(const wchar_t* pszText, int iLength) const
 {
-    return m_pRenderText ? m_pRenderText->MeasureText(pszText, iLength) : SIZE{0, 0};
+    IUIRenderText* target = ActiveTarget();
+    return target ? target->MeasureText(pszText, iLength) : SIZE{0, 0};
 }
 
 void CUIRenderText::RenderText(int iPos_x, int iPos_y, const wchar_t* pszText, int iBoxWidth /* = 0 */, int iBoxHeight /* = 0 */, int iSort /* = RT3_SORT_LEFT */, OUT SIZE* lpTextSize /* = NULL */)
 {
-    if (m_pRenderText)
+    if (IUIRenderText* target = ActiveTarget())
     {
-        m_pRenderText->RenderText(iPos_x, iPos_y, pszText, iBoxWidth, iBoxHeight, iSort, lpTextSize);
+        target->RenderText(iPos_x, iPos_y, pszText, iBoxWidth, iBoxHeight, iSort, lpTextSize);
     }
 }
 DWORD g_dwBKConv = IME_CMODE_ALPHANUMERIC;

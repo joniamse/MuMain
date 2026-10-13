@@ -1,10 +1,11 @@
-﻿// NewUICharacterInfoWindow.cpp: implementation of the CNewUICharacterInfoWindow class.
+// NewUICharacterInfoWindow.cpp: implementation of the CNewUICharacterInfoWindow class.
 //////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
 #include "UI/Chat/Chat.h"
 #include "UI/NewUI/Character/NewUICharacterInfoWindow.h"
 #include "UI/NewUI/NewUISystem.h"
+#include "UI/Modern/ModernHud.h"
 #include "Character/CharacterManager.h"
 #include "GameLogic/Items/CSItemOption.h"
 #include "Audio/DSPlaySound.h"
@@ -174,8 +175,7 @@ bool SEASON3B::CNewUICharacterInfoWindow::BtnProcess()
         {
             if (m_BtnStat[i].UpdateMouseEvent() == true)
             {
-                SocketClient->ToGameServer()->SendIncreaseCharacterStatPoint(static_cast<CharacterStatAttribute>(i));
-                PlayBuffer(SOUND_CLICK01);
+                IncreaseStat(i);
                 return true;
             }
         }
@@ -189,24 +189,55 @@ bool SEASON3B::CNewUICharacterInfoWindow::BtnProcess()
 
     if (m_BtnQuest.UpdateMouseEvent() == true)
     {
-        g_pNewUISystem->Toggle(SEASON3B::INTERFACE_MYQUEST);
+        ToggleQuestWindow();
         return true;
     }
 
     if (m_BtnPet.UpdateMouseEvent() == true)
     {
-        g_pNewUISystem->Toggle(SEASON3B::INTERFACE_PET);
+        TogglePetWindow();
         return true;
     }
 
     if (m_BtnMasterLevel.UpdateMouseEvent() == true)
     {
-        if (gCharacterManager.IsMasterLevel(Hero->Class)
-            && Hero->Class != CLASS_TEMPLENIGHT)
-            g_pNewUISystem->Toggle(SEASON3B::INTERFACE_MASTER_LEVEL);
+        ToggleMasterLevelWindow();
         return true;
     }
     return false;
+}
+
+void SEASON3B::CNewUICharacterInfoWindow::IncreaseStat(int stat)
+{
+    if (CharacterAttribute->LevelUpPoint <= 0 || stat < 0 || stat >= StatButtonCount())
+    {
+        return;
+    }
+    SocketClient->ToGameServer()->SendIncreaseCharacterStatPoint(static_cast<CharacterStatAttribute>(stat));
+    PlayBuffer(SOUND_CLICK01);
+}
+
+void SEASON3B::CNewUICharacterInfoWindow::ToggleQuestWindow()
+{
+    g_pNewUISystem->Toggle(SEASON3B::INTERFACE_MYQUEST);
+}
+
+void SEASON3B::CNewUICharacterInfoWindow::TogglePetWindow()
+{
+    g_pNewUISystem->Toggle(SEASON3B::INTERFACE_PET);
+}
+
+bool SEASON3B::CNewUICharacterInfoWindow::CanOpenMasterLevelWindow() const
+{
+    return gCharacterManager.IsMasterLevel(Hero->Class) && Hero->Class != CLASS_TEMPLENIGHT;
+}
+
+void SEASON3B::CNewUICharacterInfoWindow::ToggleMasterLevelWindow()
+{
+    if (CanOpenMasterLevelWindow())
+    {
+        g_pNewUISystem->Toggle(SEASON3B::INTERFACE_MASTER_LEVEL);
+    }
 }
 
 bool SEASON3B::CNewUICharacterInfoWindow::UpdateKeyEvent()
@@ -270,6 +301,13 @@ void SEASON3B::CNewUICharacterInfoWindow::RenderFrame()
     {
         RenderImage(IMAGE_CHAINFO_TEXTBOX, m_Pos.x + 11, m_Pos.y + HEIGHT_CHARISMA, 170.f, 21.f);
     }
+}
+
+void SEASON3B::CNewUICharacterInfoWindow::CaptureTexts(IUIRenderText& target)
+{
+    g_pRenderText->SetCaptureTarget(&target);
+    RenderTexts();
+    g_pRenderText->SetCaptureTarget(nullptr);
 }
 
 bool SEASON3B::CNewUICharacterInfoWindow::Render()
