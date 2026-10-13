@@ -44,13 +44,13 @@ struct Textures
     GLuint starSoft = BITMAP_UNKNOWN;
     GLuint starSharp = BITMAP_UNKNOWN;
     GLuint starBurst = BITMAP_UNKNOWN;
-    GLuint orbFlare = BITMAP_UNKNOWN;
     GLuint runes = BITMAP_UNKNOWN;
     GLuint vortex = BITMAP_UNKNOWN;
     GLuint vortexWide = BITMAP_UNKNOWN;
     GLuint pillar = BITMAP_UNKNOWN;
     GLuint bolt = BITMAP_UNKNOWN;
     GLuint flash = BITMAP_UNKNOWN;
+    std::array<GLuint, 4> arcs{BITMAP_UNKNOWN, BITMAP_UNKNOWN, BITMAP_UNKNOWN, BITMAP_UNKNOWN};
 };
 
 GLuint Load(const wchar_t* name)
@@ -68,13 +68,13 @@ const Textures& GetTextures()
         loaded.starSoft = Load(L"aura_star_soft");
         loaded.starSharp = Load(L"aura_star_sharp");
         loaded.starBurst = Load(L"aura_star_burst");
-        loaded.orbFlare = Load(L"aura_orb_flare");
         loaded.runes = Load(L"aura_runes");
         loaded.vortex = Load(L"aura_vortex");
         loaded.vortexWide = Load(L"aura_vortex_wide");
         loaded.pillar = Load(L"aura_pillar");
         loaded.bolt = Load(L"aura_bolt");
         loaded.flash = Load(L"aura_flash");
+        loaded.arcs = {Load(L"aura_arc_1"), Load(L"aura_arc_2"), Load(L"aura_arc_3"), Load(L"aura_arc_4")};
         return loaded;
     }();
     return textures;
@@ -149,25 +149,60 @@ void Motes(OBJECT* object, float time, int count, const Color& color, GLuint tex
     }
 }
 
-// Orbs circling the chest, each with a fading trail behind it.
-void Orbs(OBJECT* object, float time, int count, float radius, float height, const Color& color, GLuint texture)
+// A stable pseudo-random number in [0, 1) for a step of an effect and an index.
+float Hash(int step, int index, float seed)
 {
-    constexpr int kTrail = 5;
+    const float x = std::sinf(static_cast<float>(step) * 12.9898f + static_cast<float>(index) * 78.233f + seed * 3.17f) * 43758.547f;
+    return x - std::floor(x);
+}
+
+// Electric arcs crackling around the body: each one jumps to a new place every few hundredths of
+// a second, sometimes skipping a beat, so they flicker like real sparks.
+void Electricity(OBJECT* object, float time, int count, const Color& color, const Textures& textures, float seed)
+{
+    constexpr float kStepMs = 90.f;
+    const int step = static_cast<int>(time / kStepMs);
     vec3_t position, light;
     for (int i = 0; i < count; ++i)
     {
-        const float base = static_cast<float>(i) * kTwoPi / static_cast<float>(count);
-        for (int t = 0; t < kTrail; ++t)
+        if (Hash(step, i + 50, seed) < 0.3f)
         {
-            const float angle = base + time * 0.0025f - static_cast<float>(t) * 0.12f;
-            position[0] = object->Position[0] + std::cosf(angle) * radius;
-            position[1] = object->Position[1] + std::sinf(angle) * radius;
-            // A gentle bob, different for each orb.
-            position[2] = object->Position[2] + height + 18.f * std::sinf(time * 0.002f + base);
-            const float fade = 1.f - static_cast<float>(t) / kTrail;
-            color.To(fade * (t == 0 ? 1.f : 0.6f), light);
-            CreateSprite(static_cast<int>(texture), position, (t == 0 ? 0.55f : 0.4f) * fade + 0.1f, light, object);
+            continue;
         }
+        const GLuint texture = textures.arcs[static_cast<std::size_t>(Hash(step, i + 20, seed) * 4.f) % 4];
+        if (!Has(texture))
+        {
+            continue;
+        }
+        const float angle = Hash(step, i, seed) * kTwoPi;
+        const float radius = 18.f + Hash(step, i + 10, seed) * 22.f;
+        position[0] = object->Position[0] + std::cosf(angle) * radius;
+        position[1] = object->Position[1] + std::sinf(angle) * radius;
+        position[2] = object->Position[2] + 40.f + Hash(step, i + 30, seed) * 120.f;
+        color.To(0.9f, light);
+        CreateSprite(static_cast<int>(texture), position, 0.55f + Hash(step, i + 40, seed) * 0.3f, light, object,
+                     Hash(step, i + 60, seed) * 360.f);
+    }
+}
+
+// Glowing embers drifting up from the ground, swaying and dimming from gold to red as they rise.
+void Embers(OBJECT* object, float time, int count, const Textures& textures, float seed)
+{
+    const GLuint texture = Or(textures.orb, BITMAP_LIGHT);
+    vec3_t position, light;
+    for (int i = 0; i < count; ++i)
+    {
+        const float speed = 0.00025f + Hash(0, i, seed) * 0.00025f;
+        const float cycle = std::fmod(time * speed + Hash(1, i, seed), 1.f);
+        const float angle = Hash(2, i, seed) * kTwoPi;
+        const float radius = 15.f + Hash(3, i, seed) * 55.f;
+        const float sway = std::sinf(time * 0.002f + static_cast<float>(i)) * 12.f * cycle;
+        position[0] = object->Position[0] + std::cosf(angle) * radius + sway;
+        position[1] = object->Position[1] + std::sinf(angle) * radius;
+        position[2] = object->Position[2] + 5.f + cycle * 230.f;
+        const float glow = std::sinf(cycle * kPi) * (0.7f + 0.3f * std::sinf(time * 0.02f + static_cast<float>(i)));
+        Vector(glow, glow * (0.75f - 0.45f * cycle), glow * 0.25f * (1.f - cycle), light);
+        CreateSprite(static_cast<int>(texture), position, 0.09f + Hash(4, i, seed) * 0.06f, light, object);
     }
 }
 
@@ -179,7 +214,7 @@ void Column(OBJECT* object, float time, const Color& color, GLuint texture)
     for (int i = 0; i < kSegments; ++i)
     {
         const float fade = 1.f - static_cast<float>(i) / kSegments;
-        Glow(object, 40.f + static_cast<float>(i) * 55.f, 2.6f, color, 0.28f * fade * flicker, texture);
+        Glow(object, 40.f + static_cast<float>(i) * 55.f, 2.2f, color, 0.18f * fade * flicker, texture);
     }
 }
 
@@ -246,22 +281,19 @@ void RenderOro(OBJECT* object, float time, const Textures& textures)
     Motes(object, time, 6, kGold, Or(textures.starSoft, BITMAP_LIGHT), 0.5f, 180.f);
 }
 
-void RenderPlatino(OBJECT* object, float time, const Textures& textures)
+void RenderPlatino(OBJECT* object, float time, const Textures& textures, float seed)
 {
     const float pulse = Pulse(time);
     Decal(object, textures.vortex, 2.0f, kCyan, pulse * 0.75f, -time * 0.008f);
     Decal(object, textures.sigil, 1.6f, kCyan, pulse * 0.9f, time * 0.006f);
     Glow(object, 25.f, 2.8f, kCyan, 0.4f);
-    Motes(object, time, 8, kCyan, Or(textures.starSharp, BITMAP_LIGHT), 0.55f, 200.f);
-    if (Has(textures.orb))
-    {
-        Orbs(object, time, 2, 60.f, 110.f, kCyan, Or(textures.orbFlare, textures.orb));
-    }
+    Motes(object, time, 8, kCyan, Or(textures.starSharp, BITMAP_LIGHT), 0.4f, 200.f);
+    Electricity(object, time, 2, kCyan, textures, seed);
 }
 
 // The most glorious: a prismatic vortex and two sigils turning on the ground, a column of light,
-// a halo over the head, three orbs with trails, rising star bursts and, every few seconds, a
-// lightning bolt from the sky.
+// a halo over the head, crackling electricity, rising embers and star bursts and, every few
+// seconds, a lightning bolt from the sky.
 void RenderDiamante(OBJECT* object, float time, const Textures& textures, float seed)
 {
     const float pulse = Pulse(time, 0.0025f, 0.2f);
@@ -279,14 +311,12 @@ void RenderDiamante(OBJECT* object, float time, const Textures& textures, float 
     {
         Column(object, time, main, textures.pillar);
     }
-    Glow(object, 25.f, 3.4f, main, 0.55f);
+    Glow(object, 25.f, 3.0f, main, 0.4f);
     Decal(object, textures.halo, 0.55f, kWhiteGold, Pulse(time, 0.004f, 0.15f), time * 0.01f, 205.f);
 
-    if (Has(textures.orb))
-    {
-        Orbs(object, time, 3, 70.f, 120.f, second, Or(textures.orbFlare, textures.orb));
-    }
-    Motes(object, time, 12, kWhiteGold, Or(textures.starBurst, BITMAP_SHINY), 0.65f, 240.f);
+    Electricity(object, time, 3, main, textures, seed);
+    Embers(object, time, 24, textures, seed);
+    Motes(object, time, 8, kWhiteGold, Or(textures.starBurst, BITMAP_SHINY), 0.4f, 240.f);
     Lightning(object, time, main, textures, seed);
 }
 } // namespace
@@ -341,13 +371,15 @@ void Render(CHARACTER* character, OBJECT* object)
     }
 
     const float time = static_cast<float>(WorldTime);
+    // Each character's own rhythm for the random-looking parts.
+    const float seed = static_cast<float>((character->Key & 0x7FFF) % 97);
     EnableAlphaBlend();
     switch (found->second)
     {
     case kPlata: RenderPlata(object, time, GetTextures()); break;
     case kOro: RenderOro(object, time, GetTextures()); break;
-    case kPlatino: RenderPlatino(object, time, GetTextures()); break;
-    case kDiamante: RenderDiamante(object, time, GetTextures(), static_cast<float>((character->Key & 0x7FFF) % 97)); break;
+    case kPlatino: RenderPlatino(object, time, GetTextures(), seed); break;
+    case kDiamante: RenderDiamante(object, time, GetTextures(), seed); break;
     default: break;
     }
 }
